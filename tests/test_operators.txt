@@ -1,0 +1,40 @@
+// 运算符测试
+
+let a = 10;
+let b = 5;
+
+print("\n a = " . a);
+print("\n b = " . b);
+
+// 基本算术运算
+let sum = a + b;
+print("\n a + b = " . sum);
+
+let diff = a - b;
+print("\n a - b = " . diff);
+
+// 比较运算
+let gt = a > b;
+print("\n a > b: " . gt);
+
+let lt = a < b;
+print("\n a < b: " . lt);
+
+let eq = a == b;
+print("\n a == b: " . eq);
+
+let ne = a != b;
+print("\n a != b: " . ne);
+
+let ge = a >= b;
+print("\n a >= b: " . ge);
+
+let le = a <= b;
+print("\n a <= b: " . le);
+
+// 逻辑运算
+let and_result = a > 0 && b > 0;
+print("\n a > 0 && b > 0: " . and_result);
+
+let or_result = a > 20 || b > 10;
+print("\n a > 20 || b > 10: " . or_result);

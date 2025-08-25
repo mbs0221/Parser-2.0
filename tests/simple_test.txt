@@ -1,0 +1,58 @@
+let x = 5;
+let y = 10;
+print(x);
+print(y);
+
+let a = 1;
+let b = 2;
+let c = 3;
+let d = 4;
+let e = 5;
+let f = 6;
+print(a);
+print(b);
+print(c);
+print(d);
+print(e);
+print(f);
+
+print("\nHello, World!\n");
+
+let arr = [1, 2, 3, 4, 5];
+print("\nTest arr: \n");
+print(arr[0]);
+print(arr[1]);
+print(arr[2]);
+print(arr[3]);
+print(arr[4]);
+
+let dict = {"a": 1, "b": 2, "c": 3, "d": [1, 2, 3, 4, 5]};
+print("\nTest dict: \n");
+print(dict["a"]);
+print(dict["b"]);
+print(dict["c"]);
+print("\nTest dict array: \n");
+print(dict["d"][0]);
+print(dict["d"][1]);
+print(dict["d"][2]);
+print(dict["d"][3]);
+print(dict["d"][4]);
+
+let str = "Hello, World!";
+print("\nTest str: \n");
+print(str);
+print("\nTest str array: \n");
+print(str[0]);
+print(str[1]);
+print(str[2]);
+print(str[3]);
+print(str[4]);
+print(str[5]);
+print(str[6]);
+print(str[7]);
+print(str[8]);
+print(str[9]);
+print(str[10]);
+print(str[11]);
+print("\n");
+#

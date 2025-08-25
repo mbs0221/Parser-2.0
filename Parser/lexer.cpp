@@ -1,0 +1,354 @@
+#include "lexer.h"
+#include "inter.h"
+
+// 静态成员定义
+Word *Word::Temp = new Word(TEMP, "TEMP");
+Type *Type::Int = new Type(INT, "int", 4);
+Type *Type::Double = new Type(DOUBLE, "double", 16);
+Integer *Integer::True = new Integer(1);
+Integer *Integer::False = new Integer(0);
+
+
+
+// 词法分析器实现
+Lexer::Lexer(){
+	words["int"] = Type::Int;// new Word(INT, "int");
+	words["double"] = Type::Double;// new Word(INT, "int");
+	words["if"] = new Word(IF, "if");
+	words["then"] = new Word(THEN, "then");
+	words["else"] = new Word(ELSE, "else");
+	words["while"] = new Word(WHILE, "while");
+	words["do"] = new Word(DO, "do");
+	words["for"] = new Word(FOR, "for");
+	words["case"] = new Word(CASE, "case");
+	words["begin"] = new Word(BEGIN, "begin");
+	words["end"] = new Word(END, "end");
+	words["true"] = Integer::True;
+	words["false"] = Integer::False;
+	words["null"] = new Word(NULL, "null");
+	words["let"] = new Word(LET, "let");
+	words["break"] = new Word(BREAK, "break");
+	words["continue"] = new Word(CONTINUE, "continue");
+	words["return"] = new Word(RETURN, "return");
+	words["throw"] = new Word(THROW, "throw");
+	words["try"] = new Word(TRY, "try");
+	words["catch"] = new Word(CATCH, "catch");
+	words["finally"] = new Word(FINALLY, "finally");
+	words["switch"] = new Word(SWITCH, "switch");
+	words["default"] = new Word(DEFAULT, "default");
+	words["function"] = new Word(FUNCTION, "function");
+}
+
+Lexer::~Lexer(){
+	words.clear();
+	inf.close();
+}
+
+bool Lexer::open(string file){
+	inf.open(file, ios::in);
+	if (inf.is_open()){
+		return true;
+	}
+	return false;
+}
+
+Token *Lexer::scan(){//LL(1)
+	if (inf.eof()){
+		return new Token(EOF);
+	}
+	while (inf.read(&peek, 1)){
+		column++;
+		if (peek == ' ' || peek == '\t')continue;
+		else if (peek == '\r')continue; // 忽略回车符
+		else if (peek == '\n'){ column = 0; line++; }
+		else if (peek == '/'){
+			Token *t;
+			if (t = skip_comment()){
+				return t;
+			}
+			// 如果不是注释，跳出循环让后续处理处理为除法运算符
+			break;
+		}
+		else break;
+	}
+	if (peek == '\''){
+		return match_char();
+	} else if (peek == '"'){
+		return match_string();
+	} else if (isalpha(peek) || peek == '_'){// 
+		return match_id();//a _
+	} else if (isdigit(peek)){
+		return match_number();
+	} else {
+		return match_other();
+	}
+}// a, b, c, int;
+
+
+
+Token *Lexer::match_char(){
+	char c; // '
+	inf.read(&peek, 1);
+	if (peek == '\\'){// '\a
+		inf.read(&peek, 1);
+		switch (peek){
+		case 'a':c = '\a'; break;
+		case 'b':c = '\b'; break;
+		case 'f':c = '\f'; break;
+		case 'n':c = '\n'; break;
+		case 'r':c = '\r'; break;
+		case 't':c = '\t'; break;
+		case 'v':c = '\v'; break;
+		case '\\':c = '\\'; break;
+		case '\'':c = '\''; break;
+		case '\"':c = '"'; break;
+		case '?':c = '\?'; break;
+		case '0':c = '\0'; break;
+		default:c = '\\'; c = peek; break;
+		}
+		inf.read(&peek, 1);// '\a'
+	}else{
+		c = peek;
+	}
+	return new Integer(c);
+}
+
+Token *Lexer::match_id(){
+	string str;
+	do{
+		str.push_back(peek);
+		inf.read(&peek, 1);
+	} while (isalnum(peek) || peek == '_');
+	inf.seekg(-1, ios_base::cur);
+	if (words.find(str) != words.end()){
+		return words[str];
+	}
+	Word *w = new Word(ID, str);
+	words[str] = w;
+	return w;
+}
+
+Token *Lexer::match_number(){
+	if (peek == '0'){
+		inf.read(&peek, 1);
+		if (peek == 'x'){
+			return match_hex();
+		} else if (isdigit(peek) && peek >= '1' && peek <= '7'){
+			return match_oct();
+		}
+		inf.seekg(-1, ios_base::cur);
+		return new Integer(0);
+	}
+	else{
+		return match_decimal();
+	}
+}
+
+Token *Lexer::match_decimal(){
+	int val = 0;
+	bool isFloat = false;
+	double floatVal = 0.0;
+	double decimalPart = 0.1;
+	
+	// 读取整数部分
+	do{
+		val = val * 10 + peek - '0';
+		inf.read(&peek, 1);
+	} while (isdigit(peek));
+	
+	// 检查是否有小数点
+	if (peek == '.'){
+		isFloat = true;
+		floatVal = (double)val;
+		inf.read(&peek, 1);
+		
+		// 读取小数部分
+		while (isdigit(peek)){
+			floatVal += (peek - '0') * decimalPart;
+			decimalPart *= 0.1;
+			inf.read(&peek, 1);
+		}
+	}
+	
+	inf.seekg(-1, ios_base::cur);
+	
+	// 根据是否为浮点数返回相应的Token
+	if (isFloat){
+		return new Double(floatVal);
+	} else {
+		return new Integer(val);
+	}
+}
+
+Token *Lexer::match_hex(){
+	int val = 0;
+	inf.read(&peek, 1);
+	do{
+		if (isdigit(peek)){
+			val = val * 16 + peek - '0';
+		}
+		else if (peek >= 'a' && peek <= 'f'){
+			val = val * 16 + peek - 'a' + 10;
+		}
+		else if (peek >= 'A' && peek <= 'F'){
+			val = val * 16 + peek - 'A' + 10;
+		}
+		inf.read(&peek, 1);
+	} while (isxdigit(peek));
+	inf.seekg(-1, ios_base::cur);
+	return new Integer(val);
+}
+
+Token *Lexer::match_oct(){
+	int val = 0;
+	do{
+		val = val * 8 + peek - '0';
+		inf.read(&peek, 1);
+	} while (isdigit(peek) && peek >= '0' && peek <= '7');
+	inf.seekg(-1, ios_base::cur);
+	return new Integer(val);
+}
+
+Token *Lexer::match_other(){
+	// 处理多字符运算符
+	if (peek == '=') {
+		inf.read(&peek, 1);
+		if (peek == '=') {
+			// ==
+			inf.read(&peek, 1);
+			return new Word(EQ, "==");
+		} else {
+			// =
+			inf.seekg(-1, ios_base::cur);
+			return new Token('=');
+		}
+	} else if (peek == '!') {
+		inf.read(&peek, 1);
+		if (peek == '=') {
+			// !=
+			inf.read(&peek, 1);
+			return new Word(NE, "!=");
+		} else {
+			// !
+			inf.seekg(-1, ios_base::cur);
+			return new Token('!');
+		}
+	} else if (peek == '<') {
+		inf.read(&peek, 1);
+		if (peek == '=') {
+			// <=
+			inf.read(&peek, 1);
+			return new Word(BE, "<=");
+		} else {
+			// <
+			inf.seekg(-1, ios_base::cur);
+			return new Token('<');
+		}
+	} else if (peek == '>') {
+		inf.read(&peek, 1);
+		if (peek == '=') {
+			// >=
+			inf.read(&peek, 1);
+			return new Word(GE, ">=");
+		} else {
+			// >
+			inf.seekg(-1, ios_base::cur);
+			return new Token('>');
+		}
+	} else if (peek == '&') {
+		inf.read(&peek, 1);
+		if (peek == '&') {
+			// &&
+			inf.read(&peek, 1);
+			return new Word(AND, "&&");
+		} else {
+			// &
+			inf.seekg(-1, ios_base::cur);
+			return new Token('&');
+		}
+	} else if (peek == '|') {
+		inf.read(&peek, 1);
+		if (peek == '|') {
+			// ||
+			inf.read(&peek, 1);
+			return new Word(OR, "||");
+		} else {
+			// |
+			inf.seekg(-1, ios_base::cur);
+			return new Token('|');
+		}
+	} else {
+		// 单字符运算符
+		return new Token(peek);
+	}
+}
+
+Token *Lexer::skip_comment(){
+	if (peek == '/'){
+		inf.read(&peek, 1);
+		if (peek == '/'){
+			// 单行注释
+			while (peek != '\n' && !inf.eof()){
+				inf.read(&peek, 1);
+			}
+			return nullptr;
+		}
+		else if (peek == '*'){
+			// 多行注释
+			inf.read(&peek, 1);
+			while (!inf.eof()){
+				if (peek == '*'){
+					inf.read(&peek, 1);
+					if (peek == '/'){
+						inf.read(&peek, 1);
+						return nullptr;
+					}
+				}
+				inf.read(&peek, 1);
+			}
+			return nullptr;
+		}
+		else{
+			peek = '/';
+			inf.seekg(-1, ios_base::cur);
+			return new Token('/');
+		}
+	}
+	return nullptr;
+}
+
+Token *Lexer::match_string(){
+	string str;
+	inf.read(&peek, 1); // 跳过开始的引号
+	
+	// 读取字符串内容，直到遇到结束引号
+	while (peek != '"' && !inf.eof()) {
+		if (peek == '\\') {
+			// 处理转义字符
+			inf.read(&peek, 1);
+			switch (peek) {
+				case 'n': str += '\n'; break;
+				case 't': str += '\t'; break;
+				case 'r': str += '\r'; break;
+				case '\\': str += '\\'; break;
+				case '"': str += '"'; break;
+				case '\'': str += '\''; break;
+				case '0': str += '\0'; break;
+				default: 
+					// 未知转义字符，保持原样
+					str += '\\'; 
+					str += peek; 
+					break;
+			}
+		} else {
+			str += peek;
+		}
+		inf.read(&peek, 1);
+	}
+	
+	// 跳过结束引号
+	// inf.read(&peek, 1);
+	
+	// 返回字符串字面量token
+	return new Word(STR, str);
+}
