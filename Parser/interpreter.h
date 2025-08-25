@@ -40,6 +40,9 @@ private:
     // 全局作用域（程序级别的变量和函数）
     Scope* globalScope;
     
+    // 结构体定义存储
+    map<string, StructDefinition*> structDefinitions;
+    
     // 内置函数映射
     map<string, function<Expression*(vector<Expression*>&)>> builtinFunctions;
     
@@ -68,12 +71,14 @@ public:
     Expression* evaluateDeclaration(VariableDeclaration* decl);
 
     // 表达式求值
-    Expression* evaluateExpression(Expression* expr);
+
 
     Expression* evaluateIdentifierExpression(IdentifierExpression* idExpr);
     Expression* evaluateUnaryExpression(UnaryExpression* unary);
     Expression* evaluateArithmeticExpression(ArithmeticExpression* arith);
+    Expression* evaluateAssignmentExpression(AssignmentExpression* assign);
     Expression* evaluateStringLiteral(StringLiteral* strLit);
+    Expression* evaluateCharExpression(CharExpression* charExpr);
     Expression* evaluateArrayNode(ArrayNode* array);
     Expression* evaluateDictNode(DictNode* dict);
     Expression* evaluateStringNode(StringNode* strNode);
@@ -122,6 +127,11 @@ public:
     Expression* executeReturn(ReturnStatement* returnStmt);
     Expression* executeFunction(FunctionDefinition* funcDef, vector<Expression*>& args);
     void executeFunctionDefinition(FunctionDefinition* funcDef);
+    
+    // 结构体相关
+    void registerStructDefinition(StructDefinition* structDef);
+    Expression* evaluateStructInstantiation(StructInstantiationExpression* structInst);
+    Expression* evaluateMemberAccess(MemberAccessExpression* memberAccess);
 };
 
 #endif // INTERPRETER_H

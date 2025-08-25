@@ -1,0 +1,14 @@
+let c1 = 'A';
+let c2 = '\n';
+let c3 = '\t';
+let c4 = '\\';
+let c5 = '\'';
+let s = "Hello";
+print("c1 = " + c1 + "\n");
+print("c2 = " + c2 + "\n");
+print("c3 = " + c3 + "\n");
+print("c4 = " + c4 + "\n");
+print("c5 = " + c5 + "\n");
+print("s + c1 = " + s + c1 + "\n");
+print("s + c2 = " + s + c2 + "\n");
+print("c1 + c2 = " + c1 + c2 + "\n");

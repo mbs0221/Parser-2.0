@@ -1,0 +1,23 @@
+let a = 10;
+let b = 3;
+print("Arithmetic operators:\n");
+print("a + b = " + (a + b) + "\n");
+print("a - b = " + (a - b) + "\n");
+print("a * b = " + (a * b) + "\n");
+print("a / b = " + (a / b) + "\n");
+
+print("Comparison operators:\n");
+print("a == b: " + (a == b) + "\n");
+print("a != b: " + (a != b) + "\n");
+print("a < b: " + (a < b) + "\n");
+print("a > b: " + (a > b) + "\n");
+print("a <= b: " + (a <= b) + "\n");
+print("a >= b: " + (a >= b) + "\n");
+
+let c = 5;
+print("Logical operators:");
+print("a > 0 && b > 0: " + (a > 0 && b > 0) + "\n");
+print("a > 20 || b > 10: " + (a > 20 || b > 10) + "\n");
+print("c > 0 && c < 10: " + (c > 0 && c < 10) + "\n");
+
+#

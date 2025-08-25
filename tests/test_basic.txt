@@ -1,0 +1,39 @@
+# 基本功能测试
+
+# 变量声明和赋值
+let a = 10;
+let b = 5;
+
+# 基本运算
+print("a = " . a);
+print("b = " . b);
+let sum = a + b;
+print("sum = " . sum);
+
+# 字符串操作
+let str = "Hello";
+print("String: " . str);
+print("Length: " . length(str));
+
+# 字符串访问
+let firstChar = str[0];
+print("First character: " . firstChar);
+
+# 数组操作
+let arr = [1, 2, 3, 4, 5];
+print("Array count: " . count(arr));
+print("First element: " . arr[0]);
+
+# 条件语句
+if a > b then {
+    print("a is greater than b");
+} else {
+    print("b is greater than or equal to a");
+}
+
+# 循环
+let i = 0;
+while i < 3 do {
+    print("i = " . i);
+    i = i + 1;
+}

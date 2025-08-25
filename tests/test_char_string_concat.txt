@@ -1,0 +1,9 @@
+let x = 1;
+let c = 'A';
+let s = "Hello";
+print("x = " + x + "\n");
+print("c = " + c + "\n");
+print("s = " + s + "\n");
+print("s + c = " + s + c + "\n");
+print("c + s = " + c + s + "\n");
+print("c + c = " + c + c + "\n");

@@ -21,10 +21,10 @@ using namespace std;
 //词法分析器标记
 enum Tag{
 	IF = 256, THEN, ELSE, DO, WHILE, FOR, CASE, PRINT, BASIC,
-	LET, ID, NUM, REAL, INDEX, BREAK, CONTINUE, RETURN, THROW, TRY, CATCH, FINALLY, SWITCH, DEFAULT,
+	LET, ID, NUM, REAL, CHAR, INDEX, BREAK, CONTINUE, RETURN, THROW, TRY, CATCH, FINALLY, SWITCH, DEFAULT,
 	INT, DOUBLE, STR, BEGIN, END, FUNCTION, LAMBDA,
 	AND, OR, EQ, NE, GE, BE, NEG, TRUE, FALSE, INPUT, OUTPUT, CALL,
-	INC, DEC, SHL, SHR, TEMP
+	INC, DEC, SHL, SHR, TEMP, END_OF_FILE, STRUCT, CLASS, PUBLIC, PRIVATE, PROTECTED
 };
 
 //词法单元
@@ -87,6 +87,16 @@ struct Double :Type{
 		ostringstream oss;
 		oss << value;
 		word = oss.str();
+		return this;
+	}
+};
+
+// 字符
+struct Char :Type{
+	char value;
+	Char(char value) : value(value){ Tag = CHAR; width = 1; }
+	virtual Type *eval(){
+		word = string(1, value);
 		return this;
 	}
 };

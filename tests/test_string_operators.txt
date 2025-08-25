@@ -1,0 +1,41 @@
+// 字符串运算符重载测试
+
+let str1 = "Hello";
+let str2 = "World";
+
+print("str1 = " . str1);
+print("str2 = " . str2);
+
+// 字符串拼接
+let concat = str1 + str2;
+print("str1 + str2 = " . concat);
+
+// 字符串比较
+let eq = str1 == str2;
+print("str1 == str2: " . eq);
+
+let ne = str1 != str2;
+print("str1 != str2: " . ne);
+
+let lt = str1 < str2;
+print("str1 < str2: " . lt);
+
+let gt = str1 > str2;
+print("str1 > str2: " . gt);
+
+let le = str1 <= str2;
+print("str1 <= str2: " . le);
+
+let ge = str1 >= str2;
+print("str1 >= str2: " . ge);
+
+// 相同字符串比较
+let str3 = "Hello";
+let same = str1 == str3;
+print("str1 == str3: " . same);
+
+// 字符串和数字混合运算
+let num = 123;
+let mixed = str1 . " " . num;
+print("str1 + num = " . mixed);
+

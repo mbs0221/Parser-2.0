@@ -46,6 +46,7 @@ protected:
     
     // 表达式解析
     Expression* parseExpression();
+    Expression* parseAssignment();
     Expression* parseCompare();
     Expression* parseAdditive();
     Expression* parseTerm();
@@ -55,10 +56,20 @@ protected:
     
     // 字符串解析
     StringLiteral* parseStringLiteral();
+    CharExpression* parseCharLiteral();
     
     // 数组和字典解析
     ArrayNode* parseArray();
     DictNode* parseDict();
+    
+    // 结构体和类解析
+    StructDefinition* parseStruct();
+    ClassDefinition* parseClass();
+    ClassMethod* parseClassMethod();
+    Expression* parseStructInstantiation(const string& structName);
+    Expression* parseClassInstantiation(const string& className);
+    Expression* parseMemberAccess();
+    Expression* parseMethodCall();
     
     // 类型解析
     Type* parseType();

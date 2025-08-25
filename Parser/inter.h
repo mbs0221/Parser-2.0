@@ -24,7 +24,9 @@ struct AST {
         FUNCTION,   // 函数类型
         ARRAY,      // 数组类型
         STRING,     // 字符串类型
-        DICT        // 字典类型
+        DICT,       // 字典类型
+        STRUCT,     // 结构体类型
+        CLASS       // 类类型
     };
     
     // 获取节点类型
@@ -202,6 +204,19 @@ struct ArithmeticExpression : public Expression {
             }
         }
         return "(" + (left ? left->toString() : "") + " " + opStr + " " + (right ? right->toString() : "") + ")";
+    }
+};
+
+// 赋值表达式
+struct AssignmentExpression : public Expression {
+    string variableName;  // 变量名
+    Expression* value;    // 要赋的值
+    
+    AssignmentExpression(const string& varName, Expression* val) 
+        : variableName(varName), value(val) {}
+    
+    string toString() const override {
+        return variableName + " = " + (value ? value->toString() : "");
     }
 };
 
@@ -516,16 +531,36 @@ struct ExpressionStatement : public Statement {
 
 // 变量声明语句
 struct VariableDeclaration : public Statement {
-    string name;
-    Expression* initializer;  // 初始化表达式
+    struct Variable {
+        string name;
+        Expression* initializer;  // 初始化表达式，可为nullptr
+        
+        Variable(const string& n, Expression* init = nullptr) 
+            : name(n), initializer(init) {}
+    };
     
-    VariableDeclaration(const string& n, Expression* init = nullptr) 
-        : name(n), initializer(init) {}
+    vector<Variable> variables;
+    
+    VariableDeclaration() {}
+    
+    // 添加单个变量
+    void addVariable(const string& name, Expression* initializer = nullptr) {
+        variables.emplace_back(name, initializer);
+    }
+    
+    // 构造函数，用于单个变量（向后兼容）
+    VariableDeclaration(const string& name, Expression* initializer = nullptr) {
+        addVariable(name, initializer);
+    }
     
     string toString() const override {
-        string result = "let " + name;
-        if (initializer) {
-            result += " = " + initializer->toString();
+        string result = "let ";
+        for (size_t i = 0; i < variables.size(); ++i) {
+            if (i > 0) result += ", ";
+            result += variables[i].name;
+            if (variables[i].initializer) {
+                result += " = " + variables[i].initializer->toString();
+            }
         }
         return result + ";";
     }
@@ -811,6 +846,185 @@ struct BuiltinFunctionExpression : public Expression {
     }
     
     string getName() const { return functionName; }
+};
+
+// ==================== 结构体和类定义 ====================
+
+// 结构体成员定义
+struct StructMember {
+    string name;
+    string type;
+    Expression* defaultValue;
+    
+    StructMember(const string& n, const string& t, Expression* def = nullptr) 
+        : name(n), type(t), defaultValue(def) {}
+};
+
+// 结构体定义
+struct StructDefinition : public Statement {
+    string name;
+    vector<StructMember> members;
+    
+    StructDefinition(const string& n, vector<StructMember> mems) 
+        : name(n), members(mems) {}
+    
+    string toString() const override {
+        string result = "struct " + name + " {\n";
+        for (const auto& member : members) {
+            result += "  " + member.type + " " + member.name;
+            if (member.defaultValue) {
+                result += " = " + member.defaultValue->toString();
+            }
+            result += ";\n";
+        }
+        result += "}";
+        return result;
+    }
+};
+
+// 类成员定义
+struct ClassMember {
+    string name;
+    string type;
+    string visibility; // "public", "private", "protected"
+    Expression* defaultValue;
+    
+    ClassMember(const string& n, const string& t, const string& vis = "public", Expression* def = nullptr) 
+        : name(n), type(t), visibility(vis), defaultValue(def) {}
+};
+
+// 类方法定义
+struct ClassMethod {
+    string name;
+    vector<string> parameters;
+    string returnType;
+    string visibility; // "public", "private", "protected"
+    BlockStatement* body;
+    
+    ClassMethod(const string& n, vector<string> params, const string& ret = "void", 
+                const string& vis = "public", BlockStatement* b = nullptr) 
+        : name(n), parameters(params), returnType(ret), visibility(vis), body(b) {}
+    
+    string toString() const {
+        string result = visibility + " " + returnType + " " + name + "(";
+        for (size_t i = 0; i < parameters.size(); ++i) {
+            if (i > 0) result += ", ";
+            result += parameters[i];
+        }
+        result += ")";
+        if (body) {
+            result += " {\n" + body->toString() + "\n}";
+        }
+        return result;
+    }
+};
+
+// 类定义
+struct ClassDefinition : public Statement {
+    string name;
+    vector<ClassMember> members;
+    vector<ClassMethod> methods;
+    string baseClass; // 继承的基类
+    
+    ClassDefinition(const string& n, vector<ClassMember> mems = {}, 
+                   vector<ClassMethod> meths = {}, const string& base = "") 
+        : name(n), members(mems), methods(meths), baseClass(base) {}
+    
+    string toString() const override {
+        string result = "class " + name;
+        if (!baseClass.empty()) {
+            result += " : " + baseClass;
+        }
+        result += " {\n";
+        
+        // 成员变量
+        for (const auto& member : members) {
+            result += "  " + member.visibility + " " + member.type + " " + member.name;
+            if (member.defaultValue) {
+                result += " = " + member.defaultValue->toString();
+            }
+            result += ";\n";
+        }
+        
+        // 方法
+        for (const auto& method : methods) {
+            result += "  " + method.toString() + "\n";
+        }
+        
+        result += "}";
+        return result;
+    }
+};
+
+// 结构体实例化表达式
+struct StructInstantiationExpression : public Expression {
+    string structName;
+    map<string, Expression*> fieldValues;
+    
+    StructInstantiationExpression(const string& name, map<string, Expression*> values) 
+        : structName(name), fieldValues(values) {}
+    
+    string toString() const override {
+        string result = structName + " {";
+        for (const auto& pair : fieldValues) {
+            if (result.back() != '{') result += ", ";
+            result += pair.first + ": " + pair.second->toString();
+        }
+        result += "}";
+        return result;
+    }
+};
+
+// 类实例化表达式
+struct ClassInstantiationExpression : public Expression {
+    string className;
+    vector<Expression*> arguments;
+    
+    ClassInstantiationExpression(const string& name, vector<Expression*> args) 
+        : className(name), arguments(args) {}
+    
+    string toString() const override {
+        string result = className + "(";
+        for (size_t i = 0; i < arguments.size(); ++i) {
+            if (i > 0) result += ", ";
+            result += arguments[i]->toString();
+        }
+        result += ")";
+        return result;
+    }
+};
+
+// 成员访问表达式
+struct MemberAccessExpression : public Expression {
+    Expression* object;
+    string memberName;
+    
+    MemberAccessExpression(Expression* obj, const string& member) 
+        : object(obj), memberName(member) {}
+    
+    string toString() const override {
+        return object->toString() + "." + memberName;
+    }
+};
+
+// 方法调用表达式
+struct MethodCallExpression : public Expression {
+    Expression* object;
+    string methodName;
+    vector<Expression*> arguments;
+    
+    MethodCallExpression(Expression* obj, const string& method, vector<Expression*> args) 
+        : object(obj), methodName(method), arguments(args) {}
+    
+    string toString() const override {
+        string result = object->toString() + "." + methodName + "(";
+        for (size_t i = 0; i < arguments.size(); ++i) {
+            if (i > 0) result += ", ";
+            result += arguments[i]->toString();
+        }
+        result += ")";
+        return result;
+    }
 };
 
 #endif // INTER_H

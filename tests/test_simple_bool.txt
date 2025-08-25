@@ -1,0 +1,26 @@
+let a = 10;
+let b = 5;
+
+function println(a) {
+    print(a + "\n");
+}
+
+let result = a > b;
+println("a > b = " + result);
+
+let result1 = a < b;
+println("a < b = " + result1);
+
+let result2 = a >= b;
+println("a >= b = " + result2);
+
+let result3 = a <= b;
+println("a <= b = " + result3);
+
+let result4 = a == b;
+println("a == b = " + result4);
+
+let result5 = a != b;
+println("a != b = " + result5);
+
+#

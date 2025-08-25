@@ -1,0 +1,41 @@
+// 字符串转义测试
+
+// 基本字符串
+let str1 = "Hello World";
+print("Basic string: " . str1);
+
+// 转义字符测试
+let str2 = "Hello\nWorld";
+print("Newline: " . str2);
+
+let str3 = "Hello\tWorld";
+print("Tab: " . str3);
+
+let str4 = "Hello\\World";
+print("Backslash: " . str4);
+
+let str5 = "Hello\"World";
+print("Quote: " . str5);
+
+let str6 = "Hello\'World";
+print("Single quote: " . str6);
+
+let str7 = "Hello\rWorld";
+print("Carriage return: " . str7);
+
+let str8 = "Hello\0World";
+print("Null character: " . str8);
+
+// 混合转义字符
+let str9 = "Line1\nLine2\tTabbed\nLine3";
+print("Mixed escapes: " . str9);
+
+// 字符串拼接中的转义
+let result = "First line\n" . "Second line\t" . "Third line";
+print("Concatenated with escapes: " . result);
+
+// 字符串访问测试
+let testStr = "Hello";
+print("First char: " . testStr[0]);
+print("Second char: " . testStr[1]);
+print("Length: " . length(testStr));

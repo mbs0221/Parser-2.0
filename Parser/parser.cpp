@@ -36,9 +36,10 @@ bool Parser::match(int Tag) {
     }
     move();
     if (look->Tag > 255)
-        printf("line[%03d]:%d not matched.\n", lex.line, look->Tag);
+        printf("SYNTAX ERROR line[%03d]: expected %d, got %d\n", lex.line, Tag, look->Tag);
     else
-        printf("line[%03d]:%c not matched.\n", lex.line, (char)look->Tag);
+        printf("SYNTAX ERROR line[%03d]: expected '%c', got '%c'\n", lex.line, (char)Tag, (char)look->Tag);
+    exit(1);  // 强制退出
     return false;
 }
 
@@ -46,7 +47,7 @@ bool Parser::match(int Tag) {
 Program* Parser::parseProgram() {
     Program* program = new Program();
     
-    while (look->Tag != '#' && look->Tag != -1) {
+    while (look->Tag != '#' && look->Tag != -1 && look->Tag != END_OF_FILE) {
         Statement* stmt = parseStatement();
         if (stmt) {
             program->addStatement(stmt);
@@ -89,6 +90,10 @@ Statement* Parser::parseStatement() {
             return parseDefaultStatement();
         case FUNCTION:
             return parseFunction();
+        case STRUCT:
+            return parseStruct();
+        case CLASS:
+            return parseClass();
         case PRINT:
             return parsePrintStatement();
         case ID:
@@ -96,33 +101,49 @@ Statement* Parser::parseStatement() {
         case '{':
             return parseBlock();
         default:
-            printf("Error[%03d]: unexpected token in statement\n", lex.line);
-            match(look->Tag);
+            printf("SYNTAX ERROR line[%03d]: unexpected token in statement\n", lex.line);
+            exit(1);  // 强制退出
             return nullptr;
     }
 }
 
-// 解析变量声明语句 (let x = 10;)
+// 解析变量声明语句 (let x = 10, y = 20, z;)
 VariableDeclaration* Parser::parseVariableDeclaration() {
     match(LET);
     
-    // 解析标识符
-    Token* idToken = look;
-    match(ID);
+    VariableDeclaration* decl = new VariableDeclaration();
     
-    Word* wordToken = static_cast<Word*>(idToken);
-    string name = wordToken ? wordToken->word : "";
-    
-    // 匹配等号
-    match('=');
-    
-    // 解析表达式
-    Expression* value = parseExpression();
+    while (true) {
+        // 解析标识符
+        Token* idToken = look;
+        match(ID);
+        
+        Word* wordToken = static_cast<Word*>(idToken);
+        string name = wordToken ? wordToken->word : "";
+        
+        Expression* value = nullptr;
+        
+        // 检查是否有初始化表达式
+        if (look->Tag == '=') {
+            match('=');
+            value = parseExpression();
+        }
+        
+        // 添加变量到声明中
+        decl->addVariable(name, value);
+        
+        // 检查是否还有更多变量（用逗号分隔）
+        if (look->Tag == ',') {
+            match(',');
+        } else {
+            break;
+        }
+    }
     
     // 匹配分号
     match(';');
     
-    return new VariableDeclaration(name, value);
+    return decl;
 }
 
 // 解析表达式语句 (x + y;)
@@ -368,7 +389,68 @@ Expression* Parser::parseAdditive() {
 
 // 解析表达式
 Expression* Parser::parseExpression() {
-    return parseCompare();
+    Expression* expr = parseAssignment();
+    
+    // 处理成员访问和方法调用
+    while (look->Tag == '.') {
+        match('.');
+        
+        Token* memberToken = look;
+        match(ID);
+        
+        string memberName = "";
+        if (memberToken && memberToken->Tag == Tag::ID) {
+            Word* wordToken = static_cast<Word*>(memberToken);
+            memberName = wordToken ? wordToken->word : "";
+        }
+        
+        if (look->Tag == '(') {
+            // 方法调用
+            match('(');
+            
+            vector<Expression*> arguments;
+            
+            if (look->Tag != ')') {
+                arguments.push_back(parseExpression());
+                
+                while (look->Tag == ',') {
+                    match(',');
+                    arguments.push_back(parseExpression());
+                }
+            }
+            
+            match(')');
+            
+            expr = new MethodCallExpression(expr, memberName, arguments);
+        } else {
+            // 成员访问
+            expr = new MemberAccessExpression(expr, memberName);
+        }
+    }
+    
+    return expr;
+}
+
+// 解析赋值表达式
+Expression* Parser::parseAssignment() {
+    Expression* left = parseCompare();
+    
+    if (look->Tag == '=') {
+        Token* op = look;
+        match('=');
+        Expression* right = parseCompare();  // 改为parseCompare，避免递归
+        
+        // 检查左操作数是否为标识符
+        if (IdentifierExpression* idExpr = dynamic_cast<IdentifierExpression*>(left)) {
+            return new AssignmentExpression(idExpr->getName(), right);
+        } else {
+            // 如果不是标识符，报告错误
+            printf("Error: Left side of assignment must be a variable\n");
+            return left;
+        }
+    }
+    
+    return left;
 }
 
 // 解析比较运算
@@ -388,7 +470,7 @@ Expression* Parser::parseCompare() {
 Expression* Parser::parseTerm() {
     Expression* left = parseFactor();
     
-    while (look->Tag == '*' || look->Tag == '/') {
+    while (look->Tag == '*' || look->Tag == '/' || look->Tag == '%') {
         Token* op = look;
         match(look->Tag);
         Expression* right = parseFactor();
@@ -430,6 +512,26 @@ Expression* Parser::parseFactor() {
             return parseAccess(new IdentifierExpression(name));
         }
         
+        // 检查是否是结构体实例化
+        if (look->Tag == '{') {
+            string name = "";
+            if (idToken && idToken->Tag == Tag::ID) {
+                Word* wordToken = static_cast<Word*>(idToken);
+                name = wordToken ? wordToken->word : "";
+            }
+            return parseStructInstantiation(name);
+        }
+        
+        // 检查是否是类实例化
+        if (look->Tag == '(') {
+            string name = "";
+            if (idToken && idToken->Tag == Tag::ID) {
+                Word* wordToken = static_cast<Word*>(idToken);
+                name = wordToken ? wordToken->word : "";
+            }
+            return parseClassInstantiation(name);
+        }
+        
         // 普通标识符
         string name = "";
         if (idToken && idToken->Tag == Tag::ID) {
@@ -445,6 +547,9 @@ Expression* Parser::parseFactor() {
     } else if (look->Tag == STR) {
         // 字符串字面量
         return parseStringLiteral();
+    } else if (look->Tag == CHAR) {
+        // 字符字面量
+        return parseCharLiteral();
     } else if (look->Tag == '[') {
         // 数组字面量
         return parseArray();
@@ -457,7 +562,7 @@ Expression* Parser::parseFactor() {
         match(')');
         return expr;
     } else {
-        printf("Error: unexpected token in factor\n");
+        printf("SYNTAX ERROR line[%03d]: unexpected token in factor\n", lex.line);
         match(look->Tag);
         return nullptr;
     }
@@ -470,6 +575,15 @@ StringLiteral* Parser::parseStringLiteral() {
     string word = wordToken ? wordToken->word : "";
     match(STR);
     return new StringLiteral(word);
+}
+
+// 解析字符字面量
+CharExpression* Parser::parseCharLiteral() {
+    // 词法分析器已经处理了字符，直接获取当前token
+    Char* charToken = static_cast<Char*>(look);
+    char value = charToken ? charToken->value : '\0';
+    match(CHAR);
+    return new CharExpression(value);
 }
 
 // 解析数组字面量
@@ -632,4 +746,396 @@ FunctionDefinition* Parser::parseFunction() {
     FunctionPrototype* proto = parsePrototype();
     BlockStatement* body = parseBlock();
     return new FunctionDefinition(proto, body);
+}
+
+// 解析结构体定义
+StructDefinition* Parser::parseStruct() {
+    match(STRUCT);
+    
+    // 解析结构体名
+    Token* structNameToken = look;
+    match(ID);
+    
+    string structName = "";
+    if (structNameToken && structNameToken->Tag == Tag::ID) {
+        Word* wordToken = static_cast<Word*>(structNameToken);
+        structName = wordToken ? wordToken->word : "";
+    }
+    
+    match('{');
+    
+    vector<StructMember> members;
+    
+    while (look->Tag != '}') {
+        // 解析成员类型
+        Token* typeToken = look;
+        
+        // 支持基本类型和用户定义类型
+        if (look->Tag == ID || look->Tag == STR || look->Tag == INT || look->Tag == DOUBLE) {
+            match(look->Tag);
+        } else {
+            match(ID); // 默认情况
+        }
+        
+        string memberType = "";
+        if (typeToken) {
+            if (typeToken->Tag == Tag::ID) {
+                Word* wordToken = static_cast<Word*>(typeToken);
+                memberType = wordToken ? wordToken->word : "";
+            } else if (typeToken->Tag == Tag::STR) {
+                memberType = "string";
+            } else if (typeToken->Tag == Tag::INT) {
+                memberType = "int";
+            } else if (typeToken->Tag == Tag::DOUBLE) {
+                memberType = "double";
+            }
+        }
+        
+        // 解析成员名
+        Token* memberNameToken = look;
+        match(ID);
+        
+        string memberName = "";
+        if (memberNameToken && memberNameToken->Tag == Tag::ID) {
+            Word* wordToken = static_cast<Word*>(memberNameToken);
+            memberName = wordToken ? wordToken->word : "";
+        }
+        
+        Expression* defaultValue = nullptr;
+        
+        // 检查是否有默认值
+        if (look->Tag == '=') {
+            match('=');
+            defaultValue = parseExpression();
+        }
+        
+        match(';');
+        
+        members.push_back(StructMember(memberName, memberType, defaultValue));
+    }
+    
+    match('}');
+    
+    return new StructDefinition(structName, members);
+}
+
+// 解析类定义
+ClassDefinition* Parser::parseClass() {
+    match(CLASS);
+    
+    // 解析类名
+    Token* classNameToken = look;
+    match(ID);
+    
+    string className = "";
+    if (classNameToken && classNameToken->Tag == Tag::ID) {
+        Word* wordToken = static_cast<Word*>(classNameToken);
+        className = wordToken ? wordToken->word : "";
+    }
+    
+    string baseClass = "";
+    
+    // 检查是否有继承
+    if (look->Tag == ':') {
+        match(':');
+        Token* baseToken = look;
+        match(ID);
+        
+        if (baseToken && baseToken->Tag == Tag::ID) {
+            Word* wordToken = static_cast<Word*>(baseToken);
+            baseClass = wordToken ? wordToken->word : "";
+        }
+    }
+    
+    match('{');
+    
+    vector<ClassMember> members;
+    vector<ClassMethod> methods;
+    
+    while (look->Tag != '}') {
+        if (look->Tag == PUBLIC || look->Tag == PRIVATE || look->Tag == PROTECTED) {
+            // 解析成员变量
+            string visibility = "";
+            if (look->Tag == PUBLIC) {
+                match(PUBLIC);
+                visibility = "public";
+            } else if (look->Tag == PRIVATE) {
+                match(PRIVATE);
+                visibility = "private";
+            } else if (look->Tag == PROTECTED) {
+                match(PROTECTED);
+                visibility = "protected";
+            }
+            
+            // 解析类型和名称
+            Token* typeToken = look;
+            
+            // 支持基本类型和用户定义类型
+            if (look->Tag == ID || look->Tag == STR || look->Tag == INT || look->Tag == DOUBLE) {
+                match(look->Tag);
+            } else {
+                match(ID); // 默认情况
+            }
+            
+            string memberType = "";
+            if (typeToken) {
+                if (typeToken->Tag == Tag::ID) {
+                    Word* wordToken = static_cast<Word*>(typeToken);
+                    memberType = wordToken ? wordToken->word : "";
+                } else if (typeToken->Tag == Tag::STR) {
+                    memberType = "string";
+                } else if (typeToken->Tag == Tag::INT) {
+                    memberType = "int";
+                } else if (typeToken->Tag == Tag::DOUBLE) {
+                    memberType = "double";
+                }
+            }
+            
+            Token* memberNameToken = look;
+            match(ID);
+            
+            string memberName = "";
+            if (memberNameToken && memberNameToken->Tag == Tag::ID) {
+                Word* wordToken = static_cast<Word*>(memberNameToken);
+                memberName = wordToken ? wordToken->word : "";
+            }
+            
+            Expression* defaultValue = nullptr;
+            
+            if (look->Tag == '=') {
+                match('=');
+                defaultValue = parseExpression();
+            }
+            
+            match(';');
+            
+            members.push_back(ClassMember(memberName, memberType, visibility, defaultValue));
+        } else if (look->Tag == FUNCTION) {
+            // 解析方法
+            methods.push_back(*parseClassMethod());
+        } else {
+            // 默认public成员
+            Token* typeToken = look;
+            
+            // 支持基本类型和用户定义类型
+            if (look->Tag == ID || look->Tag == STR || look->Tag == INT || look->Tag == DOUBLE) {
+                match(look->Tag);
+            } else {
+                match(ID); // 默认情况
+            }
+            
+            string memberType = "";
+            if (typeToken) {
+                if (typeToken->Tag == Tag::ID) {
+                    Word* wordToken = static_cast<Word*>(typeToken);
+                    memberType = wordToken ? wordToken->word : "";
+                } else if (typeToken->Tag == Tag::STR) {
+                    memberType = "string";
+                } else if (typeToken->Tag == Tag::INT) {
+                    memberType = "int";
+                } else if (typeToken->Tag == Tag::DOUBLE) {
+                    memberType = "double";
+                }
+            }
+            
+            Token* memberNameToken = look;
+            match(ID);
+            
+            string memberName = "";
+            if (memberNameToken && memberNameToken->Tag == Tag::ID) {
+                Word* wordToken = static_cast<Word*>(memberNameToken);
+                memberName = wordToken ? wordToken->word : "";
+            }
+            
+            Expression* defaultValue = nullptr;
+            
+            if (look->Tag == '=') {
+                match('=');
+                defaultValue = parseExpression();
+            }
+            
+            match(';');
+            
+            members.push_back(ClassMember(memberName, memberType, "public", defaultValue));
+        }
+    }
+    
+    match('}');
+    
+    return new ClassDefinition(className, members, methods, baseClass);
+}
+
+// 解析类方法
+ClassMethod* Parser::parseClassMethod() {
+    match(FUNCTION);
+    
+    // 解析方法名
+    Token* methodNameToken = look;
+    match(ID);
+    
+    string methodName = "";
+    if (methodNameToken && methodNameToken->Tag == Tag::ID) {
+        Word* wordToken = static_cast<Word*>(methodNameToken);
+        methodName = wordToken ? wordToken->word : "";
+    }
+    
+    // 解析参数列表
+    match('(');
+    vector<string> parameters;
+    
+    if (look->Tag != ')') {
+        Token* paramToken = look;
+        match(ID);
+        
+        string paramName = "";
+        if (paramToken && paramToken->Tag == Tag::ID) {
+            Word* wordToken = static_cast<Word*>(paramToken);
+            paramName = wordToken ? wordToken->word : "";
+        }
+        parameters.push_back(paramName);
+        
+        while (look->Tag == ',') {
+            match(',');
+            paramToken = look;
+            match(ID);
+            
+            paramName = "";
+            if (paramToken && paramToken->Tag == Tag::ID) {
+                Word* wordToken = static_cast<Word*>(paramToken);
+                paramName = wordToken ? wordToken->word : "";
+            }
+            parameters.push_back(paramName);
+        }
+    }
+    
+    match(')');
+    
+    // 解析方法体
+    BlockStatement* body = parseBlock();
+    
+    return new ClassMethod(methodName, parameters, "void", "public", body);
+}
+
+// 解析结构体实例化
+Expression* Parser::parseStructInstantiation(const string& structName) {
+    match('{');
+    
+    map<string, Expression*> fieldValues;
+    
+    if (look->Tag != '}') {
+        // 解析第一个字段
+        Token* fieldNameToken = look;
+        match(ID);
+        
+        string fieldName = "";
+        if (fieldNameToken && fieldNameToken->Tag == Tag::ID) {
+            Word* wordToken = static_cast<Word*>(fieldNameToken);
+            fieldName = wordToken ? wordToken->word : "";
+        }
+        
+        match(':');
+        Expression* value = parseExpression();
+        fieldValues[fieldName] = value;
+        
+        // 解析更多字段
+        while (look->Tag == ',') {
+            match(',');
+            
+            fieldNameToken = look;
+            match(ID);
+            
+            fieldName = "";
+            if (fieldNameToken && fieldNameToken->Tag == Tag::ID) {
+                Word* wordToken = static_cast<Word*>(fieldNameToken);
+                fieldName = wordToken ? wordToken->word : "";
+            }
+            
+            match(':');
+            value = parseExpression();
+            fieldValues[fieldName] = value;
+        }
+    }
+    
+    match('}');
+    
+    return new StructInstantiationExpression(structName, fieldValues);
+}
+
+// 解析类实例化
+Expression* Parser::parseClassInstantiation(const string& className) {
+    match('(');
+    
+    vector<Expression*> arguments;
+    
+    if (look->Tag != ')') {
+        arguments.push_back(parseExpression());
+        
+        while (look->Tag == ',') {
+            match(',');
+            arguments.push_back(parseExpression());
+        }
+    }
+    
+    match(')');
+    
+    return new ClassInstantiationExpression(className, arguments);
+}
+
+// 解析成员访问
+Expression* Parser::parseMemberAccess() {
+    Expression* object = parseExpression();
+    
+    while (look->Tag == '.') {
+        match('.');
+        
+        Token* memberToken = look;
+        match(ID);
+        
+        string memberName = "";
+        if (memberToken && memberToken->Tag == Tag::ID) {
+            Word* wordToken = static_cast<Word*>(memberToken);
+            memberName = wordToken ? wordToken->word : "";
+        }
+        
+        object = new MemberAccessExpression(object, memberName);
+    }
+    
+    return object;
+}
+
+// 解析方法调用
+Expression* Parser::parseMethodCall() {
+    Expression* object = parseExpression();
+    
+    while (look->Tag == '.') {
+        match('.');
+        
+        Token* methodToken = look;
+        match(ID);
+        
+        string methodName = "";
+        if (methodToken && methodToken->Tag == Tag::ID) {
+            Word* wordToken = static_cast<Word*>(methodToken);
+            methodName = wordToken ? wordToken->word : "";
+        }
+        
+        match('(');
+        
+        vector<Expression*> arguments;
+        
+        if (look->Tag != ')') {
+            arguments.push_back(parseExpression());
+            
+            while (look->Tag == ',') {
+                match(',');
+                arguments.push_back(parseExpression());
+            }
+        }
+        
+        match(')');
+        
+        object = new MethodCallExpression(object, methodName, arguments);
+    }
+    
+    return object;
 }

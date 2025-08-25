@@ -1,0 +1,22 @@
+// 简单的结构体和类测试
+
+// 定义结构体
+struct Person {
+    string name;
+    int age;
+}
+
+// 定义类
+class Student {
+    public string name;
+    public int age;
+    public int grade;
+}
+
+// 测试结构体实例化
+let person1 = Person {name: "John", age: 25};
+print("Person: " + person1.name + ", Age: " + person1.age + "\n");
+
+// 测试类实例化
+let student1 = Student("Alice", 20, 85);
+print("Student: " + student1.name + ", Age: " + student1.age + ", Grade: " + student1.grade + "\n");

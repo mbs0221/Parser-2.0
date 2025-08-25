@@ -1,0 +1,4 @@
+let i = 0;
+print("Before assignment: i = " + i + "\n");
+i = 1;
+print("After assignment: i = " + i + "\n");

@@ -1,0 +1,8 @@
+let num = 42;
+let str = "Hello";
+let mixed1 = num + str;
+print("num + str = " . mixed1);
+let mixed2 = str + num;
+print("str + num = " . mixed2);
+let result = "The answer is " . mixed1;
+print(result);

@@ -1,0 +1,78 @@
+let a = 10;
+let b = 5;
+let c = 0;
+
+function println(str) {
+    print(str + "\n");
+}
+
+c = a + b;
+println("a + b = " + c);
+
+c = a - b;
+println("a - b = " + c);
+
+c = a * b;
+println("a * b = " + c);
+
+c = a / b;
+println("a / b = " + c);
+
+c = a % b;
+println("a % b = " + c);
+
+let arr = [1, 2, 3, 4, 5];
+let arr_size = count(arr);
+println("Array size: " + arr_size);
+
+let str1 = "Hello";
+let str2 = "World";
+let combined = str1 + " " + str2;
+println("Combined: " + combined);
+
+let x = 10;
+let y = 5;
+println("x > y: " + (x > y));
+println("x == y: " + (x == y));
+println("x != y: " + (x != y));
+println("x && y: " + (x && y));
+println("!x: " + (!x));
+
+if (x > y) {
+    println("x is greater than y");
+} else {
+    println("x is not greater than y");
+}
+
+let i = 0;
+while (i < 3) {
+    println("i = " + i);
+    i = i + 1;
+}
+
+function add(a, b) {
+    return a + b;
+}
+
+function factorial(n) {
+    if (n <= 1) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+let result1 = add(10, 20);
+println("add(10, 20) = " + result1);
+
+let result2 = factorial(5);
+println("factorial(5) = " + result2);
+
+let person = {
+    "name": "John",
+    "age": 30,
+    "city": "New York"
+};
+
+println("Person name: " + person["name"]);
+println("Person age: " + person["age"]);

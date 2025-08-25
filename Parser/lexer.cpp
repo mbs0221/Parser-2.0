@@ -37,6 +37,11 @@ Lexer::Lexer(){
 	words["switch"] = new Word(SWITCH, "switch");
 	words["default"] = new Word(DEFAULT, "default");
 	words["function"] = new Word(FUNCTION, "function");
+	words["struct"] = new Word(STRUCT, "struct");
+	words["class"] = new Word(CLASS, "class");
+	words["public"] = new Word(PUBLIC, "public");
+	words["private"] = new Word(PRIVATE, "private");
+	words["protected"] = new Word(PROTECTED, "protected");
 }
 
 Lexer::~Lexer(){
@@ -54,7 +59,7 @@ bool Lexer::open(string file){
 
 Token *Lexer::scan(){//LL(1)
 	if (inf.eof()){
-		return new Token(EOF);
+		return new Token(END_OF_FILE);
 	}
 	while (inf.read(&peek, 1)){
 		column++;
@@ -104,13 +109,23 @@ Token *Lexer::match_char(){
 		case '\"':c = '"'; break;
 		case '?':c = '\?'; break;
 		case '0':c = '\0'; break;
-		default:c = '\\'; c = peek; break;
+		default:
+			printf("LEXICAL ERROR line[%03d]: invalid escape sequence '\\%c'\n", line, peek);
+			exit(1);  // 强制退出
 		}
-		inf.read(&peek, 1);// '\a'
+		inf.read(&peek, 1);// 读取结束引号
 	}else{
 		c = peek;
+		inf.read(&peek, 1);// 读取结束引号
 	}
-	return new Integer(c);
+	
+	// 检查是否遇到结束引号
+	if (peek != '\'') {
+		printf("LEXICAL ERROR line[%03d]: unterminated character literal\n", line);
+		exit(1);  // 强制退出
+	}
+	
+	return new Char(c);
 }
 
 Token *Lexer::match_id(){
@@ -278,8 +293,20 @@ Token *Lexer::match_other(){
 			return new Token('|');
 		}
 	} else {
-		// 单字符运算符
-		return new Token(peek);
+		// 检查是否为可识别的字符
+		if (peek >= 32 && peek <= 126) {  // 可打印ASCII字符
+			// 单字符运算符
+			return new Token(peek);
+		} else if (peek == '\n' || peek == '\r') {
+			// 忽略换行符，继续扫描下一个字符
+			column = 0;
+			line++;
+			return scan();
+		} else {
+			// 无法识别的字符
+			printf("LEXICAL ERROR line[%03d]: unrecognized character '\\x%02x'\n", line, (unsigned char)peek);
+			exit(1);  // 强制退出
+		}
 	}
 }
 
@@ -323,6 +350,10 @@ Token *Lexer::match_string(){
 	
 	// 读取字符串内容，直到遇到结束引号
 	while (peek != '"' && !inf.eof()) {
+		if (peek == '\n') {
+			printf("LEXICAL ERROR line[%03d]: unterminated string literal\n", line);
+			exit(1);  // 强制退出
+		}
 		if (peek == '\\') {
 			// 处理转义字符
 			inf.read(&peek, 1);

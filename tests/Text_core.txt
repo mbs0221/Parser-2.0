@@ -1,0 +1,55 @@
+let a = 10;
+let b = 5;
+
+print("a = " + a + "\n");
+print("b = " + b + "\n");
+
+let sum = a + b;
+print("sum = " + sum + "\n");
+
+let diff = a - b;
+print("diff = " + diff + "\n");
+
+let product = a * b;
+print("product = " + product + "\n");
+
+let quotient = a / b;
+print("quotient = " + quotient + "\n");
+
+let remainder = a % b;
+print("remainder = " + remainder + "\n");
+
+let arr = [1, 2, 3, 4, 5];
+let size = count(arr);
+print("Array size: " + size + "\n");
+
+let str1 = "Hello";
+let str2 = "World";
+let combined = str1 + " " + str2;
+print("Combined: " + combined + "\n");
+
+if (a > b) {
+    print("a is greater than b\n");
+} else {
+    print("a is not greater than b\n");
+}
+
+function add(x, y) {
+    return x + y;
+}
+
+function factorial(n) {
+    if (n <= 1) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+let result1 = add(15, 25);
+print("add(15, 25) = " + result1 + "\n");
+
+let result2 = factorial(4);
+print("factorial(4) = " + result2 + "\n");
+
+#

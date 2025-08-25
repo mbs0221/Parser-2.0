@@ -1,0 +1,131 @@
+# 全面功能测试
+
+print("=== 开始全面功能测试 ===");
+
+# 1. 基本变量声明和赋值
+let x = 10;
+let y = 20;
+let z = 30;
+print("变量声明测试: x=" . x . ", y=" . y . ", z=" . z);
+
+# 2. 算术运算
+let sum = x + y;
+let diff = y - x;
+let product = x * y;
+let quotient = y / x;
+print("算术运算测试:");
+print("  x + y = " . sum);
+print("  y - x = " . diff);
+print("  x * y = " . product);
+print("  y / x = " . quotient);
+
+# 3. 字符串操作
+let str1 = "Hello";
+let str2 = "World";
+let str3 = str1 . " " . str2;
+print("字符串操作测试:");
+print("  str1 = " . str1);
+print("  str2 = " . str2);
+print("  str1 . str2 = " . str3);
+print("  str1长度 = " . length(str1));
+
+# 4. 字符串字符访问
+let char0 = str1[0];
+let char1 = str1[1];
+let char2 = str1[2];
+print("字符串字符访问测试:");
+print("  str1[0] = " . char0);
+print("  str1[1] = " . char1);
+print("  str1[2] = " . char2);
+
+# 5. 数组操作
+let arr = [1, 2, 3, 4, 5];
+print("数组操作测试:");
+print("  数组 = " . arr);
+print("  数组长度 = " . count(arr));
+print("  arr[0] = " . arr[0]);
+print("  arr[2] = " . arr[2]);
+print("  arr[4] = " . arr[4]);
+
+# 6. 字典操作
+let person = {"name": "Alice", "age": 25, "city": "Beijing"};
+print("字典操作测试:");
+print("  person[\"name\"] = " . person["name"]);
+print("  person[\"age\"] = " . person["age"]);
+print("  person[\"city\"] = " . person["city"]);
+
+# 7. 条件语句
+print("条件语句测试:");
+if x < y then {
+    print("  x < y 为真");
+} else {
+    print("  x < y 为假");
+}
+
+if x > y then {
+    print("  x > y 为真");
+} else {
+    print("  x > y 为假");
+}
+
+# 8. 循环语句
+print("循环语句测试:");
+let i = 0;
+while i < 3 do {
+    print("  while循环: i = " . i);
+    i = i + 1;
+}
+
+for j = 0; j < 3; j = j + 1; {
+    print("  for循环: j = " . j);
+}
+
+# 9. 嵌套循环
+print("嵌套循环测试:");
+for i = 0; i < 2; i = i + 1; {
+    for j = 0; j < 2; j = j + 1; {
+        print("  i=" . i . ", j=" . j . ", i*j=" . (i * j));
+    }
+}
+
+# 10. 函数调用
+print("函数调用测试:");
+let testStr = "Testing";
+print("  length(\"" . testStr . "\") = " . length(testStr));
+
+let testArr = [10, 20, 30, 40];
+print("  count([10,20,30,40]) = " . count(testArr));
+
+# 11. 复杂表达式
+print("复杂表达式测试:");
+let complex1 = (x + y) * 2 - z;
+let complex2 = x * y / z + 5;
+print("  (x + y) * 2 - z = " . complex1);
+print("  x * y / z + 5 = " . complex2);
+
+# 12. 字符串拼接和数字转换
+print("字符串拼接和数字转换测试:");
+let message = "计算结果: x=" . x . ", y=" . y . ", 总和=" . (x + y);
+print("  " . message);
+
+# 13. 数组和字符串混合操作
+print("数组和字符串混合操作测试:");
+let words = ["Hello", "World", "Test"];
+print("  第一个单词: " . words[0]);
+print("  第一个单词长度: " . length(words[0]));
+print("  单词数量: " . count(words));
+
+# 14. 嵌套数据结构
+print("嵌套数据结构测试:");
+let data = {
+    "user": {
+        "name": "Bob",
+        "scores": [85, 90, 78]
+    },
+    "status": "active"
+};
+print("  用户名: " . data["user"]["name"]);
+print("  第一个分数: " . data["user"]["scores"][0]);
+print("  状态: " . data["status"]);
+
+print("=== 测试完成 ===");
