@@ -124,6 +124,11 @@ struct NumberExpression : public Expression {
         return NumberExpression((value != 0 || other.value != 0) ? 1 : 0);
     }
     
+    // 一元逻辑非操作符
+    NumberExpression operator!() const {
+        return NumberExpression(value == 0 ? 1 : 0);
+    }
+    
 
 };
 
@@ -142,6 +147,28 @@ struct IdentifierExpression : public Expression {
     }
 };
 
+// 一元表达式
+struct UnaryExpression : public Expression {
+    Token* operator_;  // 操作符Token
+    Expression* operand;
+    
+    UnaryExpression(Token* op, Expression* operand) 
+        : operator_(op), operand(operand) {}
+    
+    string toString() const override {
+        string opStr = "";
+        if (operator_) {
+            if (operator_->Tag == '!') {
+                opStr = "!";
+            } else {
+                Word* wordToken = static_cast<Word*>(operator_);
+                opStr = wordToken ? wordToken->word : "";
+            }
+        }
+        return "(" + opStr + (operand ? operand->toString() : "") + ")";
+    }
+};
+
 // 算术表达式
 struct ArithmeticExpression : public Expression {
     Expression* left;
@@ -154,8 +181,25 @@ struct ArithmeticExpression : public Expression {
     string toString() const override {
         string opStr = "";
         if (operator_) {
-            Word* wordToken = static_cast<Word*>(operator_);
-            opStr = wordToken ? wordToken->word : "";
+            // 处理单字符操作符
+            if (operator_->Tag == '+') opStr = "+";
+            else if (operator_->Tag == '-') opStr = "-";
+            else if (operator_->Tag == '*') opStr = "*";
+            else if (operator_->Tag == '/') opStr = "/";
+            else if (operator_->Tag == '%') opStr = "%";
+            else if (operator_->Tag == EQ) opStr = "==";
+            else if (operator_->Tag == NE) opStr = "!=";
+            else if (operator_->Tag == '<') opStr = "<";
+            else if (operator_->Tag == '>') opStr = ">";
+            else if (operator_->Tag == BE) opStr = "<=";
+            else if (operator_->Tag == GE) opStr = ">=";
+            else if (operator_->Tag == AND) opStr = "&&";
+            else if (operator_->Tag == OR) opStr = "||";
+            else {
+                // 尝试作为Word处理（用于其他操作符）
+                Word* wordToken = static_cast<Word*>(operator_);
+                opStr = wordToken ? wordToken->word : "";
+            }
         }
         return "(" + (left ? left->toString() : "") + " " + opStr + " " + (right ? right->toString() : "") + ")";
     }
@@ -170,7 +214,7 @@ struct StringConcatenationExpression : public Expression {
         : left(l), right(r) {}
     
     string toString() const override {
-        return "(" + (left ? left->toString() : "") + " . " + 
+        return "(" + (left ? left->toString() : "") + " + " + 
                (right ? right->toString() : "") + ")";
     }
 };

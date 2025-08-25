@@ -7,8 +7,18 @@
 #include <map>
 #include <vector>
 #include <functional>
+#include <iostream>
 
 using namespace std;
+
+// 返回值包装结构
+struct ReturnResult {
+    bool hasReturn;
+    Expression* value;
+    
+    ReturnResult() : hasReturn(false), value(nullptr) {}
+    ReturnResult(Expression* val) : hasReturn(true), value(val) {}
+};
 
 // 解释器类 - 负责AST的求值和作用域管理
 class Interpreter {
@@ -50,7 +60,8 @@ public:
     
     // AST求值方法
     Expression* evaluate(AST* node);
-    void execute(Statement* stmt);
+    Expression* evaluate(Expression* expr);
+    ReturnResult execute(Statement* stmt);
     void execute(Program* program);
 
     // 声明求值
@@ -60,6 +71,7 @@ public:
     Expression* evaluateExpression(Expression* expr);
 
     Expression* evaluateIdentifierExpression(IdentifierExpression* idExpr);
+    Expression* evaluateUnaryExpression(UnaryExpression* unary);
     Expression* evaluateArithmeticExpression(ArithmeticExpression* arith);
     Expression* evaluateStringLiteral(StringLiteral* strLit);
     Expression* evaluateArrayNode(ArrayNode* array);
@@ -69,11 +81,11 @@ public:
     Expression* evaluateCallExpression(CallExpression* call);
     
     // 语句执行
-    void executeExpressionStatement(ExpressionStatement* stmt);
-    void executeVariableDeclaration(VariableDeclaration* decl);
-    void executeIfStatement(IfStatement* ifStmt);
-    void executeWhileStatement(WhileStatement* whileStmt);
-    void executeBlockStatement(BlockStatement* block);
+    ReturnResult executeExpressionStatement(ExpressionStatement* stmt);
+    ReturnResult executeVariableDeclaration(VariableDeclaration* decl);
+    ReturnResult executeIfStatement(IfStatement* ifStmt);
+    ReturnResult executeWhileStatement(WhileStatement* whileStmt);
+    ReturnResult executeBlockStatement(BlockStatement* block);
     
     // 字符串运算
     Expression* stringConcatenation(Expression* left, Expression* right);

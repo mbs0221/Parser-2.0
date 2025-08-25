@@ -366,18 +366,9 @@ Expression* Parser::parseAdditive() {
     return left;
 }
 
-// 解析表达式（处理字符串拼接）
+// 解析表达式
 Expression* Parser::parseExpression() {
-    Expression* left = parseCompare();
-    
-    while (look->Tag == '.') {
-        Token* op = look;
-        match(look->Tag);
-        Expression* right = parseCompare();
-        left = new StringConcatenationExpression(left, right);
-    }
-    
-    return left;
+    return parseCompare();
 }
 
 // 解析比较运算
@@ -409,6 +400,17 @@ Expression* Parser::parseTerm() {
 
 // 解析因子
 Expression* Parser::parseFactor() {
+    // 处理一元操作符
+    if (look->Tag == '!') {
+        Token* op = look;
+        match('!');
+        Expression* operand = parseFactor();
+        if (!operand) return nullptr;
+        
+        // 创建一元表达式
+        return new UnaryExpression(op, operand);
+    }
+    
     if (look->Tag == ID) {
         Token* idToken = look;
         match(ID);
@@ -436,14 +438,9 @@ Expression* Parser::parseFactor() {
         }
         return new IdentifierExpression(name);
     } else if (look->Tag == NUM) {
-        Token* numToken = look;
+        Integer* intToken = static_cast<Integer*>(look);
+        int value = intToken ? intToken->value : 0;
         match(NUM);
-        
-        int value = 0;
-        if (numToken && numToken->Tag == Tag::NUM) {
-            Integer* intToken = static_cast<Integer*>(numToken);
-            value = intToken ? intToken->value : 0;
-        }
         return new NumberExpression(value);
     } else if (look->Tag == STR) {
         // 字符串字面量
@@ -470,8 +467,9 @@ Expression* Parser::parseFactor() {
 StringLiteral* Parser::parseStringLiteral() {
     // 词法分析器已经处理了字符串，直接获取当前token
     Word* wordToken = static_cast<Word*>(look);
+    string word = wordToken ? wordToken->word : "";
     match(STR);
-    return new StringLiteral(wordToken->word);
+    return new StringLiteral(word);
 }
 
 // 解析数组字面量
