@@ -3,21 +3,21 @@ let b = 5;
 
 // 逻辑运算
 let and_result = a > 0 && b > 0;
-print("and_result = " . and_result);
+print("and_result = " + and_result);
 
 let or_result = a > 20 || b > 10;
-print("or_result = " . or_result);
+print("or_result = " + or_result);
 
 let not_result = !(a > 0);
-print("not_result = " . not_result);
+print("not_result = " + not_result);
 
 // 比较运算
 let eq = a == b;
-print("eq = " . eq);
+print("eq = " + eq);
 
 let gt = a > b;
-print("gt = " . gt);
+print("gt = " + gt);
 
 // 混合运算
-let mixed = "结果: " . (a > b && b > 0);
+let mixed = "结果: " + (a > b && b > 0);
 print(mixed);

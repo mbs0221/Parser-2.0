@@ -366,9 +366,9 @@ Token *Lexer::match_string(){
 				case '\'': str += '\''; break;
 				case '0': str += '\0'; break;
 				default: 
-					// 未知转义字符，保持原样
-					str += '\\'; 
-					str += peek; 
+					// 无效转义字符，报错
+					printf("LEXICAL ERROR line[%03d]: invalid escape sequence '\\%c'\n", line, peek);
+					exit(1);  // 强制退出
 					break;
 			}
 		} else {

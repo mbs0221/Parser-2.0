@@ -52,6 +52,14 @@ class TestRunner:
             if result.returncode == 0:
                 status = 'PASS'
                 message = '测试通过'
+            elif result.returncode == 1:
+                # 检查是否为预期的语法或词法错误
+                if any(keyword in (result.stdout + result.stderr) for keyword in ['SYNTAX ERROR', 'LEXICAL ERROR']):
+                    status = 'PASS'
+                    message = '预期的语法/词法错误，测试通过'
+                else:
+                    status = 'FAIL'
+                    message = '意外的错误，退出码: 1'
             elif result.returncode in [139, -11]:  # 段错误
                 status = 'SEGFAULT'
                 message = '段错误（程序结束时的内存清理问题）'

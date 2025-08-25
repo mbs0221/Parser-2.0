@@ -5,104 +5,108 @@ let a = 10;
 let b = 5;
 let c = 3;
 
-print("=== 基本算术运算 ===");
-print("a = " . a);
-print("b = " . b);
-print("c = " . c);
+function println(x) {
+    print(x + "\n");
+}
+
+println("=== 基本算术运算 ===");
+println("a = " + a);
+println("b = " + b);
+println("c = " + c);
 
 let sum = a + b;
-print("a + b = " . sum);
+println("a + b = " + sum);
 
 let diff = a - b;
-print("a - b = " . diff);
+println("a - b = " + diff);
 
 let product = a * b;
-print("a * b = " . product);
+println("a * b = " + product);
 
 let quotient = a / b;
-print("a / b = " . quotient);
+println("a / b = " + quotient);
 
 let remainder = a % c;
-print("a % c = " . remainder);
+println("a % c = " + remainder);
 
 // 比较运算
-print("=== 比较运算 ===");
+println("=== 比较运算 ===");
 let eq = a == b;
-print("a == b: " . eq);
+println("a == b: " + eq);
 
 let ne = a != b;
-print("a != b: " . ne);
+println("a != b: " + ne);
 
 let lt = a < b;
-print("a < b: " . lt);
+println("a < b: " + lt);
 
 let gt = a > b;
-print("a > b: " . gt);
+println("a > b: " + gt);
 
 let le = a <= b;
-print("a <= b: " . le);
+println("a <= b: " + le);
 
 let ge = a >= b;
-print("a >= b: " . ge);
+println("a >= b: " + ge);
 
 // 逻辑运算
-print("=== 逻辑运算 ===");
+println("=== 逻辑运算 ===");
 let and_result = a > 0 && b > 0;
-print("a > 0 && b > 0: " . and_result);
+println("a > 0 && b > 0: " + and_result);
 
 let or_result = a > 20 || b > 10;
-print("a > 20 || b > 10: " . or_result);
+println("a > 20 || b > 10: " + or_result);
 
 let not_and = !(a > 0 && b > 0);
-print("!(a > 0 && b > 0): " . not_and);
+println("!(a > 0 && b > 0): " + not_and);
 
 // 复杂表达式
-print("=== 复杂表达式 ===");
+println("=== 复杂表达式 ===");
 let complex1 = (a + b) * c - (a / b);
-print("(a + b) * c - (a / b) = " . complex1);
+println("(a + b) * c - (a / b) = " + complex1);
 
 let complex2 = a > b && c < a || b == 5;
-print("a > b && c < a || b == 5: " . complex2);
+println("a > b && c < a || b == 5: " + complex2);
 
 // 条件语句测试
-print("=== 条件语句测试 ===");
+println("=== 条件语句测试 ===");
 if a > b then {
-    print("a 大于 b");
+    println("a 大于 b");
 } else {
-    print("a 不大于 b");
+    println("a 不大于 b");
 }
 
 if a == 10 && b == 5 then {
-    print("a 等于 10 且 b 等于 5");
+    println("a 等于 10 且 b 等于 5");
 } else {
-    print("条件不满足");
+    println("条件不满足");
 }
 
 // 循环测试
-print("=== 循环测试 ===");
+println("=== 循环测试 ===");
 let i = 0;
 while i < 5 do {
-    print("i = " . i);
+    println("i = " + i);
     i = i + 1;
 }
 
 // 字符串和数字混合运算
-print("=== 字符串和数字混合运算 ===");
+println("=== 字符串和数字混合运算 ===");
 let str = "Hello";
 let num = 123;
-let mixed = str . " " . num;
-print("字符串拼接: " . mixed);
+let mixed = str + " " + num;
+println("字符串拼接: " + mixed);
 
 // 数组操作
-print("=== 数组操作 ===");
+println("=== 数组操作 ===");
 let arr = [1, 2, 3, 4, 5];
-print("数组长度: " . count(arr));
-print("第一个元素: " . arr[0]);
-print("最后一个元素: " . arr[4]);
+println("数组长度: " + count(arr));
+println("第一个元素: " + arr[0]);
+println("最后一个元素: " + arr[4]);
 
 // 字典操作
-print("=== 字典操作 ===");
+println("=== 字典操作 ===");
 let person = {"name": "Alice", "age": 25};
-print("姓名: " . person["name"]);
-print("年龄: " . person["age"]);
+println("姓名: " + person["name"]);
+println("年龄: " + person["age"]);
 

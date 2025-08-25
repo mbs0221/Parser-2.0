@@ -1,0 +1,5 @@
+let x = 1;
+print("x = " + x + "\n");
+let y = 2 + 3;
+let z = 4 + 5;
+let w = 6 + 7;
