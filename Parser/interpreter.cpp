@@ -607,10 +607,16 @@ Expression* Interpreter::executeFunction(FunctionDefinition* funcDef, vector<Exp
         }
     }
     
+    // 复制返回值以避免内存问题
+    Expression* returnValue = nullptr;
+    if (result) {
+        returnValue = evaluate(result);
+    }
+    
     // 退出作用域
     exitScope();
     
-    return result;
+    return returnValue;
 }
 
 // 执行函数定义
