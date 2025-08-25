@@ -1,0 +1,12 @@
+// 测试单个函数
+
+function abs(x) {
+    if (x < 0) {
+        return -x;
+    } else {
+        return x;
+    }
+}
+
+let result = abs(-10);
+print("abs(-10) = " + result + "\n");

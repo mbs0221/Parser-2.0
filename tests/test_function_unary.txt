@@ -1,0 +1,15 @@
+// 测试函数中的一元负号
+
+function abs(x) {
+    if (x < 0) {
+        return -x;
+    } else {
+        return x;
+    }
+}
+
+let result1 = abs(-10);
+print("abs(-10) = " + result1 + "\n");
+
+let result2 = abs(5);
+print("abs(5) = " + result2 + "\n");

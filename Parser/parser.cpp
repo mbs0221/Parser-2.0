@@ -483,9 +483,9 @@ Expression* Parser::parseTerm() {
 // 解析因子
 Expression* Parser::parseFactor() {
     // 处理一元操作符
-    if (look->Tag == '!') {
+    if (look->Tag == '!' || look->Tag == '-') {
         Token* op = look;
-        match('!');
+        match(look->Tag);
         Expression* operand = parseFactor();
         if (!operand) return nullptr;
         

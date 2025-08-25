@@ -253,6 +253,15 @@ Expression* Interpreter::evaluateUnaryExpression(UnaryExpression* unary) {
                 return new NumberExpression(boolValue ? 0 : 1);
             }
         }
+        case '-': {
+            // 一元负号操作 - 使用运算符重载
+            if (NumberExpression* numExpr = dynamic_cast<NumberExpression*>(operand)) {
+                return new NumberExpression(-(*numExpr));
+            } else {
+                cout << "Error: Unary minus requires numeric operand" << endl;
+                return nullptr;
+            }
+        }
         default:
             cout << "Error: Unknown unary operator Tag " << unary->operator_->Tag << endl;
             return nullptr;
@@ -574,8 +583,12 @@ Expression* Interpreter::executeFunction(FunctionDefinition* funcDef, vector<Exp
     // 绑定参数到局部变量
     const vector<string>& params = funcDef->prototype->parameters;
     for (size_t i = 0; i < params.size() && i < args.size(); ++i) {
-        defineVariable(params[i], args[i]);
-        LOG_DEBUG("Bound parameter '" + params[i] + "' = " + args[i]->toString());
+        // 复制参数以避免内存问题
+        Expression* paramValue = evaluate(args[i]);
+        if (paramValue) {
+            defineVariable(params[i], paramValue);
+            LOG_DEBUG("Bound parameter '" + params[i] + "' = " + paramValue->toString());
+        }
     }
     
     // 执行函数体

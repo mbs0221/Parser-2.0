@@ -131,6 +131,11 @@ struct NumberExpression : public Expression {
         return NumberExpression(value == 0 ? 1 : 0);
     }
     
+    // 一元负号操作符
+    NumberExpression operator-() const {
+        return NumberExpression(-value);
+    }
+    
 
 };
 
@@ -162,6 +167,8 @@ struct UnaryExpression : public Expression {
         if (operator_) {
             if (operator_->Tag == '!') {
                 opStr = "!";
+            } else if (operator_->Tag == '-') {
+                opStr = "-";
             } else {
                 Word* wordToken = static_cast<Word*>(operator_);
                 opStr = wordToken ? wordToken->word : "";

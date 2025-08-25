@@ -1,0 +1,8 @@
+// 基本函数测试
+
+function add(x, y) {
+    return x + y;
+}
+
+let result = add(5, 3);
+print("add(5, 3) = " + result + "\n");
