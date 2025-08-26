@@ -1,0 +1,28 @@
+// 简单的continue测试
+
+let i = 0;
+let sum = 0;
+
+print("Starting loop:\n");
+
+while (i < 5) {
+    i = i + 1;
+    
+    if (i == 3) {
+        print("Skipping i = ");
+        print(i);
+        print("\n");
+        continue;
+    }
+    
+    sum = sum + i;
+    print("i = ");
+    print(i);
+    print(", sum = ");
+    print(sum);
+    print("\n");
+}
+
+print("Final sum = ");
+print(sum);
+print("\n");

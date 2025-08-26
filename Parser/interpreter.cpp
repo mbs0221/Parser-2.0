@@ -740,6 +740,10 @@ ReturnResult Interpreter::execute(Statement* stmt) {
     } else if (ClassDefinition* classDef = dynamic_cast<ClassDefinition*>(stmt)) {
         registerClassDefinition(classDef);
         return ReturnResult();
+    } else if (BreakStatement* breakStmt = dynamic_cast<BreakStatement*>(stmt)) {
+        return ReturnResult::Break();
+    } else if (ContinueStatement* continueStmt = dynamic_cast<ContinueStatement*>(stmt)) {
+        return ReturnResult::Continue();
     } else if (ReturnStatement* returnStmt = dynamic_cast<ReturnStatement*>(stmt)) {
         Expression* value = executeReturn(returnStmt);
         return ReturnResult(value);
@@ -846,8 +850,8 @@ ReturnResult Interpreter::executeIfStatement(IfStatement* ifStmt) {
         enterScope();
         ReturnResult result = execute(ifStmt->thenBranch);
         exitScope();  // 退出then分支作用域
-        if (result.hasReturn) {
-            return result;  // 传递return值
+        if (result.hasReturn || result.hasBreak || result.hasContinue) {
+            return result;  // 传递return、break或continue值
         }
     } else if (!conditionValue && ifStmt->elseBranch) {
         LOG_DEBUG("Executing else branch");
@@ -855,8 +859,8 @@ ReturnResult Interpreter::executeIfStatement(IfStatement* ifStmt) {
         enterScope();
         ReturnResult result = execute(ifStmt->elseBranch);
         exitScope();  // 退出else分支作用域
-        if (result.hasReturn) {
-            return result;  // 传递return值
+        if (result.hasReturn || result.hasBreak || result.hasContinue) {
+            return result;  // 传递return、break或continue值
         }
     }
     
@@ -895,12 +899,24 @@ ReturnResult Interpreter::executeWhileStatement(WhileStatement* whileStmt) {
                 if (result.hasReturn) {
                     return result;  // 传递return值
                 }
+                if (result.hasBreak) {
+                    return ReturnResult();  // 退出循环
+                }
+                if (result.hasContinue) {
+                    break;  // 跳过当前迭代，继续下一次循环
+                }
             }
         } else {
             // 如果不是块语句，正常执行
             result = execute(whileStmt->body);
             if (result.hasReturn) {
                 return result;  // 传递return值
+            }
+            if (result.hasBreak) {
+                return ReturnResult();  // 退出循环
+            }
+            if (result.hasContinue) {
+                continue;  // 跳过当前迭代，继续下一次循环
             }
         }
     }
@@ -916,9 +932,9 @@ ReturnResult Interpreter::executeBlockStatement(BlockStatement* block) {
     
     for (Statement* stmt : block->statements) {
         ReturnResult result = execute(stmt);
-        if (result.hasReturn) {
+        if (result.hasReturn || result.hasBreak || result.hasContinue) {
             exitScope();
-            return result;  // 传递return值
+            return result;  // 传递return、break或continue值
         }
     }
     

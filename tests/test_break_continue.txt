@@ -1,0 +1,46 @@
+// 测试break和continue语句功能
+
+let i = 0;
+let sum = 0;
+
+// 测试break语句
+print("Testing break statement:\n");
+while (i < 10) {
+    i = i + 1;
+    if (i == 5) {
+        print("Breaking at i = ");
+        print(i);
+        print("\n");
+        break;
+    }
+    print("i = ");
+    print(i);
+    print("\n");
+}
+
+print("After break, i = ");
+print(i);
+print("\n\n");
+
+// 测试continue语句
+let j = 0;
+print("Testing continue statement:\n");
+while (j < 10) {
+    j = j + 1;
+    if (j == 3 || j == 7) {
+        print("Skipping j = ");
+        print(j);
+        print("\n");
+        continue;
+    }
+    sum = sum + j;
+    print("j = ");
+    print(j);
+    print(", sum = ");
+    print(sum);
+    print("\n");
+}
+
+print("Final sum = ");
+print(sum);
+print("\n");

@@ -15,10 +15,26 @@ using namespace std;
 // 返回值包装结构
 struct ReturnResult {
     bool hasReturn;
+    bool hasBreak;
+    bool hasContinue;
     Expression* value;
     
-    ReturnResult() : hasReturn(false), value(nullptr) {}
-    ReturnResult(Expression* val) : hasReturn(true), value(val) {}
+    ReturnResult() : hasReturn(false), hasBreak(false), hasContinue(false), value(nullptr) {}
+    ReturnResult(Expression* val) : hasReturn(true), hasBreak(false), hasContinue(false), value(val) {}
+    
+    // 创建break结果
+    static ReturnResult Break() {
+        ReturnResult result;
+        result.hasBreak = true;
+        return result;
+    }
+    
+    // 创建continue结果
+    static ReturnResult Continue() {
+        ReturnResult result;
+        result.hasContinue = true;
+        return result;
+    }
 };
 
 // 解释器类 - 负责AST的求值和作用域管理
