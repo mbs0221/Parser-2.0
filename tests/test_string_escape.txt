@@ -38,4 +38,4 @@ print("Concatenated with escapes: " + result);
 let testStr = "Hello";
 print("First char: " + testStr[0]);
 print("Second char: " + testStr[1]);
-print("Length: " + length(testStr));
+print("Length: " + count(testStr));

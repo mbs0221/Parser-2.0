@@ -365,3 +365,156 @@ Expression* TypeCastOptimizer::createCastExpressionForType(Expression* expr, Exp
     // 默认转换为整数
     return new CastExpression<IntExpression>(expr);
 }
+
+// 添加缺失的visit方法实现
+void TypeCastOptimizer::visit(MethodCallExpression* expr) {
+    if (!expr) return;
+    
+    if (expr->object) {
+        expr->object = optimize(expr->object);
+    }
+    for (auto& arg : expr->arguments) {
+        if (arg) {
+            arg = optimize(arg);
+        }
+    }
+}
+
+void TypeCastOptimizer::visit(CastExpression<IntExpression>* expr) {
+    if (!expr) return;
+    
+    if (expr->operand) {
+        expr->operand = optimize(expr->operand);
+    }
+}
+
+void TypeCastOptimizer::visit(CastExpression<DoubleExpression>* expr) {
+    if (!expr) return;
+    
+    if (expr->operand) {
+        expr->operand = optimize(expr->operand);
+    }
+}
+
+void TypeCastOptimizer::visit(CastExpression<StringLiteral>* expr) {
+    if (!expr) return;
+    
+    if (expr->operand) {
+        expr->operand = optimize(expr->operand);
+    }
+}
+
+void TypeCastOptimizer::visit(CastExpression<CharExpression>* expr) {
+    if (!expr) return;
+    
+    if (expr->operand) {
+        expr->operand = optimize(expr->operand);
+    }
+}
+
+void TypeCastOptimizer::visit(CastExpression<BoolExpression>* expr) {
+    if (!expr) return;
+    
+    if (expr->operand) {
+        expr->operand = optimize(expr->operand);
+    }
+}
+
+void TypeCastOptimizer::visit(StructInstantiationExpression* expr) {
+    // 暂时简单实现
+}
+
+void TypeCastOptimizer::visit(ClassInstantiationExpression* expr) {
+    // 暂时简单实现
+}
+
+void TypeCastOptimizer::visit(MemberAccessExpression* expr) {
+    // 暂时简单实现
+}
+
+void TypeCastOptimizer::visit(StructDefinition* stmt) {
+    if (!stmt) return;
+    
+    for (auto& member : stmt->members) {
+        if (member.defaultValue) {
+            member.defaultValue = optimize(member.defaultValue);
+        }
+    }
+}
+
+void TypeCastOptimizer::visit(ThrowStatement* stmt) {
+    if (!stmt) return;
+    
+    if (stmt->expression) {
+        stmt->expression = optimize(stmt->expression);
+    }
+}
+
+void TypeCastOptimizer::visit(TryStatement* stmt) {
+    if (!stmt) return;
+    
+    if (stmt->tryBlock) {
+        stmt->tryBlock = optimize(stmt->tryBlock);
+    }
+    if (stmt->catchBlock) {
+        stmt->catchBlock = optimize(stmt->catchBlock);
+    }
+    if (stmt->finallyBlock) {
+        stmt->finallyBlock = optimize(stmt->finallyBlock);
+    }
+}
+
+void TypeCastOptimizer::visit(CatchStatement* stmt) {
+    if (!stmt) return;
+    
+    if (stmt->body) {
+        stmt->body = optimize(stmt->body);
+    }
+}
+
+void TypeCastOptimizer::visit(FinallyStatement* stmt) {
+    if (!stmt) return;
+    
+    if (stmt->body) {
+        stmt->body = optimize(stmt->body);
+    }
+}
+
+void TypeCastOptimizer::visit(SwitchStatement* stmt) {
+    if (!stmt) return;
+    
+    if (stmt->expression) {
+        stmt->expression = optimize(stmt->expression);
+    }
+    for (auto& caseStmt : stmt->cases) {
+        if (caseStmt) {
+            caseStmt = optimize(caseStmt);
+        }
+    }
+    if (stmt->defaultCase) {
+        stmt->defaultCase = optimize(stmt->defaultCase);
+    }
+}
+
+void TypeCastOptimizer::visit(CaseStatement* stmt) {
+    if (!stmt) return;
+    
+    if (stmt->expression) {
+        stmt->expression = optimize(stmt->expression);
+    }
+    if (stmt->body) {
+        stmt->body = optimize(stmt->body);
+    }
+}
+
+void TypeCastOptimizer::visit(DefaultStatement* stmt) {
+    if (!stmt) return;
+    
+    if (stmt->body) {
+        stmt->body = optimize(stmt->body);
+    }
+}
+
+void TypeCastOptimizer::visit(FunctionPrototype* stmt) {
+    // 函数原型不需要优化
+}

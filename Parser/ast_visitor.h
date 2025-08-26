@@ -77,7 +77,7 @@ public:
     virtual void visit(MethodCallExpression* expr) = 0;
     virtual void visit(CastExpression<IntExpression>* expr) = 0;
     virtual void visit(CastExpression<DoubleExpression>* expr) = 0;
-    virtual void visit(CastExpression<StringLiteral>* expr) = 0;
+    // virtual void visit(CastExpression<StringLiteral>* expr) = 0;
     virtual void visit(CastExpression<CharExpression>* expr) = 0;
     virtual void visit(CastExpression<BoolExpression>* expr) = 0;
 

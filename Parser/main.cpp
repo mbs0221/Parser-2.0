@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "interpreter.h"
+// #include "ast_optimizer.h"  // 暂时注释掉优化器
 #include "logger.h"
 #include <iostream>
 #include <string>
@@ -105,6 +106,12 @@ int main(int argc, char *argv[])
 	Program *program = p.parse(fileName);
 	if (program != nullptr){
 		LOG_INFO("Parsing successful, executing program");
+		
+		// 暂时不使用优化器
+		// TypeCastOptimizer optimizer;
+		// Program* optimizedProgram = optimizer.optimize(program);
+		
+		LOG_INFO("Executing program");
 		Interpreter interpreter;
 		interpreter.execute(program);
 		LOG_INFO("Program execution completed");

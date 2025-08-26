@@ -111,17 +111,17 @@ public:
     void visit(StringLiteral* expr) override;
     void visit(AccessExpression* expr) override;
     void visit(CallExpression* expr) override;
-    void visit(MethodCallExpression* expr) override;
     
     // CastExpression具体访问方法
     void visit(CastExpression<IntExpression>* expr) override;
     void visit(CastExpression<DoubleExpression>* expr) override;
-    void visit(CastExpression<StringLiteral>* expr) override;
+    // void visit(CastExpression<StringLiteral>* expr) override;
     void visit(CastExpression<CharExpression>* expr) override;
     void visit(CastExpression<BoolExpression>* expr) override;
     void visit(StructInstantiationExpression* expr) override;
     void visit(ClassInstantiationExpression* expr) override;
     void visit(MemberAccessExpression* expr) override;
+    void visit(MethodCallExpression* expr) override;
 
     // ASTVisitor接口实现 - 语句访问方法
     void visit(ImportStatement* stmt) override;

@@ -31,7 +31,7 @@ let char0 = str1[0];
 let char1 = str1[1];
 println("First character: " + char0);
 println("Second character: " + char1);
-println("String length: " + length(str1));
+println("String length: " + count(str1));
 
 // 数组操作
 let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -97,7 +97,7 @@ println("Is even: " + isEven);
 // 数组和字符串混合操作
 let words = ["Hello", "World", "Test"];
 println("First word: " + words[0]);
-println("First word length: " + length(words[0]));
+println("First word length: " + count(words[0]));
 println("Words count: " + count(words));
 
 // 嵌套字典

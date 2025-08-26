@@ -8,7 +8,6 @@ set(SOURCES
     parser.cpp
     main.cpp
     logger.cpp
-    ast_optimizer.cpp
 )
 
 # 设置头文件
@@ -19,6 +18,14 @@ set(HEADERS
     logger.h
     ast_visitor.h
     ast_optimizer.h
+)
+
+# 创建优化器库
+add_library(ast_optimizer STATIC
+    ast_optimizer.cpp
+    ast_optimizer.h
+    ast_visitor.h
+    inter.h
 )
 
 # 创建可执行文件
@@ -41,6 +48,11 @@ set_target_properties(parser PROPERTIES
 # 链接log4cpp库
 target_link_libraries(parser ${LOG4CPP_LIBRARIES})
 target_compile_options(parser PRIVATE ${LOG4CPP_CFLAGS_OTHER})
+
+# 设置优化器库的包含目录（暂时不链接）
+target_include_directories(ast_optimizer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(ast_optimizer PRIVATE ${LOG4CPP_INCLUDE_DIRS})
+target_compile_options(ast_optimizer PRIVATE ${LOG4CPP_CFLAGS_OTHER})
 
 # 安装规则
 install(TARGETS parser

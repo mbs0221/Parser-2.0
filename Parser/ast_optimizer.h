@@ -56,6 +56,24 @@ public:
     void visit(AccessExpression* expr) override;
     void visit(IntExpression* expr) override;
     void visit(DoubleExpression* expr) override;
+    void visit(MethodCallExpression* expr) override;
+    void visit(CastExpression<IntExpression>* expr) override;
+    void visit(CastExpression<DoubleExpression>* expr) override;
+    void visit(CastExpression<StringLiteral>* expr) override;
+    void visit(CastExpression<CharExpression>* expr) override;
+    void visit(CastExpression<BoolExpression>* expr) override;
+    void visit(StructInstantiationExpression* expr) override;
+    void visit(ClassInstantiationExpression* expr) override;
+    void visit(MemberAccessExpression* expr) override;
+    void visit(StructDefinition* stmt) override;
+    void visit(ThrowStatement* stmt) override;
+    void visit(TryStatement* stmt) override;
+    void visit(CatchStatement* stmt) override;
+    void visit(FinallyStatement* stmt) override;
+    void visit(SwitchStatement* stmt) override;
+    void visit(CaseStatement* stmt) override;
+    void visit(DefaultStatement* stmt) override;
+    void visit(FunctionPrototype* stmt) override;
 
 private:
     // 辅助方法

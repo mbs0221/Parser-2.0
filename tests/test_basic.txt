@@ -13,7 +13,7 @@ print("sum = " . sum);
 # 字符串操作
 let str = "Hello";
 print("String: " . str);
-print("Length: " . length(str));
+print("Length: " . count(str));
 
 # 字符串访问
 let firstChar = str[0];

@@ -165,11 +165,6 @@ void CastExpression<DoubleExpression>::accept(ASTVisitor* visitor) {
 }
 
 template<>
-void CastExpression<StringLiteral>::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
-template<>
 void CastExpression<CharExpression>::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
