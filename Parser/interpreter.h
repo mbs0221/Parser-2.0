@@ -91,11 +91,10 @@ public:
     void clearResultStack();
     
     // AST求值方法
-    Expression* evaluate(AST* node);
-    Expression* evaluate(Expression* expr);
+    void visit(AST* node);
+    void visit(Expression* expr);
     void execute(Statement* stmt);
     void execute(Program* program);
-    void visit(AST* node);
 
     // ASTVisitor接口实现 - 表达式访问方法
     void visit(IntExpression* expr) override;
@@ -158,16 +157,18 @@ public:
     bool isBuiltinFunction(const string& funcName);
     Expression* executeBuiltinFunction(const string& funcName, vector<Expression*>& args);
 
-    // 二元运算辅助方法
-    void executeArithmeticOperation(BinaryExpression* binary, Expression* left, Expression* right);
-    void executeComparisonOperation(BinaryExpression* binary, Expression* left, Expression* right);
-    void executeLogicalOperation(BinaryExpression* binary, Expression* left, Expression* right);
-    
     // 类型转换辅助方法
     template<typename T>
     void executeCastOperation(CastExpression<T>* cast);
-    template<typename T>
-    Expression* performCast(Expression* operand);
+    int getTypePriority(Expression* expr);
+    Expression* insertCastExpression(Expression* expr);
+
+    // 计算方法 - 使用函数重载
+    IntExpression* calculate(IntExpression* left, IntExpression* right, int op);
+    DoubleExpression* calculate(DoubleExpression* left, DoubleExpression* right, int op);
+    BoolExpression* calculate(BoolExpression* left, BoolExpression* right, int op);
+    CharExpression* calculate(CharExpression* left, CharExpression* right, int op);
+    StringLiteral* calculate(StringLiteral* left, StringLiteral* right, int op);
     
     // 错误处理
     void reportError(const string& message);

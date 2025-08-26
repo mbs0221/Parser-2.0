@@ -141,17 +141,10 @@ void Interpreter::execute(Program* program) {
 }
 
 // 求值表达式 - 使用访问者模式
-Expression* Interpreter::evaluate(Expression* expr) {
-    if (!expr) return nullptr;
+void Interpreter::visit(Expression* expr) {
+    if (!expr) return;
     
-    // 清空结果栈
-    clearResultStack();
-    
-    // 使用访问者模式，让表达式自己决定如何被求值
     expr->accept(this);
-    
-    // 从结果栈获取结果
-    return popResult();
 }
 
 // 结果栈操作实现
@@ -239,70 +232,16 @@ void Interpreter::executeCastOperation(CastExpression<T>* cast) {
         reportError("Invalid operand in cast expression");
         return;
     }
-    
-    // 使用模板特化进行类型转换
-    Expression* result = performCast<T>(operand);
-    pushResult(result);
-}
 
-// 类型转换模板函数 - 使用泛型转换方法
-template<typename T>
-Expression* Interpreter::performCast(Expression* operand) {
-    LOG_DEBUG("Performing cast on operand: " + operand->getLocation());
-    
-    // 直接检查具体类型并进行转换
-    if (IntExpression* intExpr = dynamic_cast<IntExpression*>(operand)) {
-        if (typeid(T) == typeid(IntExpression)) {
-            return new IntExpression(intExpr->value);
-        } else if (typeid(T) == typeid(DoubleExpression)) {
-            return new DoubleExpression((double)intExpr->value);
-        } else if (typeid(T) == typeid(StringLiteral)) {
-            return new StringLiteral(std::to_string(intExpr->value));
-        } else if (typeid(T) == typeid(CharExpression)) {
-            return new CharExpression((char)intExpr->value);
-        } else if (typeid(T) == typeid(BoolExpression)) {
-            return new BoolExpression(intExpr->value != 0);
-        }
-    } else if (DoubleExpression* doubleExpr = dynamic_cast<DoubleExpression*>(operand)) {
-        if (typeid(T) == typeid(IntExpression)) {
-            return new IntExpression((int)doubleExpr->value);
-        } else if (typeid(T) == typeid(DoubleExpression)) {
-            return new DoubleExpression(doubleExpr->value);
-        } else if (typeid(T) == typeid(StringLiteral)) {
-            return new StringLiteral(std::to_string(doubleExpr->value));
-        } else if (typeid(T) == typeid(CharExpression)) {
-            return new CharExpression((char)doubleExpr->value);
-        } else if (typeid(T) == typeid(BoolExpression)) {
-            return new BoolExpression(doubleExpr->value != 0.0);
-        }
-    } else if (BoolExpression* boolExpr = dynamic_cast<BoolExpression*>(operand)) {
-        if (typeid(T) == typeid(IntExpression)) {
-            return new IntExpression(boolExpr->value ? 1 : 0);
-        } else if (typeid(T) == typeid(DoubleExpression)) {
-            return new DoubleExpression(boolExpr->value ? 1.0 : 0.0);
-        } else if (typeid(T) == typeid(StringLiteral)) {
-            return new StringLiteral(boolExpr->value ? "true" : "false");
-        } else if (typeid(T) == typeid(CharExpression)) {
-            return new CharExpression(boolExpr->value ? '1' : '0');
-        } else if (typeid(T) == typeid(BoolExpression)) {
-            return new BoolExpression(boolExpr->value);
-        }
-    } else if (CharExpression* charExpr = dynamic_cast<CharExpression*>(operand)) {
-        if (typeid(T) == typeid(IntExpression)) {
-            return new IntExpression((int)charExpr->value);
-        } else if (typeid(T) == typeid(DoubleExpression)) {
-            return new DoubleExpression((double)charExpr->value);
-        } else if (typeid(T) == typeid(StringLiteral)) {
-            return new StringLiteral(std::string(1, charExpr->value));
-        } else if (typeid(T) == typeid(CharExpression)) {
-            return new CharExpression(charExpr->value);
-        } else if (typeid(T) == typeid(BoolExpression)) {
-            return new BoolExpression(charExpr->value != 0);
-        }
+    // 如果operand是T类型，则直接pushResult
+    if (typeid(*operand) == typeid(T)) {
+        cout << "operand is already of type T" << endl;
+        pushResult(operand);
+    } else {
+        // 使用模板特化进行类型转换
+        cout << "operand is not of type T, casting to type T" << endl;
+        pushResult(new CastExpression<T>(operand));
     }
-    
-    LOG_DEBUG("Cast failed, unsupported type conversion");
-    return nullptr;
 }
 
 // 赋值表达式求值 - 后序遍历模式
@@ -345,34 +284,53 @@ void Interpreter::visit(UnaryExpression* unary) {
         reportError("Invalid operand in unary expression");
         return;
     }
+
+    // 如果操作数不是BoolExpression，则转换为BoolExpression
+    if (typeid(*operand) != typeid(BoolExpression)) {
+        operand = new CastExpression<BoolExpression>(operand);
+        visit(operand);
+        operand = popResult();
+    }
     
     // 根据操作符类型进行处理
     switch (unary->operator_->Tag) {
         case '!': {
-            // 逻辑非操作
-            if (IntExpression* numExpr = dynamic_cast<IntExpression*>(operand)) {
-                pushResult(new IntExpression(!(*numExpr)));
-                return;
+            BoolExpression* expr = dynamic_cast<BoolExpression*>(operand);
+            if (expr) {
+                pushResult(new BoolExpression(!expr->getBoolValue()));
+            } else {
+                reportError("Invalid operand for logical NOT operator");
             }
-            // 对于非数字类型，转换为布尔值再取反
-            bool boolValue = operand->getLocation() != "" && operand->getLocation() != "0";
-            pushResult(new IntExpression(boolValue ? 0 : 1));
-            return;
+            break;
         }
         case '-': {
-            // 一元负号操作 - 使用运算符重载
-            if (IntExpression* numExpr = dynamic_cast<IntExpression*>(operand)) {
-                pushResult(new IntExpression(-(*numExpr)));
-                return;
+            IntExpression* intOperand = dynamic_cast<IntExpression*>(operand);
+            if (intOperand) {
+                pushResult(new IntExpression(-(*intOperand)));
+            } else {
+                DoubleExpression* doubleOperand = dynamic_cast<DoubleExpression*>(operand);
+                if (doubleOperand) {
+                    pushResult(new DoubleExpression(-(*doubleOperand)));
+                } else {
+                    reportError("Invalid operand for unary minus operator");
+                }
             }
-            reportError("Unary minus requires numeric operand");
-            return;
+            break;
         }
         default:
             reportError("Unknown unary operator Tag " + to_string(unary->operator_->Tag));
-            return;
+            break;
     }
 }
+
+int Interpreter::getTypePriority(Expression* expr) {
+    if (dynamic_cast<StringLiteral*>(expr)) return 4;
+    if (dynamic_cast<DoubleExpression*>(expr)) return 3;
+    if (dynamic_cast<IntExpression*>(expr)) return 2;
+    if (dynamic_cast<CharExpression*>(expr)) return 1;
+    if (dynamic_cast<BoolExpression*>(expr)) return 0;
+    return 0;
+};
 
 // 二元运算表达式求值 - 后序遍历模式
 void Interpreter::visit(BinaryExpression* binary) {
@@ -382,10 +340,10 @@ void Interpreter::visit(BinaryExpression* binary) {
     }
     
     // 后序遍历：先处理左子树
-    binary->left->accept(this);
+    visit(binary->left);
     
     // 再处理右子树
-    binary->right->accept(this);
+    visit(binary->right);
     
     // 从栈中pop出右操作数和左操作数（注意顺序）
     Expression* right = popResult();
@@ -395,205 +353,101 @@ void Interpreter::visit(BinaryExpression* binary) {
         reportError("Invalid operands in binary expression");
         return;
     }
-    
-    // 根据操作符类型进行相应的运算
-    auto opType = binary->getOperatorType();
-    
-    switch (opType) {
-        case BinaryExpression::OperatorType::ARITHMETIC: {
-            executeArithmeticOperation(binary, left, right);
-            break;
+
+    // get left type and right type with dynamic_cast
+    // if (typeid(*left) != typeid(*right)) {
+    //     if (getTypePriority(left) < getTypePriority(right)) {
+    //         // convert left to runtime type of right
+    //         left = new CastExpression<decltype(right)>(left);
+    //         left = visit(left);
+    //     } else {
+    //         // convert right to runtime type of left
+    //         right = new CastExpression<decltype(left)>(right);
+    //         right = visit(right);
+    //     }
+    // }
+
+    // 统一处理所有二元运算 - 使用typeid机制
+    int op = binary->operator_->Tag;
+    LOG_DEBUG("executeBinaryOperation called with operator: " + std::string(1, op));
+ 
+    // 根据操作数类型执行相应的运算
+    if (IntExpression* leftInt = dynamic_cast<IntExpression*>(left)) {
+        if (IntExpression* rightInt = dynamic_cast<IntExpression*>(right)) {
+            pushResult(calculate(leftInt, rightInt, op));
+        } else {
+            reportError("Type mismatch in binary expression");
         }
-        
-        case BinaryExpression::OperatorType::COMPARISON: {
-            executeComparisonOperation(binary, left, right);
-            break;
+    } else if (DoubleExpression* leftDouble = dynamic_cast<DoubleExpression*>(left)) {
+        if (DoubleExpression* rightDouble = dynamic_cast<DoubleExpression*>(right)) {
+            pushResult(calculate(leftDouble, rightDouble, op));
+        } else {
+            reportError("Type mismatch in binary expression");
         }
-        
-        case BinaryExpression::OperatorType::LOGICAL: {
-            executeLogicalOperation(binary, left, right);
-            break;
+    } else if (BoolExpression* leftBool = dynamic_cast<BoolExpression*>(left)) {
+        if (BoolExpression* rightBool = dynamic_cast<BoolExpression*>(right)) {
+            pushResult(calculate(leftBool, rightBool, op));
+        } else {
+            reportError("Type mismatch in binary expression");
         }
+    } else if (CharExpression* leftChar = dynamic_cast<CharExpression*>(left)) {
+        if (CharExpression* rightChar = dynamic_cast<CharExpression*>(right)) {
+            pushResult(calculate(leftChar, rightChar, op));
+        } else {
+            reportError("Type mismatch in binary expression");
+        }
+    } else if (StringLiteral* leftStr = dynamic_cast<StringLiteral*>(left)) {
+        if (StringLiteral* rightStr = dynamic_cast<StringLiteral*>(right)) {
+            pushResult(calculate(leftStr, rightStr, op));
+        } else {
+            reportError("Type mismatch in binary expression");
+        }
+    } else {
+        reportError("Invalid operands in binary expression");
+        return;
     }
 }
 
-// 二元运算辅助方法实现
-
-void Interpreter::executeArithmeticOperation(BinaryExpression* binary, Expression* left, Expression* right) {
-    LOG_DEBUG("executeArithmeticOperation called with operator: " + std::string(1, binary->operator_->Tag));
-    LOG_DEBUG("Left operand type: " + left->getLocation());
-    LOG_DEBUG("Right operand type: " + right->getLocation());
-    
-    // 字符串拼接
-    if (binary->operator_->Tag == '+') {
-        StringLiteral* leftStr = dynamic_cast<StringLiteral*>(left);
-        StringLiteral* rightStr = dynamic_cast<StringLiteral*>(right);
-        if (leftStr && rightStr) {
-            pushResult(new StringLiteral(*leftStr + *rightStr));
-            return;
-        }
-    }
-    
-    // 数值运算：自动类型转换
-    IntExpression* leftInt = dynamic_cast<IntExpression*>(left);
-    IntExpression* rightInt = dynamic_cast<IntExpression*>(right);
-    DoubleExpression* leftDouble = dynamic_cast<DoubleExpression*>(left);
-    DoubleExpression* rightDouble = dynamic_cast<DoubleExpression*>(right);
-    
-    LOG_DEBUG("Type check - leftInt: " + std::to_string(leftInt != nullptr) + 
-              ", rightInt: " + std::to_string(rightInt != nullptr) + 
-              ", leftDouble: " + std::to_string(leftDouble != nullptr) + 
-              ", rightDouble: " + std::to_string(rightDouble != nullptr));
-    
-    // 如果类型不一致，进行转换
-    if (leftInt && rightDouble) {
-        left = new CastExpression<DoubleExpression>(left);
-        left->accept(this);
-        left = popResult();
-        leftDouble = dynamic_cast<DoubleExpression*>(left);
-        leftInt = nullptr;  // 重新设置类型
-    } else if (leftDouble && rightInt) {
-        right = new CastExpression<DoubleExpression>(right);
-        right->accept(this);
-        right = popResult();
-        rightDouble = dynamic_cast<DoubleExpression*>(right);
-        rightInt = nullptr;  // 重新设置类型
-    } else if (!leftInt && !leftDouble) {
-        left = new CastExpression<IntExpression>(left);
-        left->accept(this);
-        left = popResult();
-        leftInt = dynamic_cast<IntExpression*>(left);
-    } else if (!rightInt && !rightDouble) {
-        right = new CastExpression<IntExpression>(right);
-        right->accept(this);
-        right = popResult();
-        rightInt = dynamic_cast<IntExpression*>(right);
-    }
-    
-    // 重新检查转换后的类型
-    leftInt = dynamic_cast<IntExpression*>(left);
-    rightInt = dynamic_cast<IntExpression*>(right);
-    leftDouble = dynamic_cast<DoubleExpression*>(left);
-    rightDouble = dynamic_cast<DoubleExpression*>(right);
-    
-    // 执行运算
-    if (leftInt && rightInt) {
-        try {
-            switch (binary->operator_->Tag) {
-                case '+': pushResult(new IntExpression(*leftInt + *rightInt)); break;
-                case '-': pushResult(new IntExpression(*leftInt - *rightInt)); break;
-                case '*': pushResult(new IntExpression(*leftInt * *rightInt)); break;
-                case '/': pushResult(new IntExpression(*leftInt / *rightInt)); break;
-                case '%': pushResult(new IntExpression(*leftInt % *rightInt)); break;
-                default: reportError("Unknown arithmetic operator"); break;
-            }
-        } catch (const std::exception& e) {
-            reportError("Arithmetic operation error: " + std::string(e.what()));
-        }
-    } else if (leftDouble && rightDouble) {
-        try {
-            switch (binary->operator_->Tag) {
-                case '+': pushResult(new DoubleExpression(*leftDouble + *rightDouble)); break;
-                case '-': pushResult(new DoubleExpression(*leftDouble - *rightDouble)); break;
-                case '*': pushResult(new DoubleExpression(*leftDouble * *rightDouble)); break;
-                case '/': pushResult(new DoubleExpression(*leftDouble / *rightDouble)); break;
-                case '%': pushResult(new DoubleExpression(*leftDouble % *rightDouble)); break;
-                default: reportError("Unknown arithmetic operator"); break;
-            }
-        } catch (const std::exception& e) {
-            reportError("Arithmetic operation error: " + std::string(e.what()));
-        }
-    } else {
-        reportError("Invalid operands for arithmetic operation");
+IntExpression* Interpreter::calculate(IntExpression* left, IntExpression* right, int op) {
+    switch (op) {
+        case '+': return new IntExpression(*left + *right);
+        case '-': return new IntExpression(*left - *right);
+        case '*': return new IntExpression(*left * *right);
+        case '/': return new IntExpression(*left / *right);
+        case '%': return new IntExpression(*left % *right);
+        default: return new IntExpression(0);
     }
 }
 
-void Interpreter::executeComparisonOperation(BinaryExpression* binary, Expression* left, Expression* right) {
-    // 比较运算：自动类型转换
-    IntExpression* leftInt = dynamic_cast<IntExpression*>(left);
-    IntExpression* rightInt = dynamic_cast<IntExpression*>(right);
-    DoubleExpression* leftDouble = dynamic_cast<DoubleExpression*>(left);
-    DoubleExpression* rightDouble = dynamic_cast<DoubleExpression*>(right);
-    
-    // 如果类型不一致，进行转换
-    if (leftInt && rightDouble) {
-        left = new CastExpression<DoubleExpression>(left);
-        left->accept(this);
-        left = popResult();
-        leftDouble = dynamic_cast<DoubleExpression*>(left);
-        leftInt = nullptr;
-    } else if (leftDouble && rightInt) {
-        right = new CastExpression<DoubleExpression>(right);
-        right->accept(this);
-        right = popResult();
-        rightDouble = dynamic_cast<DoubleExpression*>(right);
-        rightInt = nullptr;
-    } else if (!leftInt && !leftDouble) {
-        left = new CastExpression<IntExpression>(left);
-        left->accept(this);
-        left = popResult();
-        leftInt = dynamic_cast<IntExpression*>(left);
-    } else if (!rightInt && !rightDouble) {
-        right = new CastExpression<IntExpression>(right);
-        right->accept(this);
-        right = popResult();
-        rightInt = dynamic_cast<IntExpression*>(right);
-    }
-    
-    // 执行比较运算
-    if (leftInt && rightInt) {
-        switch (binary->operator_->Tag) {
-            case EQ: pushResult(new IntExpression(*leftInt == *rightInt)); break;
-            case NE: pushResult(new IntExpression(*leftInt != *rightInt)); break;
-            case '<': pushResult(new IntExpression(*leftInt < *rightInt)); break;
-            case '>': pushResult(new IntExpression(*leftInt > *rightInt)); break;
-            case BE: pushResult(new IntExpression(*leftInt <= *rightInt)); break;
-            case GE: pushResult(new IntExpression(*leftInt >= *rightInt)); break;
-            default: reportError("Unknown comparison operator"); break;
-        }
-    } else if (leftDouble && rightDouble) {
-        switch (binary->operator_->Tag) {
-            case EQ: pushResult(new IntExpression(*leftDouble == *rightDouble)); break;
-            case NE: pushResult(new IntExpression(*leftDouble != *rightDouble)); break;
-            case '<': pushResult(new IntExpression(*leftDouble < *rightDouble)); break;
-            case '>': pushResult(new IntExpression(*leftDouble > *rightDouble)); break;
-            case BE: pushResult(new IntExpression(*leftDouble <= *rightDouble)); break;
-            case GE: pushResult(new IntExpression(*leftDouble >= *rightDouble)); break;
-            default: reportError("Unknown comparison operator"); break;
-        }
-    } else {
-        reportError("Invalid operands for comparison operation");
+BoolExpression* Interpreter::calculate(BoolExpression* left, BoolExpression* right, int op) {
+    switch (op) {
+        case AND: return new BoolExpression(*left && *right);
+        case OR: return new BoolExpression(*left || *right);
+        default: return new BoolExpression(false);
     }
 }
 
-void Interpreter::executeLogicalOperation(BinaryExpression* binary, Expression* left, Expression* right) {
-    // 逻辑运算：自动类型转换
-    BoolExpression* leftBool = dynamic_cast<BoolExpression*>(left);
-    BoolExpression* rightBool = dynamic_cast<BoolExpression*>(right);
-    
-    // 如果类型不一致，进行转换
-    if (!leftBool) {
-        left = new CastExpression<BoolExpression>(left);
-        left->accept(this);
-        left = popResult();
-        leftBool = dynamic_cast<BoolExpression*>(left);
+CharExpression* Interpreter::calculate(CharExpression* left, CharExpression* right, int op) {
+    switch (op) {
+        case '+': return new CharExpression(left->value + right->value);
+        default: return new CharExpression(0);
     }
-    if (!rightBool) {
-        right = new CastExpression<BoolExpression>(right);
-        right->accept(this);
-        right = popResult();
-        rightBool = dynamic_cast<BoolExpression*>(right);
+}
+
+DoubleExpression* Interpreter::calculate(DoubleExpression* left, DoubleExpression* right, int op) {
+    switch (op) {
+        case '+': return new DoubleExpression(*left + *right);
+        case '-': return new DoubleExpression(*left - *right);
+        case '*': return new DoubleExpression(*left * *right);
+        case '/': return new DoubleExpression(*left / *right);
+        default: return new DoubleExpression(0);
     }
-    
-    // 执行逻辑运算
-    if (leftBool && rightBool) {
-        switch (binary->operator_->Tag) {
-            case AND: pushResult(new BoolExpression(*leftBool && *rightBool)); break;
-            case OR: pushResult(new BoolExpression(*leftBool || *rightBool)); break;
-            default: reportError("Unknown logical operator"); break;
-        }
-    } else {
-        reportError("Invalid operands for logical operation");
+}
+
+StringLiteral* Interpreter::calculate(StringLiteral* left, StringLiteral* right, int op) {
+    switch (op) {
+        case '+': return new StringLiteral(*left + *right);
+        default: return new StringLiteral("");
     }
 }
 
@@ -659,9 +513,9 @@ void Interpreter::visit(AccessExpression* access) {
     if (!access || !access->target || !access->key) return;
     
     // 求值目标和键
-    evaluate(access->target);
+    visit(access->target);
     Expression* target = popResult();
-    evaluate(access->key);
+    visit(access->key);
     Expression* key = popResult();
     
     if (!target || !key) return;
@@ -770,7 +624,8 @@ void Interpreter::visit(MethodCallExpression* methodCall) {
 void Interpreter::visit(ReturnStatement* returnStmt) {
     if (!returnStmt || !returnStmt->returnValue) return;
     LOG_DEBUG("Executing return statement");
-    Expression* result = evaluate(returnStmt->returnValue);
+    visit(returnStmt->returnValue);
+    Expression* result = popResult();
     LOG_DEBUG("Return value: " + (result ? result->getLocation() : "null"));
     pushResult(result);
 }
@@ -843,7 +698,7 @@ void Interpreter::visit(Program* program) {
 void Interpreter::visit(ExpressionStatement* stmt) {
     if (!stmt || !stmt->expression) return;
     
-    evaluate(stmt->expression);         
+    visit(stmt->expression);         
 }
 
 
@@ -852,7 +707,8 @@ void Interpreter::visit(ExpressionStatement* stmt) {
 void Interpreter::visit(IfStatement* ifStmt) {
     if (!ifStmt || !ifStmt->condition) return;
     
-    Expression* condition = evaluate(ifStmt->condition);
+    visit(ifStmt->condition);
+    Expression* condition = popResult();
     
     // 检查条件是否为真（非零值）
     bool conditionValue = false;
@@ -892,7 +748,8 @@ void Interpreter::visit(WhileStatement* whileStmt) {
     
     while (true) {
         // 评估循环条件
-        Expression* condition = evaluate(whileStmt->condition);
+        visit(whileStmt->condition);
+        Expression* condition = popResult();
         
         // 检查条件是否为真（非零值）
         bool conditionValue = false;
@@ -935,12 +792,13 @@ void Interpreter::visit(ForStatement* forStmt) {
     
     // 执行初始化表达式
     if (forStmt->initializer) {
-        evaluate(forStmt->initializer);
+        visit(forStmt->initializer);
     }
     
     while (true) {
         // 评估循环条件
-        Expression* condition = evaluate(forStmt->condition);
+        visit(forStmt->condition);
+        Expression* condition = popResult();
         
         // 检查条件是否为真（非零值）
         bool conditionValue = false;
@@ -964,7 +822,7 @@ void Interpreter::visit(ForStatement* forStmt) {
         } catch (const ContinueException&) {
             // 执行增量表达式，然后继续下一次循环
             if (forStmt->increment) {
-                evaluate(forStmt->increment);
+                visit(forStmt->increment);
             }
             continue;  // 跳过当前迭代，继续下一次循环
         } catch (const ReturnException&) {
@@ -973,7 +831,7 @@ void Interpreter::visit(ForStatement* forStmt) {
         
         // 执行增量表达式
         if (forStmt->increment) {
-            evaluate(forStmt->increment);
+            visit(forStmt->increment);
         }
     }
 }
@@ -996,7 +854,8 @@ void Interpreter::visit(DoWhileStatement* doWhileStmt) {
         }
         
         // 评估循环条件
-        Expression* condition = evaluate(doWhileStmt->condition);
+        visit(doWhileStmt->condition);
+        Expression* condition = popResult();
         
         // 检查条件是否为真（非零值）
         bool conditionValue = false;
@@ -1059,13 +918,12 @@ void Interpreter::registerBuiltinFunctions() {
 // 内置函数实现
 Expression* Interpreter::executePrint(vector<Expression*>& args) {
     for (Expression* arg : args) {
-        Expression* evaluated = evaluate(arg);
-        if (evaluated) {
-            if (LeafExpression* leaf = dynamic_cast<LeafExpression*>(evaluated)) {
-                cout << leaf->toString();
-            } else {
-                cout << "Uncalculated expression: " << evaluated->getLocation() << endl;
-            }
+        visit(arg);
+        Expression* evaluated = popResult();
+        if (LeafExpression* leaf = dynamic_cast<LeafExpression*>(evaluated)) {
+            cout << leaf->toString();
+        } else {
+            cout << "Uncalculated expression: " << evaluated->getLocation() << endl;
         }
     }
 
@@ -1078,7 +936,8 @@ Expression* Interpreter::executeCount(vector<Expression*>& args) {
         return nullptr;
     }
     
-    Expression* arg = evaluate(args[0]);
+    visit(args[0]);
+    Expression* arg = popResult();
     if (!arg) {
         reportError("count() argument evaluation failed");
         return nullptr;

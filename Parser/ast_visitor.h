@@ -4,6 +4,7 @@
 #include <string>
 
 // 前向声明
+class AST;
 class Expression;
 class Statement;
 class Program;
@@ -112,6 +113,8 @@ public:
     
     // 程序访问方法
     virtual void visit(Program* program) = 0;
+
+    virtual void visit(AST* node) = 0;
 };
 
 #endif // AST_VISITOR_H
