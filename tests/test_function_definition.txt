@@ -1,0 +1,9 @@
+function testFunc(x) {
+    return x + 1;
+}
+
+let a = 10;
+let result = testFunc(a);
+print("result = ");
+print(result);
+print("\n");

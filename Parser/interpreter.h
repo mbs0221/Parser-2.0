@@ -43,6 +43,7 @@ private:
     
     // 结构体定义存储
     map<string, StructDefinition*> structDefinitions;
+    map<string, ClassDefinition*> classDefinitions;
     
     // 内置函数映射
     map<string, function<Expression*(vector<Expression*>&)>> builtinFunctions;
@@ -132,7 +133,9 @@ public:
     
     // 结构体相关
     void registerStructDefinition(StructDefinition* structDef);
+    void registerClassDefinition(ClassDefinition* classDef);
     Expression* evaluateStructInstantiation(StructInstantiationExpression* structInst);
+    Expression* evaluateClassInstantiation(ClassInstantiationExpression* classInst);
     Expression* evaluateMemberAccess(MemberAccessExpression* memberAccess);
 };
 

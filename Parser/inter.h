@@ -51,13 +51,103 @@ struct Expression : public AST {
 
 
 
-// 数字表达式节点 - 现在是语法树节点，不是词法单元
-struct NumberExpression : public Expression {
-    double value;  // 使用double来支持整数和浮点数
-    bool isFloat;  // 标记是否为浮点数
+// 整数表达式节点
+struct IntExpression : public Expression {
+    int value;
     
-    NumberExpression(int val) : value(val), isFloat(false) {}
-    NumberExpression(double val) : value(val), isFloat(true) {}
+    IntExpression(int val) : value(val) {}
+    
+    // 获取数值
+    int getIntValue() const {
+        return value;
+    }
+    
+    double getDoubleValue() const {
+        return (double)value;
+    }
+    
+    string toString() const override {
+        return to_string(value);
+    }
+    
+    // 运算符重载 - 算术运算
+    IntExpression operator+(const IntExpression& other) const {
+        return IntExpression(value + other.value);
+    }
+    
+    IntExpression operator-(const IntExpression& other) const {
+        return IntExpression(value - other.value);
+    }
+    
+    IntExpression operator*(const IntExpression& other) const {
+        return IntExpression(value * other.value);
+    }
+    
+    IntExpression operator/(const IntExpression& other) const {
+        if (other.value == 0) {
+            throw runtime_error("Division by zero");
+        }
+        return IntExpression(value / other.value);
+    }
+    
+    IntExpression operator%(const IntExpression& other) const {
+        if (other.value == 0) {
+            throw runtime_error("Modulo by zero");
+        }
+        return IntExpression(value % other.value);
+    }
+    
+    // 运算符重载 - 比较运算
+    IntExpression operator==(const IntExpression& other) const {
+        return IntExpression(value == other.value ? 1 : 0);
+    }
+    
+    IntExpression operator!=(const IntExpression& other) const {
+        return IntExpression(value != other.value ? 1 : 0);
+    }
+    
+    IntExpression operator<(const IntExpression& other) const {
+        return IntExpression(value < other.value ? 1 : 0);
+    }
+    
+    IntExpression operator>(const IntExpression& other) const {
+        return IntExpression(value > other.value ? 1 : 0);
+    }
+    
+    IntExpression operator<=(const IntExpression& other) const {
+        return IntExpression(value <= other.value ? 1 : 0);
+    }
+    
+    IntExpression operator>=(const IntExpression& other) const {
+        return IntExpression(value >= other.value ? 1 : 0);
+    }
+    
+    // 运算符重载 - 逻辑运算
+    IntExpression operator&&(const IntExpression& other) const {
+        return IntExpression((value != 0 && other.value != 0) ? 1 : 0);
+    }
+    
+    IntExpression operator||(const IntExpression& other) const {
+        return IntExpression((value != 0 || other.value != 0) ? 1 : 0);
+    }
+    
+    // 一元逻辑非操作符
+    IntExpression operator!() const {
+        return IntExpression(value == 0 ? 1 : 0);
+    }
+    
+    // 一元负号操作符
+    IntExpression operator-() const {
+        return IntExpression(-value);
+    }
+};
+
+// 浮点数表达式节点
+struct DoubleExpression : public Expression {
+    double value;
+    
+    DoubleExpression(double val) : value(val) {}
+    DoubleExpression(int val) : value((double)val) {}  // 从整数构造
     
     // 获取数值
     int getIntValue() const {
@@ -69,97 +159,83 @@ struct NumberExpression : public Expression {
     }
     
     string toString() const override {
-        if (isFloat()) {
-            // 对于浮点数，保留适当的小数位数
-            char buffer[32];
-            snprintf(buffer, sizeof(buffer), "%.6g", value);
-            return string(buffer);
-        } else {
-            return to_string((int)value);
-        }
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "%.6g", value);
+        return string(buffer);
     }
     
     // 运算符重载 - 算术运算
-    NumberExpression operator+(const NumberExpression& other) const {
-        return NumberExpression(value + other.value);
+    DoubleExpression operator+(const DoubleExpression& other) const {
+        return DoubleExpression(value + other.value);
     }
     
-    NumberExpression operator-(const NumberExpression& other) const {
-        return NumberExpression(value - other.value);
+    DoubleExpression operator-(const DoubleExpression& other) const {
+        return DoubleExpression(value - other.value);
     }
     
-    NumberExpression operator*(const NumberExpression& other) const {
-        return NumberExpression(value * other.value);
+    DoubleExpression operator*(const DoubleExpression& other) const {
+        return DoubleExpression(value * other.value);
     }
     
-    NumberExpression operator/(const NumberExpression& other) const {
+    DoubleExpression operator/(const DoubleExpression& other) const {
         if (other.value == 0) {
             throw runtime_error("Division by zero");
         }
-        return NumberExpression(value / other.value);
+        return DoubleExpression(value / other.value);
     }
     
-    NumberExpression operator%(const NumberExpression& other) const {
-        if (other.value == 0) {
-            throw runtime_error("Modulo by zero");
-        }
-        // 对于浮点数，模运算没有意义，返回0
-        if (isFloat || other.isFloat) {
-            return NumberExpression(0.0);
-        }
-        return NumberExpression((int)value % (int)other.value);
+    // 浮点数不支持模运算，返回0
+    DoubleExpression operator%(const DoubleExpression& other) const {
+        return DoubleExpression(0.0);
     }
     
     // 运算符重载 - 比较运算
-    NumberExpression operator==(const NumberExpression& other) const {
-        return NumberExpression(value == other.value ? 1 : 0);
+    IntExpression operator==(const DoubleExpression& other) const {
+        return IntExpression(value == other.value ? 1 : 0);
     }
     
-    NumberExpression operator!=(const NumberExpression& other) const {
-        return NumberExpression(value != other.value ? 1 : 0);
+    IntExpression operator!=(const DoubleExpression& other) const {
+        return IntExpression(value != other.value ? 1 : 0);
     }
     
-    NumberExpression operator<(const NumberExpression& other) const {
-        return NumberExpression(value < other.value ? 1 : 0);
+    IntExpression operator<(const DoubleExpression& other) const {
+        return IntExpression(value < other.value ? 1 : 0);
     }
     
-    NumberExpression operator>(const NumberExpression& other) const {
-        return NumberExpression(value > other.value ? 1 : 0);
+    IntExpression operator>(const DoubleExpression& other) const {
+        return IntExpression(value > other.value ? 1 : 0);
     }
     
-    NumberExpression operator<=(const NumberExpression& other) const {
-        return NumberExpression(value <= other.value ? 1 : 0);
+    IntExpression operator<=(const DoubleExpression& other) const {
+        return IntExpression(value <= other.value ? 1 : 0);
     }
     
-    NumberExpression operator>=(const NumberExpression& other) const {
-        return NumberExpression(value >= other.value ? 1 : 0);
+    IntExpression operator>=(const DoubleExpression& other) const {
+        return IntExpression(value >= other.value ? 1 : 0);
     }
     
     // 运算符重载 - 逻辑运算
-    NumberExpression operator&&(const NumberExpression& other) const {
-        return NumberExpression((value != 0 && other.value != 0) ? 1 : 0);
+    IntExpression operator&&(const DoubleExpression& other) const {
+        return IntExpression((value != 0 && other.value != 0) ? 1 : 0);
     }
     
-    NumberExpression operator||(const NumberExpression& other) const {
-        return NumberExpression((value != 0 || other.value != 0) ? 1 : 0);
+    IntExpression operator||(const DoubleExpression& other) const {
+        return IntExpression((value != 0 || other.value != 0) ? 1 : 0);
     }
     
     // 一元逻辑非操作符
-    NumberExpression operator!() const {
-        return NumberExpression(value == 0 ? 1 : 0);
+    IntExpression operator!() const {
+        return IntExpression(value == 0 ? 1 : 0);
     }
     
     // 一元负号操作符
-    NumberExpression operator-() const {
-        return NumberExpression(-value);
+    DoubleExpression operator-() const {
+        return DoubleExpression(-value);
     }
-    
-
 };
 
 // 类型别名，方便使用
-using IntExpression = NumberExpression<int>;
-using DoubleExpression = NumberExpression<double>;
+using NumberExpression = IntExpression;  // 为了向后兼容
 
 // 标识符表达式
 struct IdentifierExpression : public Expression {
@@ -403,28 +479,28 @@ struct StringNode : public ArrayNode {
     }
     
     // 运算符重载 - 字符串比较
-    NumberExpression<int> operator==(const StringNode& other) const {
-        return NumberExpression<int>(toString() == other.toString() ? 1 : 0);
+    IntExpression operator==(const StringNode& other) const {
+        return IntExpression(toString() == other.toString() ? 1 : 0);
     }
     
-    NumberExpression<int> operator!=(const StringNode& other) const {
-        return NumberExpression<int>(toString() != other.toString() ? 1 : 0);
+    IntExpression operator!=(const StringNode& other) const {
+        return IntExpression(toString() != other.toString() ? 1 : 0);
     }
     
-    NumberExpression<int> operator<(const StringNode& other) const {
-        return NumberExpression<int>(toString() < other.toString() ? 1 : 0);
+    IntExpression operator<(const StringNode& other) const {
+        return IntExpression(toString() < other.toString() ? 1 : 0);
     }
     
-    NumberExpression<int> operator>(const StringNode& other) const {
-        return NumberExpression<int>(toString() > other.toString() ? 1 : 0);
+    IntExpression operator>(const StringNode& other) const {
+        return IntExpression(toString() > other.toString() ? 1 : 0);
     }
     
-    NumberExpression<int> operator<=(const StringNode& other) const {
-        return NumberExpression<int>(toString() <= other.toString() ? 1 : 0);
+    IntExpression operator<=(const StringNode& other) const {
+        return IntExpression(toString() <= other.toString() ? 1 : 0);
     }
     
-    NumberExpression<int> operator>=(const StringNode& other) const {
-        return NumberExpression<int>(toString() >= other.toString() ? 1 : 0);
+    IntExpression operator>=(const StringNode& other) const {
+        return IntExpression(toString() >= other.toString() ? 1 : 0);
     }
     
 
@@ -861,7 +937,7 @@ struct Program : public AST {
 // ==================== 类型别名（向后兼容） ====================
 // 为了保持向后兼容性，提供类型别名
 using Id = IdentifierExpression;
-using Constant = NumberExpression<int>;
+using Constant = NumberExpression;
 using Arith = ArithmeticExpression;
 using Stmt = Statement;
 using Stmts = BlockStatement;
@@ -998,14 +1074,14 @@ struct ClassDefinition : public Statement {
 
 // 结构体实例化表达式
 struct StructInstantiationExpression : public Expression {
-    string structName;
+    IdentifierExpression* structName;
     map<string, Expression*> fieldValues;
     
-    StructInstantiationExpression(const string& name, map<string, Expression*> values) 
+    StructInstantiationExpression(IdentifierExpression* name, map<string, Expression*> values) 
         : structName(name), fieldValues(values) {}
     
     string toString() const override {
-        string result = structName + " {";
+        string result = structName->toString() + " {";
         for (const auto& pair : fieldValues) {
             if (result.back() != '{') result += ", ";
             result += pair.first + ": " + pair.second->toString();
@@ -1015,16 +1091,18 @@ struct StructInstantiationExpression : public Expression {
     }
 };
 
+
+
 // 类实例化表达式
 struct ClassInstantiationExpression : public Expression {
-    string className;
+    IdentifierExpression* className;
     vector<Expression*> arguments;
     
-    ClassInstantiationExpression(const string& name, vector<Expression*> args) 
+    ClassInstantiationExpression(IdentifierExpression* name, vector<Expression*> args) 
         : className(name), arguments(args) {}
     
     string toString() const override {
-        string result = className + "(";
+        string result = className->toString() + "(";
         for (size_t i = 0; i < arguments.size(); ++i) {
             if (i > 0) result += ", ";
             result += arguments[i]->toString();

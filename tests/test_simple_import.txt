@@ -1,0 +1,15 @@
+import "simple_module.txt";
+
+let x = 10;
+print("x = ");
+print(x);
+print("\n");
+
+let y = simpleFunc(x);
+print("simpleFunc(x) = ");
+print(y);
+print("\n");
+
+print("MODULE_CONSTANT = ");
+print(MODULE_CONSTANT);
+print("\n");

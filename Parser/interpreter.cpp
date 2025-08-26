@@ -167,6 +167,8 @@ Expression* Interpreter::evaluate(Expression* expr) {
         return evaluateCharExpression(charExpr);
     } else if (StructInstantiationExpression* structInst = dynamic_cast<StructInstantiationExpression*>(expr)) {
         return evaluateStructInstantiation(structInst);
+    } else if (ClassInstantiationExpression* classInst = dynamic_cast<ClassInstantiationExpression*>(expr)) {
+        return evaluateClassInstantiation(classInst);
     } else if (MemberAccessExpression* memberAccess = dynamic_cast<MemberAccessExpression*>(expr)) {
         return evaluateMemberAccess(memberAccess);
     }
@@ -735,6 +737,9 @@ ReturnResult Interpreter::execute(Statement* stmt) {
     } else if (StructDefinition* structDef = dynamic_cast<StructDefinition*>(stmt)) {
         registerStructDefinition(structDef);
         return ReturnResult();
+    } else if (ClassDefinition* classDef = dynamic_cast<ClassDefinition*>(stmt)) {
+        registerClassDefinition(classDef);
+        return ReturnResult();
     } else if (ReturnStatement* returnStmt = dynamic_cast<ReturnStatement*>(stmt)) {
         Expression* value = executeReturn(returnStmt);
         return ReturnResult(value);
@@ -1095,11 +1100,20 @@ void Interpreter::registerStructDefinition(StructDefinition* structDef) {
     LOG_DEBUG("Registered struct definition: " + structName);
 }
 
+// 注册类定义
+void Interpreter::registerClassDefinition(ClassDefinition* classDef) {
+    if (!classDef) return;
+    
+    string className = classDef->name;
+    classDefinitions[className] = classDef;
+    LOG_DEBUG("Registered class definition: " + className);
+}
+
 // 结构体实例化求值
 Expression* Interpreter::evaluateStructInstantiation(StructInstantiationExpression* structInst) {
     if (!structInst) return nullptr;
     
-    string structName = structInst->structName;
+    string structName = structInst->structName->getName();
     
     // 查找结构体定义
     auto it = structDefinitions.find(structName);
@@ -1132,6 +1146,58 @@ Expression* Interpreter::evaluateStructInstantiation(StructInstantiationExpressi
     // 应用提供的字段值
     for (const auto& field : structInst->fieldValues) {
         instance->setEntry(field.first, evaluate(field.second));
+    }
+    
+    return instance;
+}
+
+// 类实例化求值
+Expression* Interpreter::evaluateClassInstantiation(ClassInstantiationExpression* classInst) {
+    if (!classInst) return nullptr;
+    
+    string className = classInst->className->getName();
+    
+    // 查找类定义
+    auto it = classDefinitions.find(className);
+    if (it == classDefinitions.end()) {
+        reportError("Undefined class: " + className);
+        return nullptr;
+    }
+    
+    ClassDefinition* classDef = it->second;
+    
+    // 创建一个字典来存储类实例
+    DictNode* instance = new DictNode();
+    
+    // 初始化所有公共成员为默认值
+    for (const auto& member : classDef->members) {
+        if (member.visibility == "public") {
+            if (member.defaultValue) {
+                instance->setEntry(member.name, evaluate(member.defaultValue));
+            } else {
+                // 根据类型设置默认值
+                if (member.type == "string") {
+                    instance->setEntry(member.name, new StringLiteral(""));
+                } else if (member.type == "int" || member.type == "double") {
+                    instance->setEntry(member.name, new IntExpression(0));
+                } else {
+                    instance->setEntry(member.name, new StringLiteral(""));
+                }
+            }
+        }
+    }
+    
+    // 如果有构造函数，调用构造函数
+    if (!classInst->arguments.empty()) {
+        // 这里可以添加构造函数调用的逻辑
+        // 暂时简单地将参数赋值给前几个公共成员
+        size_t argIndex = 0;
+        for (const auto& member : classDef->members) {
+            if (member.visibility == "public" && argIndex < classInst->arguments.size()) {
+                instance->setEntry(member.name, evaluate(classInst->arguments[argIndex]));
+                argIndex++;
+            }
+        }
     }
     
     return instance;

@@ -1,0 +1,42 @@
+let a = 10;
+let b = 3.14;
+let c = 5;
+let d = 2.5;
+
+let result1 = a + c;
+let result2 = a - c;
+let result3 = a * c;
+let result4 = a / c;
+let result5 = a % c;
+
+let result6 = b + d;
+let result7 = b - d;
+let result8 = b * d;
+let result9 = b / d;
+
+let result10 = a + b;
+let result11 = a * d;
+
+let compare1 = a > c;
+let compare2 = b < d;
+let compare3 = a == 10;
+
+let neg1 = -a;
+let neg2 = -b;
+
+print(result1);
+print(result2);
+print(result3);
+print(result4);
+print(result5);
+print(result6);
+print(result7);
+print(result8);
+print(result9);
+print(result10);
+print(result11);
+print(compare1);
+print(compare2);
+print(compare3);
+print(neg1);
+print(neg2);

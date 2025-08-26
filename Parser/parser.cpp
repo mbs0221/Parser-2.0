@@ -16,16 +16,16 @@ Parser::~Parser() {
 // parse方法实现 - 返回AST
 Program* Parser::parse(const string& file) {
     if (lex.open(file)) {
-        look = lex.scan();
+			look = lex.scan();
         return parseProgram();
     } else {
         printf("can't open %s.\n", file.c_str());
         return nullptr;
-    }
+		}
 }
 
 void Parser::move() {
-    look = lex.scan();
+		look = lex.scan();
 }
 
 // 语法分析器 - 匹配Tag预定义一个语法元素
@@ -35,13 +35,13 @@ bool Parser::match(int Tag) {
         return true;
     }
     move();
-    if (look->Tag > 255)
+		if (look->Tag > 255)
         printf("SYNTAX ERROR line[%03d]: expected %d, got %d\n", lex.line, Tag, look->Tag);
-    else
+		else
         printf("SYNTAX ERROR line[%03d]: expected '%c', got '%c'\n", lex.line, (char)Tag, (char)look->Tag);
     exit(1);  // 强制退出
-    return false;
-}
+		return false;
+	}
 
 // 解析程序 - 程序根节点
 Program* Parser::parseProgram() {
@@ -105,8 +105,8 @@ Statement* Parser::parseStatement() {
         default:
             printf("SYNTAX ERROR line[%03d]: unexpected token in statement\n", lex.line);
             exit(1);  // 强制退出
-            return nullptr;
-    }
+		return nullptr;
+	}
 }
 
 // 解析导入语句 (import "module.txt";)
@@ -139,7 +139,7 @@ VariableDeclaration* Parser::parseVariableDeclaration() {
     while (true) {
         // 解析标识符
         Token* idToken = look;
-        match(ID);
+		match(ID);
         
         Word* wordToken = static_cast<Word*>(idToken);
         string name = wordToken ? wordToken->word : "";
@@ -157,11 +157,11 @@ VariableDeclaration* Parser::parseVariableDeclaration() {
         
         // 检查是否还有更多变量（用逗号分隔）
         if (look->Tag == ',') {
-            match(',');
+					match(',');
         } else {
-            break;
-        }
-    }
+				break;
+			}
+		}
     
     // 匹配分号
     match(';');
@@ -184,7 +184,7 @@ ExpressionStatement* Parser::parsePrintStatement() {
     Expression* expr = parseExpression();
     
     match(')');
-    match(';');
+			match(';');
     
     // 创建print函数调用
     IdentifierExpression* printFunc = new IdentifierExpression("print");
@@ -301,7 +301,7 @@ TryStatement* Parser::parseTryStatement() {
         match(CATCH);
         match('(');
         Token* exceptionToken = look;
-        match(ID);
+			match(ID);
         
         string exceptionName = "";
         if (exceptionToken && exceptionToken->Tag == Tag::ID) {
@@ -336,7 +336,7 @@ FinallyStatement* Parser::parseFinallyStatement() {
     match(FINALLY);
     match('{');
     Statement* finallyBlock = parseStatement();
-    match('}');
+					match('}');
     return new FinallyStatement(finallyBlock);
 }
 
@@ -419,7 +419,7 @@ Expression* Parser::parseExpression() {
         match('.');
         
         Token* memberToken = look;
-        match(ID);
+		match(ID);
         
         string memberName = "";
         if (memberToken && memberToken->Tag == Tag::ID) {
@@ -429,7 +429,7 @@ Expression* Parser::parseExpression() {
         
         if (look->Tag == '(') {
             // 方法调用
-            match('(');
+			match('(');
             
             vector<Expression*> arguments;
             
@@ -482,7 +482,7 @@ Expression* Parser::parseCompare() {
     while (look->Tag == '>' || look->Tag == '<' || look->Tag == GE || look->Tag == BE || 
            look->Tag == EQ || look->Tag == NE || look->Tag == AND || look->Tag == OR) {
         Token* op = look;
-        match(look->Tag);
+					match(look->Tag);
         Expression* right = parseAdditive();
         left = new ArithmeticExpression(left, op, right);
     }
@@ -491,110 +491,109 @@ Expression* Parser::parseCompare() {
 
 // 解析项
 Expression* Parser::parseTerm() {
-    Expression* left = parseFactor();
+    Expression* left = parseUnary();
     
     while (look->Tag == '*' || look->Tag == '/' || look->Tag == '%') {
         Token* op = look;
         match(look->Tag);
-        Expression* right = parseFactor();
+        Expression* right = parseUnary();
         left = new ArithmeticExpression(left, op, right);
     }
     
     return left;
 }
 
-// 解析因子
-Expression* Parser::parseFactor() {
+// 解析一元操作符
+Expression* Parser::parseUnary() {
     // 处理一元操作符
     if (look->Tag == '!' || look->Tag == '-') {
         Token* op = look;
         match(look->Tag);
         Expression* operand = parseFactor();
-        if (!operand) return nullptr;
-        
-        // 创建一元表达式
         return new UnaryExpression(op, operand);
     }
+    return parseFactor();
+}
+
+// 解析因子
+Expression* Parser::parseFactor() {
     
-    if (look->Tag == ID) {
-        Token* idToken = look;
-        match(ID);
-        
-        // 检查是否是函数调用
-        if (look->Tag == '(') {
-            return parseCall(idToken);
-        }
-        
-        // 检查是否是访问操作
-        if (look->Tag == '[' || look->Tag == '.') {
-            string name = "";
-            if (idToken && idToken->Tag == Tag::ID) {
-                Word* wordToken = static_cast<Word*>(idToken);
-                name = wordToken ? wordToken->word : "";
-            }
-            return parseAccess(new IdentifierExpression(name));
-        }
-        
-        // 检查是否是结构体实例化
-        if (look->Tag == '{') {
-            string name = "";
-            if (idToken && idToken->Tag == Tag::ID) {
-                Word* wordToken = static_cast<Word*>(idToken);
-                name = wordToken ? wordToken->word : "";
-            }
-            return parseStructInstantiation(name);
-        }
-        
-        // 检查是否是类实例化
-        if (look->Tag == '(') {
-            string name = "";
-            if (idToken && idToken->Tag == Tag::ID) {
-                Word* wordToken = static_cast<Word*>(idToken);
-                name = wordToken ? wordToken->word : "";
-            }
-            return parseClassInstantiation(name);
-        }
-        
-        // 普通标识符
-        string name = "";
-        if (idToken && idToken->Tag == Tag::ID) {
-            Word* wordToken = static_cast<Word*>(idToken);
-            name = wordToken ? wordToken->word : "";
-        }
-        return new IdentifierExpression(name);
-    } else if (look->Tag == NUM) {
-        Integer* intToken = static_cast<Integer*>(look);
-        int value = intToken ? intToken->value : 0;
-        match(NUM);
-        return new NumberExpression(value);
-    } else if (look->Tag == REAL) {
-        Double* doubleToken = static_cast<Double*>(look);
-        double value = doubleToken ? doubleToken->value : 0.0;
-        printf("DEBUG: parseFactor found REAL token with value %f\n", value);
-        match(REAL);
-        return new NumberExpression(value);  // 直接使用浮点数
-    } else if (look->Tag == STR) {
-        // 字符串字面量
+    // 解析标识符
+    switch (look->Tag) {
+    case ID:
+        return parseIdentifier();
+    case NUM:
+        return parseInt();
+    case REAL:
+        return parseReal();
+    case STR:
         return parseStringLiteral();
-    } else if (look->Tag == CHAR) {
-        // 字符字面量
+    case CHAR:
         return parseCharLiteral();
-    } else if (look->Tag == '[') {
-        // 数组字面量
+    case '[':
         return parseArray();
-    } else if (look->Tag == '{') {
-        // 字典字面量
+    case '{':
         return parseDict();
-    } else if (look->Tag == '(') {
-        match('(');
-        Expression* expr = parseExpression();
-        match(')');
-        return expr;
-    } else {
+    case '(':
+        return parseParentheses();
+    default:
         printf("SYNTAX ERROR line[%03d]: unexpected token in factor\n", lex.line);
         match(look->Tag);
         return nullptr;
     }
+}
+
+// 解析标识符
+Expression* Parser::parseIdentifier() {
+    Token* idToken = look;
+    string name = "";
+    if (idToken && idToken->Tag == Tag::ID) {
+        Word* wordToken = static_cast<Word*>(idToken);
+        name = wordToken ? wordToken->word : "";
+    }
+    match(ID);
+    IdentifierExpression* idExpr = new IdentifierExpression(name);
+    
+    // 向后看一个token，根据token类型决定是函数调用、数组访问、成员访问、结构体实例化还是类实例化
+    switch (look->Tag) {
+        case '(':
+            // 检查是否是类实例化还是函数调用
+            // 这里我们需要区分类实例化和函数调用
+            // 暂时都当作函数调用处理，在解释器中再区分
+            return parseCall(idExpr);
+        case '[':
+            return parseAccess(idExpr);
+        case '.':
+            return parseAccess(idExpr);
+        case '{':
+            return parseStructInstantiation(idExpr);
+        default:
+            return idExpr;
+    }
+}
+
+// 解析括号表达式
+Expression* Parser::parseParentheses() {
+    match('(');
+    Expression* expr = parseExpression();
+    match(')');
+    return expr;
+}
+
+// 解析整数
+Expression* Parser::parseInt() {
+    Integer* intToken = static_cast<Integer*>(look);
+    int value = intToken ? intToken->value : 0;
+    match(NUM);
+    return new IntExpression(value);
+}
+
+// 解析浮点数
+Expression* Parser::parseReal() {
+    Double* doubleToken = static_cast<Double*>(look);
+    double value = doubleToken ? doubleToken->value : 0.0;
+    match(REAL);
+    return new DoubleExpression(value);
 }
 
 // 解析字符串字面量
@@ -667,14 +666,8 @@ DictNode* Parser::parseDict() {
     return dict;
 }
 
-// 解析函数调用
-CallExpression* Parser::parseCall(Token* funcToken) {
-    string name = "";
-    if (funcToken && funcToken->Tag == Tag::ID) {
-        Word* wordToken = static_cast<Word*>(funcToken);
-        name = wordToken ? wordToken->word : "";
-    }
-    IdentifierExpression* calleeExpr = new IdentifierExpression(name);
+// 解析函数调用或类实例化
+Expression* Parser::parseCall(IdentifierExpression* calleeExpr) {
     
     match('(');
     
@@ -691,7 +684,20 @@ CallExpression* Parser::parseCall(Token* funcToken) {
     
     match(')');
     
-    return new CallExpression(calleeExpr, arguments);
+    // 检查是否是类实例化
+    // 这里我们需要检查calleeExpr是否是已定义的类名
+    // 暂时简单地将所有带参数的调用都当作函数调用处理
+    // 在实际实现中，我们需要检查类定义表
+    
+    // 检查是否是类名（首字母大写）
+    string className = calleeExpr->getName();
+    if (!className.empty() && isupper(className[0])) {
+        // 可能是类实例化
+        return new ClassInstantiationExpression(calleeExpr, arguments);
+    } else {
+        // 可能是函数调用
+        return new CallExpression(calleeExpr, arguments);
+    }
 }
 
 // 解析访问操作 - 统一Access类型，支持所有访问形式
@@ -711,7 +717,7 @@ AccessExpression* Parser::parseAccess(IdentifierExpression* id) {
             // 静态成员访问：obj.member
             match('.');
             Token* memberToken = look;
-            match(ID);
+			match(ID);
             Word* wordToken = static_cast<Word*>(memberToken);
             StringLiteral* key = new StringLiteral(wordToken ? wordToken->word : "");
             target = new AccessExpression(target, key, true);
@@ -729,7 +735,7 @@ FunctionPrototype* Parser::parsePrototype() {
     
     // 解析函数名
     Token* funcNameToken = look;
-    match(ID);
+		match(ID);
     
     string funcName = "";
     if (funcNameToken && funcNameToken->Tag == Tag::ID) {
@@ -801,7 +807,7 @@ StructDefinition* Parser::parseStruct() {
         
         // 支持基本类型和用户定义类型
         if (look->Tag == ID || look->Tag == STR || look->Tag == INT || look->Tag == DOUBLE) {
-            match(look->Tag);
+			match(look->Tag);
         } else {
             match(ID); // 默认情况
         }
@@ -854,7 +860,7 @@ ClassDefinition* Parser::parseClass() {
     
     // 解析类名
     Token* classNameToken = look;
-    match(ID);
+				match(ID);
     
     string className = "";
     if (classNameToken && classNameToken->Tag == Tag::ID) {
@@ -868,7 +874,7 @@ ClassDefinition* Parser::parseClass() {
     if (look->Tag == ':') {
         match(':');
         Token* baseToken = look;
-        match(ID);
+				match(ID);
         
         if (baseToken && baseToken->Tag == Tag::ID) {
             Word* wordToken = static_cast<Word*>(baseToken);
@@ -968,7 +974,7 @@ ClassDefinition* Parser::parseClass() {
             }
             
             Token* memberNameToken = look;
-            match(ID);
+		match(ID);
             
             string memberName = "";
             if (memberNameToken && memberNameToken->Tag == Tag::ID) {
@@ -1024,7 +1030,7 @@ ClassMethod* Parser::parseClassMethod() {
         parameters.push_back(paramName);
         
         while (look->Tag == ',') {
-            match(',');
+				match(',');
             paramToken = look;
             match(ID);
             
@@ -1046,8 +1052,8 @@ ClassMethod* Parser::parseClassMethod() {
 }
 
 // 解析结构体实例化
-Expression* Parser::parseStructInstantiation(const string& structName) {
-    match('{');
+Expression* Parser::parseStructInstantiation(IdentifierExpression* structName) {
+			match('{');
     
     map<string, Expression*> fieldValues;
     
@@ -1068,7 +1074,7 @@ Expression* Parser::parseStructInstantiation(const string& structName) {
         
         // 解析更多字段
         while (look->Tag == ',') {
-            match(',');
+				match(',');
             
             fieldNameToken = look;
             match(ID);
@@ -1085,30 +1091,12 @@ Expression* Parser::parseStructInstantiation(const string& structName) {
         }
     }
     
-    match('}');
+			match('}');
     
     return new StructInstantiationExpression(structName, fieldValues);
 }
 
-// 解析类实例化
-Expression* Parser::parseClassInstantiation(const string& className) {
-    match('(');
-    
-    vector<Expression*> arguments;
-    
-    if (look->Tag != ')') {
-        arguments.push_back(parseExpression());
-        
-        while (look->Tag == ',') {
-            match(',');
-            arguments.push_back(parseExpression());
-        }
-    }
-    
-    match(')');
-    
-    return new ClassInstantiationExpression(className, arguments);
-}
+
 
 // 解析成员访问
 Expression* Parser::parseMemberAccess() {

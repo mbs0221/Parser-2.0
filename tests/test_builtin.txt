@@ -1,12 +1,12 @@
 let arr = [1,2,3,4,5];
 let len = count(arr);
-print("Array length: " . len . "\n");
+print("Array length: " + len + "\n");
 
 let str = "Hello, World!";
 let len2 = count(str);
-print("String length: " . len2 . "\n");
+print("String length: " + len2 + "\n");
 
 let dict = {"a": 1, "b": 2, "c": 3};
 let len3 = count(dict);
-print("Dictionary length: " . len3 . "\n");
+print("Dictionary length: " + len3 + "\n");
 #

@@ -1,0 +1,33 @@
+// 测试类实例化功能
+
+// 定义类
+class Student {
+    public string name;
+    public int age;
+    public int grade;
+}
+
+// 测试类实例化
+let student1 = Student("Alice", 20, 85);
+
+print("Student: ");
+print(student1.name);
+print(", Age: ");
+print(student1.age);
+print(", Grade: ");
+print(student1.grade);
+print("\n");
+
+// 测试结构体实例化
+struct Person {
+    string name;
+    int age;
+}
+
+let person1 = Person {name: "John", age: 25};
+
+print("Person: ");
+print(person1.name);
+print(", Age: ");
+print(person1.age);
+print("\n");

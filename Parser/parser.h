@@ -51,8 +51,13 @@ protected:
     Expression* parseCompare();
     Expression* parseAdditive();
     Expression* parseTerm();
+    Expression* parseUnary();
     Expression* parseFactor();
-    CallExpression* parseCall(Token* funcToken);
+    Expression* parseParentheses();
+    Expression* parseReal();
+    Expression* parseInt();
+    Expression* parseIdentifier();
+    Expression* parseCall(IdentifierExpression* calleeExpr);
     AccessExpression* parseAccess(IdentifierExpression* id);
     
     // 字符串解析
@@ -67,8 +72,7 @@ protected:
     StructDefinition* parseStruct();
     ClassDefinition* parseClass();
     ClassMethod* parseClassMethod();
-    Expression* parseStructInstantiation(const string& structName);
-    Expression* parseClassInstantiation(const string& className);
+    Expression* parseStructInstantiation(IdentifierExpression* structName);
     Expression* parseMemberAccess();
     Expression* parseMethodCall();
     

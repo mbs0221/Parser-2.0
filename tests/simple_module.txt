@@ -1,0 +1,5 @@
+function simpleFunc(x) {
+    return x * 2;
+}
+
+let MODULE_CONSTANT = 42;

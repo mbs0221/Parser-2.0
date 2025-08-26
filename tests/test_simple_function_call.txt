@@ -1,0 +1,8 @@
+function testFunc() {
+    return 42;
+}
+
+let result = testFunc();
+print("result = ");
+print(result);
+print("\n");

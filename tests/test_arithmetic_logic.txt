@@ -70,13 +70,13 @@ println("a > b && c < a || b == 5: " + complex2);
 
 // 条件语句测试
 println("=== 条件语句测试 ===");
-if a > b then {
+if (a > b) {
     println("a 大于 b");
 } else {
     println("a 不大于 b");
 }
 
-if a == 10 && b == 5 then {
+if (a == 10 && b == 5) {
     println("a 等于 10 且 b 等于 5");
 } else {
     println("条件不满足");
@@ -85,7 +85,7 @@ if a == 10 && b == 5 then {
 // 循环测试
 println("=== 循环测试 ===");
 let i = 0;
-while i < 5 do {
+while (i < 5) {
     println("i = " + i);
     i = i + 1;
 }

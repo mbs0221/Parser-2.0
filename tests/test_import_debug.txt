@@ -1,0 +1,11 @@
+import "module_utils.txt";
+
+let x = 10;
+print("x = ");
+print(x);
+print("\n");
+
+let y = max(x, 5);
+print("max(x, 5) = ");
+print(y);
+print("\n");

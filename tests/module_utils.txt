@@ -32,6 +32,46 @@ function factorial(n) {
     }
 }
 
+// 输出函数
+function println(x) {
+    print(x);
+    print("\n");
+}
+
+function printInt(x) {
+    print(x);
+}
+
+function printFloat(x) {
+    print(x);
+}
+
+function printString(s) {
+    print(s);
+}
+
+function printLine() {
+    print("\n");
+}
+
+function printSeparator() {
+    print("----------------------------------------\n");
+}
+
+// 格式化输出函数
+function printResult(label, value) {
+    print(label);
+    print(" = ");
+    print(value);
+    print("\n");
+}
+
+function printHeader(title) {
+    print("=== ");
+    print(title);
+    print(" ===\n");
+}
+
 // 导出一些常量
 let MAX_INT = 2147483647;
 let MIN_INT = -2147483648;
