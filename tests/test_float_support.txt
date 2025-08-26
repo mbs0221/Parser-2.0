@@ -1,0 +1,22 @@
+// 测试浮点数支持
+
+// 直接使用浮点数
+let x = 3.14;
+print("x = " + x + "\n");
+
+let y = 2.5;
+print("y = " + y + "\n");
+
+// 浮点数运算
+let sum = x + y;
+print("x + y = " + sum + "\n");
+
+let product = x * y;
+print("x * y = " + product + "\n");
+
+// 混合运算
+let result = 10 + 3.5;
+print("10 + 3.5 = " + result + "\n");
+
+let result2 = 5.5 * 2;
+print("5.5 * 2 = " + result2 + "\n");

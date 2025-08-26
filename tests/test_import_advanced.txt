@@ -1,0 +1,56 @@
+// 高级import测试 - 测试多个模块和嵌套导入
+
+// 导入基础模块
+import "tests/module_math.txt";
+import "tests/module_utils.txt";
+import "tests/module_geometry.txt";
+
+// 测试数学函数
+print("=== 数学函数测试 ===\n");
+let sum = add(15, 25);
+print("15 + 25 = " + sum + "\n");
+
+let product = multiply(7, 8);
+print("7 * 8 = " + product + "\n");
+
+let power_result = power(3, 4);
+print("3^4 = " + power_result + "\n");
+
+// 测试工具函数
+print("=== 工具函数测试 ===\n");
+let max_val = max(100, 200);
+print("max(100, 200) = " + max_val + "\n");
+
+let min_val = min(50, 30);
+print("min(50, 30) = " + min_val + "\n");
+
+let abs_val = abs(-42);
+print("abs(-42) = " + abs_val + "\n");
+
+let fact = factorial(6);
+print("6! = " + fact + "\n");
+
+// 测试几何函数
+print("=== 几何函数测试 ===\n");
+let circle_area = circleArea(5);
+print("半径为5的圆面积 = " + circle_area + "\n");
+
+let rect_area = rectangleArea(10, 6);
+print("10x6的矩形面积 = " + rect_area + "\n");
+
+let tri_area = triangleArea(8, 4);
+print("底8高4的三角形面积 = " + tri_area + "\n");
+
+// 测试常量
+print("=== 常量测试 ===\n");
+print("数学PI = " + PI + "\n");
+print("最大整数 = " + MAX_INT + "\n");
+print("角度转弧度系数 = " + DEG_TO_RAD + "\n");
+
+// 测试复杂计算
+print("=== 复杂计算测试 ===\n");
+let complex_result = add(multiply(2, 3), power(2, 3));
+print("2*3 + 2^3 = " + complex_result + "\n");
+
+let area_sum = add(circleArea(3), rectangleArea(4, 5));
+print("圆面积(半径3) + 矩形面积(4x5) = " + area_sum + "\n");

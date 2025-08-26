@@ -60,6 +60,8 @@ Program* Parser::parseProgram() {
 // 解析语句
 Statement* Parser::parseStatement() {
     switch (look->Tag) {
+        case IMPORT:
+            return parseImportStatement();
         case LET:
             return parseVariableDeclaration();
         case IF:
@@ -105,6 +107,27 @@ Statement* Parser::parseStatement() {
             exit(1);  // 强制退出
             return nullptr;
     }
+}
+
+// 解析导入语句 (import "module.txt";)
+ImportStatement* Parser::parseImportStatement() {
+    match(IMPORT);
+    
+    // 解析字符串字面量作为模块名
+    if (look->Tag != STR) {
+        printf("SYNTAX ERROR line[%03d]: expected string literal after import\n", lex.line);
+        exit(1);
+    }
+    
+    Token* strToken = look;
+    match(STR);
+    
+    Word* wordToken = static_cast<Word*>(strToken);
+    string moduleName = wordToken ? wordToken->word : "";
+    
+    match(';');
+    
+    return new ImportStatement(moduleName);
 }
 
 // 解析变量声明语句 (let x = 10, y = 20, z;)
@@ -544,6 +567,12 @@ Expression* Parser::parseFactor() {
         int value = intToken ? intToken->value : 0;
         match(NUM);
         return new NumberExpression(value);
+    } else if (look->Tag == REAL) {
+        Double* doubleToken = static_cast<Double*>(look);
+        double value = doubleToken ? doubleToken->value : 0.0;
+        printf("DEBUG: parseFactor found REAL token with value %f\n", value);
+        match(REAL);
+        return new NumberExpression(value);  // 直接使用浮点数
     } else if (look->Tag == STR) {
         // 字符串字面量
         return parseStringLiteral();

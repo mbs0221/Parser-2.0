@@ -8,6 +8,7 @@
 #include <memory>
 #include <stdexcept>
 #include <sstream>
+#include <typeinfo>
 
 using namespace std;
 
@@ -52,17 +53,30 @@ struct Expression : public AST {
 
 // 数字表达式节点 - 现在是语法树节点，不是词法单元
 struct NumberExpression : public Expression {
-    int value;
+    double value;  // 使用double来支持整数和浮点数
+    bool isFloat;  // 标记是否为浮点数
     
-    NumberExpression(int val) : value(val) {}
+    NumberExpression(int val) : value(val), isFloat(false) {}
+    NumberExpression(double val) : value(val), isFloat(true) {}
     
     // 获取数值
     int getIntValue() const {
+        return (int)value;
+    }
+    
+    double getDoubleValue() const {
         return value;
     }
     
     string toString() const override {
-        return to_string(value);
+        if (isFloat()) {
+            // 对于浮点数，保留适当的小数位数
+            char buffer[32];
+            snprintf(buffer, sizeof(buffer), "%.6g", value);
+            return string(buffer);
+        } else {
+            return to_string((int)value);
+        }
     }
     
     // 运算符重载 - 算术运算
@@ -89,7 +103,11 @@ struct NumberExpression : public Expression {
         if (other.value == 0) {
             throw runtime_error("Modulo by zero");
         }
-        return NumberExpression(value % other.value);
+        // 对于浮点数，模运算没有意义，返回0
+        if (isFloat || other.isFloat) {
+            return NumberExpression(0.0);
+        }
+        return NumberExpression((int)value % (int)other.value);
     }
     
     // 运算符重载 - 比较运算
@@ -138,6 +156,10 @@ struct NumberExpression : public Expression {
     
 
 };
+
+// 类型别名，方便使用
+using IntExpression = NumberExpression<int>;
+using DoubleExpression = NumberExpression<double>;
 
 // 标识符表达式
 struct IdentifierExpression : public Expression {
@@ -381,28 +403,28 @@ struct StringNode : public ArrayNode {
     }
     
     // 运算符重载 - 字符串比较
-    NumberExpression operator==(const StringNode& other) const {
-        return NumberExpression(toString() == other.toString() ? 1 : 0);
+    NumberExpression<int> operator==(const StringNode& other) const {
+        return NumberExpression<int>(toString() == other.toString() ? 1 : 0);
     }
     
-    NumberExpression operator!=(const StringNode& other) const {
-        return NumberExpression(toString() != other.toString() ? 1 : 0);
+    NumberExpression<int> operator!=(const StringNode& other) const {
+        return NumberExpression<int>(toString() != other.toString() ? 1 : 0);
     }
     
-    NumberExpression operator<(const StringNode& other) const {
-        return NumberExpression(toString() < other.toString() ? 1 : 0);
+    NumberExpression<int> operator<(const StringNode& other) const {
+        return NumberExpression<int>(toString() < other.toString() ? 1 : 0);
     }
     
-    NumberExpression operator>(const StringNode& other) const {
-        return NumberExpression(toString() > other.toString() ? 1 : 0);
+    NumberExpression<int> operator>(const StringNode& other) const {
+        return NumberExpression<int>(toString() > other.toString() ? 1 : 0);
     }
     
-    NumberExpression operator<=(const StringNode& other) const {
-        return NumberExpression(toString() <= other.toString() ? 1 : 0);
+    NumberExpression<int> operator<=(const StringNode& other) const {
+        return NumberExpression<int>(toString() <= other.toString() ? 1 : 0);
     }
     
-    NumberExpression operator>=(const StringNode& other) const {
-        return NumberExpression(toString() >= other.toString() ? 1 : 0);
+    NumberExpression<int> operator>=(const StringNode& other) const {
+        return NumberExpression<int>(toString() >= other.toString() ? 1 : 0);
     }
     
 
@@ -523,6 +545,17 @@ struct Statement : public AST {
     Type getType() const override { return Type::STATEMENT; }
     
     virtual string toString() const override { return "statement"; }
+};
+
+// 导入语句
+struct ImportStatement : public Statement {
+    string moduleName;  // 要导入的模块名
+    
+    ImportStatement(const string& module) : moduleName(module) {}
+    
+    string toString() const override {
+        return "import " + moduleName + ";";
+    }
 };
 
 // 表达式语句
@@ -828,7 +861,7 @@ struct Program : public AST {
 // ==================== 类型别名（向后兼容） ====================
 // 为了保持向后兼容性，提供类型别名
 using Id = IdentifierExpression;
-using Constant = NumberExpression;
+using Constant = NumberExpression<int>;
 using Arith = ArithmeticExpression;
 using Stmt = Statement;
 using Stmts = BlockStatement;

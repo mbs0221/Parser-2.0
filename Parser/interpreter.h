@@ -2,6 +2,7 @@
 #define INTERPRETER_H
 
 #include "inter.h"
+#include "parser.h"
 #include <string>
 #include <list>
 #include <map>
@@ -86,6 +87,7 @@ public:
     Expression* evaluateCallExpression(CallExpression* call);
     
     // 语句执行
+    ReturnResult executeImportStatement(ImportStatement* importStmt);
     ReturnResult executeExpressionStatement(ExpressionStatement* stmt);
     ReturnResult executeVariableDeclaration(VariableDeclaration* decl);
     ReturnResult executeIfStatement(IfStatement* ifStmt);

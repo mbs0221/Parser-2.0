@@ -42,6 +42,7 @@ Lexer::Lexer(){
 	words["public"] = new Word(PUBLIC, "public");
 	words["private"] = new Word(PRIVATE, "private");
 	words["protected"] = new Word(PROTECTED, "protected");
+	words["import"] = new Word(IMPORT, "import");
 }
 
 Lexer::~Lexer(){
@@ -189,8 +190,10 @@ Token *Lexer::match_decimal(){
 	
 	// 根据是否为浮点数返回相应的Token
 	if (isFloat){
+		printf("DEBUG: Creating Double token with value %f\n", floatVal);
 		return new Double(floatVal);
 	} else {
+		printf("DEBUG: Creating Integer token with value %d\n", val);
 		return new Integer(val);
 	}
 }

@@ -717,7 +717,9 @@ ReturnResult Interpreter::execute(Statement* stmt) {
     if (!stmt) return ReturnResult();
     
     // 根据语句类型调用相应的执行方法
-    if (ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt)) {
+    if (ImportStatement* importStmt = dynamic_cast<ImportStatement*>(stmt)) {
+        return executeImportStatement(importStmt);
+    } else if (ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt)) {
         return executeExpressionStatement(exprStmt);
     } else if (VariableDeclaration* varDecl = dynamic_cast<VariableDeclaration*>(stmt)) {
         return executeVariableDeclaration(varDecl);
@@ -738,6 +740,41 @@ ReturnResult Interpreter::execute(Statement* stmt) {
         return ReturnResult(value);
     }
     
+    return ReturnResult();
+}
+
+// 导入语句执行
+ReturnResult Interpreter::executeImportStatement(ImportStatement* importStmt) {
+    if (!importStmt) return ReturnResult();
+    
+    string moduleName = importStmt->moduleName;
+    LOG_DEBUG("Importing module: " + moduleName);
+    
+    // 检查文件是否存在
+    ifstream file(moduleName);
+    if (!file.is_open()) {
+        LOG_ERROR("Error: Cannot open module file '" + moduleName + "'");
+        return ReturnResult();
+    }
+    file.close();
+    
+    // 创建新的解析器来解析导入的模块
+    Parser parser;
+    Program* importedProgram = parser.parse(moduleName);
+    
+    if (!importedProgram) {
+        cout << "Error: Failed to parse module '" + moduleName + "'" << endl;
+        return ReturnResult();
+    }
+    
+    // 执行导入的模块（在当前作用域中）
+    LOG_DEBUG("Executing imported module: " + moduleName);
+    execute(importedProgram);
+    
+    // 清理导入的程序
+    delete importedProgram;
+    
+    LOG_DEBUG("Module import completed: " + moduleName);
     return ReturnResult();
 }
 
@@ -943,13 +980,13 @@ Expression* Interpreter::executeCount(vector<Expression*>& args) {
 
     // 如果是数组，返回数组长度
     if (ArrayNode* array = dynamic_cast<ArrayNode*>(arg)) {
-        return new NumberExpression(array->getElementCount());
+        return new NumberExpression((int)array->getElementCount());
     }
 
     // 如果是字符串，返回字符串长度
     StringLiteral* str = dynamic_cast<StringLiteral*>(arg);
     if (str) {
-        return new NumberExpression(str->length());
+        return new NumberExpression((int)str->length());
     }
 
     // 如果是字典，返回字典的键值对数量

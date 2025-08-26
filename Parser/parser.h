@@ -22,6 +22,7 @@ protected:
     
     // 语句解析
     Statement* parseStatement();
+    ImportStatement* parseImportStatement();
     VariableDeclaration* parseVariableDeclaration();
     IfStatement* parseIfStatement();
     WhileStatement* parseWhileStatement();
