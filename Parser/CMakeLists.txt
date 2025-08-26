@@ -8,6 +8,7 @@ set(SOURCES
     parser.cpp
     main.cpp
     logger.cpp
+    ast_optimizer.cpp
 )
 
 # 设置头文件
@@ -16,6 +17,8 @@ set(HEADERS
     lexer.h
     parser.h
     logger.h
+    ast_visitor.h
+    ast_optimizer.h
 )
 
 # 创建可执行文件

@@ -1,5 +1,4 @@
 #include "parser.h"
-#include "inter.cpp"
 #include "inter.h"
 
 using namespace std;
@@ -262,7 +261,7 @@ ForStatement* Parser::parseForStatement() {
 // 解析break语句
 BreakStatement* Parser::parseBreakStatement() {
     match(BREAK);
-    match(';');
+		match(';');
     return new BreakStatement();
 }
 
@@ -299,7 +298,7 @@ TryStatement* Parser::parseTryStatement() {
     Statement* catchBlock = nullptr;
     if (look->Tag == CATCH) {
         match(CATCH);
-        match('(');
+			match('(');
         Token* exceptionToken = look;
 			match(ID);
         
@@ -319,14 +318,14 @@ CatchStatement* Parser::parseCatchStatement() {
     match(CATCH);
     match('(');
     Token* exceptionToken = look;
-    match(ID);
+					match(ID);
     
     string exceptionName = "";
     if (exceptionToken && exceptionToken->Tag == Tag::ID) {
         Word* wordToken = static_cast<Word*>(exceptionToken);
         exceptionName = wordToken ? wordToken->word : "";
-    }
-    match(')');
+			}
+			match(')');
     Statement* catchBlock = parseStatement();
     return new CatchStatement(exceptionName, catchBlock);
 }
@@ -482,7 +481,7 @@ Expression* Parser::parseCompare() {
     while (look->Tag == '>' || look->Tag == '<' || look->Tag == GE || look->Tag == BE || 
            look->Tag == EQ || look->Tag == NE || look->Tag == AND || look->Tag == OR) {
         Token* op = look;
-					match(look->Tag);
+			match(look->Tag);
         Expression* right = parseAdditive();
         left = new ArithmeticExpression(left, op, right);
     }
@@ -495,7 +494,7 @@ Expression* Parser::parseTerm() {
     
     while (look->Tag == '*' || look->Tag == '/' || look->Tag == '%') {
         Token* op = look;
-        match(look->Tag);
+			match(look->Tag);
         Expression* right = parseUnary();
         left = new ArithmeticExpression(left, op, right);
     }
@@ -508,7 +507,7 @@ Expression* Parser::parseUnary() {
     // 处理一元操作符
     if (look->Tag == '!' || look->Tag == '-') {
         Token* op = look;
-        match(look->Tag);
+			match(look->Tag);
         Expression* operand = parseFactor();
         return new UnaryExpression(op, operand);
     }
@@ -520,7 +519,7 @@ Expression* Parser::parseFactor() {
     
     // 解析标识符
     switch (look->Tag) {
-    case ID:
+		case ID:
         return parseIdentifier();
     case NUM:
         return parseInt();
@@ -551,7 +550,7 @@ Expression* Parser::parseIdentifier() {
         Word* wordToken = static_cast<Word*>(idToken);
         name = wordToken ? wordToken->word : "";
     }
-    match(ID);
+				match(ID);
     IdentifierExpression* idExpr = new IdentifierExpression(name);
     
     // 向后看一个token，根据token类型决定是函数调用、数组访问、成员访问、结构体实例化还是类实例化
@@ -584,7 +583,7 @@ Expression* Parser::parseParentheses() {
 Expression* Parser::parseInt() {
     Integer* intToken = static_cast<Integer*>(look);
     int value = intToken ? intToken->value : 0;
-    match(NUM);
+					match(NUM);
     return new IntExpression(value);
 }
 
@@ -669,7 +668,7 @@ DictNode* Parser::parseDict() {
 // 解析函数调用或类实例化
 Expression* Parser::parseCall(IdentifierExpression* calleeExpr) {
     
-    match('(');
+		match('(');
     
     vector<Expression*> arguments;
     
@@ -682,7 +681,7 @@ Expression* Parser::parseCall(IdentifierExpression* calleeExpr) {
         }
     }
     
-    match(')');
+		match(')');
     
     // 检查是否是类实例化
     // 这里我们需要检查calleeExpr是否是已定义的类名
@@ -711,7 +710,7 @@ AccessExpression* Parser::parseAccess(IdentifierExpression* id) {
             // 数组访问：arr[index] 或 jsonArr[index]
             match('[');
             Expression* key = parseExpression();
-            match(']');
+			match(']');
             target = new AccessExpression(target, key, false);
         } else if (look->Tag == '.') {
             // 静态成员访问：obj.member
@@ -759,7 +758,7 @@ FunctionPrototype* Parser::parsePrototype() {
         parameters.push_back(paramName);
         
         while (look->Tag == ',') {
-            match(',');
+				match(',');
             paramToken = look;
             match(ID);
             
@@ -797,7 +796,7 @@ StructDefinition* Parser::parseStruct() {
         structName = wordToken ? wordToken->word : "";
     }
     
-    match('{');
+			match('{');
     
     vector<StructMember> members;
     
@@ -849,7 +848,7 @@ StructDefinition* Parser::parseStruct() {
         members.push_back(StructMember(memberName, memberType, defaultValue));
     }
     
-    match('}');
+			match('}');
     
     return new StructDefinition(structName, members);
 }
@@ -872,7 +871,7 @@ ClassDefinition* Parser::parseClass() {
     
     // 检查是否有继承
     if (look->Tag == ':') {
-        match(':');
+			match(':');
         Token* baseToken = look;
 				match(ID);
         

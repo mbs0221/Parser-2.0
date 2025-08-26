@@ -3,6 +3,8 @@
 
 #include "inter.h"
 #include "parser.h"
+#include "control_flow.h"
+#include "ast_visitor.h"
 #include <string>
 #include <list>
 #include <map>
@@ -38,7 +40,7 @@ struct ReturnResult {
 };
 
 // 解释器类 - 负责AST的求值和作用域管理
-class Interpreter {
+class Interpreter : public ASTVisitor {
 private:
     // 作用域结构 - 同时管理变量和函数
     struct Scope {
@@ -66,6 +68,9 @@ private:
     
     // 调用栈（用于调试和错误报告）
     vector<string> callStack;
+    
+    // 结果栈 - 用于访问者模式存储计算结果
+    vector<Expression*> resultStack;
 
 public:
     Interpreter();
@@ -79,56 +84,90 @@ public:
     Expression* lookupVariable(const string& name);
     FunctionDefinition* lookupFunction(const string& name);
     
+    // 结果栈操作
+    void pushResult(Expression* result);
+    Expression* popResult();
+    Expression* peekResult();
+    void clearResultStack();
+    
     // AST求值方法
     Expression* evaluate(AST* node);
     Expression* evaluate(Expression* expr);
-    ReturnResult execute(Statement* stmt);
+    void execute(Statement* stmt);
     void execute(Program* program);
+    void visit(AST* node);
 
-    // 声明求值
-    Expression* evaluateDeclaration(VariableDeclaration* decl);
-
-    // 表达式求值
-
-
-    Expression* evaluateIdentifierExpression(IdentifierExpression* idExpr);
-    Expression* evaluateUnaryExpression(UnaryExpression* unary);
-    Expression* evaluateArithmeticExpression(ArithmeticExpression* arith);
-    Expression* evaluateAssignmentExpression(AssignmentExpression* assign);
-    Expression* evaluateStringLiteral(StringLiteral* strLit);
-    Expression* evaluateCharExpression(CharExpression* charExpr);
-    Expression* evaluateArrayNode(ArrayNode* array);
-    Expression* evaluateDictNode(DictNode* dict);
-    Expression* evaluateStringNode(StringNode* strNode);
-    Expression* evaluateAccessExpression(AccessExpression* access);
-    Expression* evaluateCallExpression(CallExpression* call);
+    // ASTVisitor接口实现 - 表达式访问方法
+    void visit(IntExpression* expr) override;
+    void visit(DoubleExpression* expr) override;    
+    void visit(IdentifierExpression* expr) override;
+    void visit(UnaryExpression* expr) override;
+    void visit(BinaryExpression* expr) override;
+    void visit(AssignmentExpression* expr) override;
+    void visit(BoolExpression* expr) override;
+    void visit(CharExpression* expr) override;
+    void visit(ArrayNode* expr) override;
+    void visit(DictNode* expr) override;
+    void visit(StringLiteral* expr) override;
+    void visit(AccessExpression* expr) override;
+    void visit(CallExpression* expr) override;
+    void visit(MethodCallExpression* expr) override;
     
-    // 语句执行
-    ReturnResult executeImportStatement(ImportStatement* importStmt);
-    ReturnResult executeExpressionStatement(ExpressionStatement* stmt);
-    ReturnResult executeVariableDeclaration(VariableDeclaration* decl);
-    ReturnResult executeIfStatement(IfStatement* ifStmt);
-    ReturnResult executeWhileStatement(WhileStatement* whileStmt);
-    ReturnResult executeBlockStatement(BlockStatement* block);
-    
-    // 字符串运算
-    Expression* stringConcatenation(Expression* left, Expression* right);
-    Expression* stringComparison(Expression* left, Expression* right, const string& op);
-    Expression* stringIndexing(StringNode* str, Expression* index);
-    Expression* stringLength(StringNode* str);
-    Expression* stringSubstring(StringNode* str, Expression* start, Expression* length);
+    // CastExpression具体访问方法
+    void visit(CastExpression<IntExpression>* expr) override;
+    void visit(CastExpression<DoubleExpression>* expr) override;
+    void visit(CastExpression<StringLiteral>* expr) override;
+    void visit(CastExpression<CharExpression>* expr) override;
+    void visit(CastExpression<BoolExpression>* expr) override;
+    void visit(StructInstantiationExpression* expr) override;
+    void visit(ClassInstantiationExpression* expr) override;
+    void visit(MemberAccessExpression* expr) override;
+
+    // ASTVisitor接口实现 - 语句访问方法
+    void visit(ImportStatement* stmt) override;
+    void visit(ExpressionStatement* stmt) override;
+    void visit(VariableDeclaration* stmt) override;
+    void visit(IfStatement* stmt) override;
+    void visit(WhileStatement* stmt) override;
+    void visit(ForStatement* stmt) override;
+    void visit(DoWhileStatement* stmt) override;
+    void visit(BlockStatement* stmt) override;
+    void visit(FunctionDefinition* stmt) override;
+    void visit(StructDefinition* stmt) override;
+    void visit(ClassDefinition* stmt) override;
+    void visit(BreakStatement* stmt) override;
+    void visit(ContinueStatement* stmt) override;
+    void visit(ReturnStatement* stmt) override;
+    void visit(ThrowStatement* stmt) override;
+    void visit(TryStatement* stmt) override;
+    void visit(CatchStatement* stmt) override;
+    void visit(FinallyStatement* stmt) override;
+    void visit(SwitchStatement* stmt) override;
+    void visit(CaseStatement* stmt) override;
+    void visit(DefaultStatement* stmt) override;
+    void visit(FunctionPrototype* stmt) override;
+
+    // ASTVisitor接口实现 - 程序访问方法
+    void visit(Program* program) override;
     
     // 内置函数
-    void registerBuiltinFunctions();
     Expression* executePrint(vector<Expression*>& args);
     Expression* executeCount(vector<Expression*>& args);
     Expression* executeCin(vector<Expression*>& args);
-    Expression* executeStringLength(vector<Expression*>& args);
-    Expression* executeStringSubstring(vector<Expression*>& args);
+    void registerBuiltinFunctions();
+    bool isBuiltinFunction(const string& funcName);
+    Expression* executeBuiltinFunction(const string& funcName, vector<Expression*>& args);
+
+    // 二元运算辅助方法
+    void executeArithmeticOperation(BinaryExpression* binary, Expression* left, Expression* right);
+    void executeComparisonOperation(BinaryExpression* binary, Expression* left, Expression* right);
+    void executeLogicalOperation(BinaryExpression* binary, Expression* left, Expression* right);
     
-    // 字符串拼接相关
-    Expression* evaluateStringConcatenationExpression(StringConcatenationExpression* concat);
-    string convertToString(Expression* expr);
+    // 类型转换辅助方法
+    template<typename T>
+    void executeCastOperation(CastExpression<T>* cast);
+    template<typename T>
+    Expression* performCast(Expression* operand);
     
     // 错误处理
     void reportError(const string& message);
@@ -138,21 +177,11 @@ public:
     void printScope();
     void printCallStack();
 
-    // 内置函数检查器实现
-    bool isBuiltinFunction(const string& funcName);
-    Expression* executeBuiltinFunction(const string& funcName, vector<Expression*>& args);
     
-    // 函数执行
-    Expression* executeReturn(ReturnStatement* returnStmt);
-    Expression* executeFunction(FunctionDefinition* funcDef, vector<Expression*>& args);
-    void executeFunctionDefinition(FunctionDefinition* funcDef);
-    
+
     // 结构体相关
     void registerStructDefinition(StructDefinition* structDef);
     void registerClassDefinition(ClassDefinition* classDef);
-    Expression* evaluateStructInstantiation(StructInstantiationExpression* structInst);
-    Expression* evaluateClassInstantiation(ClassInstantiationExpression* classInst);
-    Expression* evaluateMemberAccess(MemberAccessExpression* memberAccess);
 };
 
 #endif // INTERPRETER_H

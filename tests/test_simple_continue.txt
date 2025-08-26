@@ -1,28 +1,24 @@
-// 简单的continue测试
+let i = 1;
+print("Testing simple continue:\n");
 
-let i = 0;
-let sum = 0;
-
-print("Starting loop:\n");
-
-while (i < 5) {
-    i = i + 1;
+while (i <= 3) {
+    print("i = ");
+    print(i);
+    print("\n");
     
-    if (i == 3) {
-        print("Skipping i = ");
-        print(i);
-        print("\n");
+    if (i == 2) {
+        print("Continue at i = 2\n");
+        i = i + 1;
         continue;
     }
     
-    sum = sum + i;
-    print("i = ");
+    print("After continue check, i = ");
     print(i);
-    print(", sum = ");
-    print(sum);
     print("\n");
+    
+    i = i + 1;
 }
 
-print("Final sum = ");
-print(sum);
+print("After loop, i = ");
+print(i);
 print("\n");

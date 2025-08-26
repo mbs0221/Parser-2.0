@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include "inter.h"
 #include "lexer.h"
 #include "logger.h"
 #include <iostream>
@@ -14,12 +15,16 @@ Interpreter::Interpreter() {
     currentScope = globalScope;
     scopes.push_back(globalScope);
     
+    // 初始化完成
+    
     // 注册内置函数
     registerBuiltinFunctions();
 }
 
 // 解释器析构函数
 Interpreter::~Interpreter() {
+    // 清理完成
+    
     // 清理作用域
     for (auto scope : scopes) {
         if (scope) {
@@ -116,69 +121,67 @@ FunctionDefinition* Interpreter::lookupFunction(const string& name) {
 }
 
 // 主求值方法
-Expression* Interpreter::evaluate(AST* node) {
-    if (!node) return nullptr;
+void Interpreter::visit(AST* node) {
+    if (!node) return;
     
-    // 根据节点类型调用相应的求值方法
-    switch (node->getType()) {
-        case AST::Type::DECLARATION: // 初始化变量
-            return evaluateDeclaration(static_cast<VariableDeclaration*>(node));
-        case AST::Type::EXPRESSION: // 表达式求值
-            return evaluate(static_cast<Expression*>(node));
-        case AST::Type::STATEMENT: // 执行语句
-            execute(static_cast<Statement*>(node));
-            return nullptr;
-        default:
-            reportError("Unknown AST node type");
-            return nullptr;
-    }
+    // 使用访问者模式统一分发
+    node->accept(this);
 }
 
-// 求值表达式
+// 执行语句
+void Interpreter::execute(Statement* stmt) {
+    if (!stmt) return;
+    stmt->accept(this);
+}
+
+// 执行程序
+void Interpreter::execute(Program* program) {
+    if (!program) return;
+    program->accept(this);
+}
+
+// 求值表达式 - 使用访问者模式
 Expression* Interpreter::evaluate(Expression* expr) {
     if (!expr) return nullptr;
     
-    // 根据表达式类型进行求值
-    if (NumberExpression* numExpr = dynamic_cast<NumberExpression*>(expr)) {
-        return new NumberExpression(numExpr->getIntValue());  // 创建副本避免重复删除
-    } else if (IdentifierExpression* idExpr = dynamic_cast<IdentifierExpression*>(expr)) {
-        return evaluateIdentifierExpression(idExpr);
-    } else if (UnaryExpression* unary = dynamic_cast<UnaryExpression*>(expr)) {
-        return evaluateUnaryExpression(unary);
-    } else if (ArithmeticExpression* arith = dynamic_cast<ArithmeticExpression*>(expr)) {
-        return evaluateArithmeticExpression(arith);
-    } else if (StringLiteral* strLit = dynamic_cast<StringLiteral*>(expr)) {
-        return evaluateStringLiteral(strLit);
-    } else if (StringConcatenationExpression* concat = dynamic_cast<StringConcatenationExpression*>(expr)) {
-        return evaluateStringConcatenationExpression(concat);
-    } else if (ArrayNode* array = dynamic_cast<ArrayNode*>(expr)) {
-        return evaluateArrayNode(array);
-    } else if (DictNode* dict = dynamic_cast<DictNode*>(expr)) {
-        return evaluateDictNode(dict);
-    } else if (StringNode* strNode = dynamic_cast<StringNode*>(expr)) {
-        return evaluateStringNode(strNode);
-    } else if (AccessExpression* access = dynamic_cast<AccessExpression*>(expr)) {
-        return evaluateAccessExpression(access);
-    } else if (CallExpression* call = dynamic_cast<CallExpression*>(expr)) {
-        return evaluateCallExpression(call);
-    } else if (AssignmentExpression* assign = dynamic_cast<AssignmentExpression*>(expr)) {
-        return evaluateAssignmentExpression(assign);
-    } else if (CharExpression* charExpr = dynamic_cast<CharExpression*>(expr)) {
-        return evaluateCharExpression(charExpr);
-    } else if (StructInstantiationExpression* structInst = dynamic_cast<StructInstantiationExpression*>(expr)) {
-        return evaluateStructInstantiation(structInst);
-    } else if (ClassInstantiationExpression* classInst = dynamic_cast<ClassInstantiationExpression*>(expr)) {
-        return evaluateClassInstantiation(classInst);
-    } else if (MemberAccessExpression* memberAccess = dynamic_cast<MemberAccessExpression*>(expr)) {
-        return evaluateMemberAccess(memberAccess);
-    }
+    // 清空结果栈
+    clearResultStack();
     
-    return nullptr;
+    // 使用访问者模式，让表达式自己决定如何被求值
+    expr->accept(this);
+    
+    // 从结果栈获取结果
+    return popResult();
 }
 
-// 声明求值
-Expression* Interpreter::evaluateDeclaration(VariableDeclaration* decl) {
-    if (!decl) return nullptr;
+// 结果栈操作实现
+void Interpreter::pushResult(Expression* result) {
+    resultStack.push_back(result);
+}
+
+Expression* Interpreter::popResult() {
+    if (resultStack.empty()) {
+        return nullptr;
+    }
+    Expression* result = resultStack.back();
+    resultStack.pop_back();
+    return result;
+}
+
+Expression* Interpreter::peekResult() {
+    if (resultStack.empty()) {
+        return nullptr;
+    }
+    return resultStack.back();
+}
+
+void Interpreter::clearResultStack() {
+    resultStack.clear();
+}
+
+// 声明求值 - 语句类型，不需要pushResult
+void Interpreter::visit(VariableDeclaration* decl) {
+    if (!decl) return;
     
     // 处理多个变量声明
     for (const auto& var : decl->variables) {
@@ -186,356 +189,368 @@ Expression* Interpreter::evaluateDeclaration(VariableDeclaration* decl) {
         Expression* value = nullptr;
         
         if (var.initializer) {
-            value = evaluate(var.initializer);
+            var.initializer->accept(this);
+            value = popResult();
         }
         
         // 如果变量没有初始值，设置为默认值（数字0）
         if (!value) {
-            value = new NumberExpression(0);
+            value = new IntExpression(0);
         }
         
         defineVariable(name, value);
-        LOG_DEBUG("Declaring variable '" + name + "' with value " + (value ? value->toString() : "null"));
+        LOG_DEBUG("Declaring variable '" + name + "' with value " + (value ? value->getLocation() : "null"));
     }
-    
-    return nullptr;
 }
 
-
-
-
-
 // 标识符表达式求值
-Expression* Interpreter::evaluateIdentifierExpression(IdentifierExpression* idExpr) {
-    if (!idExpr) return nullptr;
+void Interpreter::visit(IdentifierExpression* idExpr) {
+    if (!idExpr) {
+        reportError("Null identifier expression");
+        return;
+    }
     
     string name = idExpr->getName();
     Expression* value = lookupVariable(name);
     
     if (!value) {
         reportError("Undefined variable: " + name);
-        return nullptr;
+        return;
     }
     
-    return value;
+    pushResult(value);
 }
 
-// 赋值表达式求值
-Expression* Interpreter::evaluateAssignmentExpression(AssignmentExpression* assign) {
-    if (!assign || !assign->value) return nullptr;
+
+
+template<typename T>
+void Interpreter::executeCastOperation(CastExpression<T>* cast) {
+    if (!cast || !cast->operand) {
+        reportError("Invalid cast expression");
+        return;
+    }
     
-    // 求值右侧表达式
-    Expression* value = evaluate(assign->value);
-    if (!value) return nullptr;
+    // 后序遍历：先处理操作数
+    cast->operand->accept(this);
+    
+    // 从栈中pop出操作数
+    Expression* operand = popResult();
+    if (!operand) {
+        reportError("Invalid operand in cast expression");
+        return;
+    }
+    
+    // 使用模板特化进行类型转换
+    Expression* result = performCast<T>(operand);
+    pushResult(result);
+}
+
+// 类型转换模板函数 - 使用泛型转换方法
+template<typename T>
+Expression* Interpreter::performCast(Expression* operand) {
+    // 尝试使用泛型转换方法
+    if (LeafExpression* leaf = dynamic_cast<LeafExpression*>(operand)) {
+        return leaf->convert<T>();
+    }
+    
+    // 如果不是叶子节点，返回nullptr
+    return nullptr;
+}
+
+// 赋值表达式求值 - 后序遍历模式
+void Interpreter::visit(AssignmentExpression* assign) {     
+    if (!assign || !assign->value) {
+        reportError("Invalid assignment expression");
+        return;
+    }
+    
+    // 后序遍历：先处理右侧表达式
+    assign->value->accept(this);
+    
+    // 从栈中pop出值
+    Expression* value = popResult();
+    if (!value) {
+        reportError("Invalid value in assignment expression");
+        return;
+    }
     
     // 更新变量值
     defineVariable(assign->variableName, value);
-    LOG_DEBUG("Assigned value " + (value ? value->toString() : "null") + " to variable '" + assign->variableName + "'");
+    LOG_DEBUG("Assigned value " + (value ? value->getLocation() : "null") + " to variable '" + assign->variableName + "'");
     
-    return value;
+    pushResult(value);
 }
 
-// 一元表达式求值
-Expression* Interpreter::evaluateUnaryExpression(UnaryExpression* unary) {
-    if (!unary || !unary->operand || !unary->operator_) return nullptr;
+// 一元表达式求值 - 后序遍历模式
+void Interpreter::visit(UnaryExpression* unary) {
+    if (!unary || !unary->operand || !unary->operator_) {
+        reportError("Invalid unary expression");
+        return;
+    }
     
-    // 求值操作数
-    Expression* operand = evaluate(unary->operand);
-    if (!operand) return nullptr;
+    // 后序遍历：先处理操作数
+    unary->operand->accept(this);
+    
+    // 从栈中pop出操作数
+    Expression* operand = popResult();
+    if (!operand) {
+        reportError("Invalid operand in unary expression");
+        return;
+    }
     
     // 根据操作符类型进行处理
     switch (unary->operator_->Tag) {
         case '!': {
             // 逻辑非操作
-            if (NumberExpression* numExpr = dynamic_cast<NumberExpression*>(operand)) {
-                return new NumberExpression(!(*numExpr));
-            } else {
-                // 对于非数字类型，转换为布尔值再取反
-                bool boolValue = operand->toString() != "" && operand->toString() != "0";
-                return new NumberExpression(boolValue ? 0 : 1);
+            if (IntExpression* numExpr = dynamic_cast<IntExpression*>(operand)) {
+                pushResult(new IntExpression(!(*numExpr)));
+                return;
             }
+            // 对于非数字类型，转换为布尔值再取反
+            bool boolValue = operand->getLocation() != "" && operand->getLocation() != "0";
+            pushResult(new IntExpression(boolValue ? 0 : 1));
+            return;
         }
         case '-': {
             // 一元负号操作 - 使用运算符重载
-            if (NumberExpression* numExpr = dynamic_cast<NumberExpression*>(operand)) {
-                return new NumberExpression(-(*numExpr));
-            } else {
-                cout << "Error: Unary minus requires numeric operand" << endl;
-                return nullptr;
+            if (IntExpression* numExpr = dynamic_cast<IntExpression*>(operand)) {
+                pushResult(new IntExpression(-(*numExpr)));
+                return;
             }
+            reportError("Unary minus requires numeric operand");
+            return;
         }
         default:
-            cout << "Error: Unknown unary operator Tag " << unary->operator_->Tag << endl;
-            return nullptr;
+            reportError("Unknown unary operator Tag " + to_string(unary->operator_->Tag));
+            return;
     }
 }
 
-// 算术表达式求值
-Expression* Interpreter::evaluateArithmeticExpression(ArithmeticExpression* arith) {
-    if (!arith || !arith->left || !arith->right || !arith->operator_) return nullptr;
+// 二元运算表达式求值 - 后序遍历模式
+void Interpreter::visit(BinaryExpression* binary) {
+    if (!binary || !binary->left || !binary->right || !binary->operator_) {
+        reportError("Invalid binary expression");
+        return;
+    }
     
-    // 求值左右操作数
-    Expression* left = evaluate(arith->left);
-    Expression* right = evaluate(arith->right);
+    // 后序遍历：先处理左子树
+    binary->left->accept(this);
     
-    if (!left || !right) return nullptr;
+    // 再处理右子树
+    binary->right->accept(this);
     
-    // 尝试转换为NumberExpression进行运算
-    NumberExpression* leftNum = dynamic_cast<NumberExpression*>(left);
-    NumberExpression* rightNum = dynamic_cast<NumberExpression*>(right);
+    // 从栈中pop出右操作数和左操作数（注意顺序）
+    Expression* right = popResult();
+    Expression* left = popResult();
+    
+    if (!left || !right) {
+        reportError("Invalid operands in binary expression");
+        return;
+    }
+    
+    // 根据操作符类型进行相应的运算
+    auto opType = binary->getOperatorType();
+    
+    switch (opType) {
+        case BinaryExpression::OperatorType::ARITHMETIC: {
+            executeArithmeticOperation(binary, left, right);
+            break;
+        }
+        
+        case BinaryExpression::OperatorType::COMPARISON: {
+            executeComparisonOperation(binary, left, right);
+            break;
+        }
+        
+        case BinaryExpression::OperatorType::LOGICAL: {
+            executeLogicalOperation(binary, left, right);
+            break;
+        }
+    }
+}
+
+// 二元运算辅助方法实现
+
+void Interpreter::executeArithmeticOperation(BinaryExpression* binary, Expression* left, Expression* right) {
+    // 算术运算：直接使用运算符重载
+    IntExpression* leftNum = dynamic_cast<IntExpression*>(left);
+    IntExpression* rightNum = dynamic_cast<IntExpression*>(right);
     
     if (leftNum && rightNum) {
         try {
-            switch (arith->operator_->Tag) {
-                // 算术运算
-                case '+':
-                    return new NumberExpression(*leftNum + *rightNum);
-                case '-':
-                    return new NumberExpression(*leftNum - *rightNum);
-                case '*':
-                    return new NumberExpression(*leftNum * *rightNum);
-                case '/':
-                    return new NumberExpression(*leftNum / *rightNum);
-                case '%':
-                    return new NumberExpression(*leftNum % *rightNum);
-                // 比较运算
-                case EQ:  // ==
-                    return new NumberExpression(*leftNum == *rightNum);
-                case NE:  // !=
-                    return new NumberExpression(*leftNum != *rightNum);
-                case '<':
-                    return new NumberExpression(*leftNum < *rightNum);
-                case '>':
-                    return new NumberExpression(*leftNum > *rightNum);
-                case BE:  // <=
-                    return new NumberExpression(*leftNum <= *rightNum);
-                case GE:  // >=
-                    return new NumberExpression(*leftNum >= *rightNum);
-                // 逻辑运算
-                case AND:  // &&
-                    return new NumberExpression(*leftNum && *rightNum);
-                case OR:   // ||
-                    return new NumberExpression(*leftNum || *rightNum);
-                default:
-                    cout << "Error: Unknown operator Tag " << arith->operator_->Tag << endl;
-                    return nullptr;
+            switch (binary->operator_->Tag) {
+                case '+': pushResult(new IntExpression(*leftNum + *rightNum)); break;
+                case '-': pushResult(new IntExpression(*leftNum - *rightNum)); break;
+                case '*': pushResult(new IntExpression(*leftNum * *rightNum)); break;
+                case '/': pushResult(new IntExpression(*leftNum / *rightNum)); break;
+                case '%': pushResult(new IntExpression(*leftNum % *rightNum)); break;
+                default: reportError("Unknown arithmetic operator"); break;
             }
         } catch (const exception& e) {
-            cout << "Error: " << e.what() << endl;
-            return nullptr;
+            reportError("Arithmetic operation error: " + string(e.what()));
+        }
+    } else {
+        // 字符串拼接
+        StringLiteral* leftStr = dynamic_cast<StringLiteral*>(left);
+        StringLiteral* rightStr = dynamic_cast<StringLiteral*>(right);
+        if (leftStr && rightStr && binary->operator_->Tag == '+') {
+            pushResult(new StringLiteral(*leftStr + *rightStr));
+        } else {
+            reportError("Invalid operands for arithmetic operation");
         }
     }
+}
+
+void Interpreter::executeComparisonOperation(BinaryExpression* binary, Expression* left, Expression* right) {
+    // 比较运算：直接使用运算符重载
+    IntExpression* leftNum = dynamic_cast<IntExpression*>(left);
+    IntExpression* rightNum = dynamic_cast<IntExpression*>(right);
     
-    // 尝试转换为StringLiteral进行运算
-    StringLiteral* leftStr = dynamic_cast<StringLiteral*>(left);
-    StringLiteral* rightStr = dynamic_cast<StringLiteral*>(right);
-    
-    // 尝试转换为CharExpression进行运算
-    CharExpression* leftChar = dynamic_cast<CharExpression*>(left);
-    CharExpression* rightChar = dynamic_cast<CharExpression*>(right);
-    
-    if (leftStr && rightStr) {
-        switch (arith->operator_->Tag) {
-            case '+':
-                return new StringLiteral(*leftStr + *rightStr);
-            case EQ:  // ==
-                return new NumberExpression(*leftStr == *rightStr);
-            case NE:  // !=
-                return new NumberExpression(*leftStr != *rightStr);
-            case '<':
-                return new NumberExpression(*leftStr < *rightStr);
-            case '>':
-                return new NumberExpression(*leftStr > *rightStr);
-            case BE:  // <=
-                return new NumberExpression(*leftStr <= *rightStr);
-            case GE:  // >=
-                return new NumberExpression(*leftStr >= *rightStr);
-            default:
-                cout << "Error: Unsupported operator for strings" << endl;
-                return nullptr;
+    if (leftNum && rightNum) {
+        switch (binary->operator_->Tag) {
+            case EQ: pushResult(new IntExpression(*leftNum == *rightNum)); break;
+            case NE: pushResult(new IntExpression(*leftNum != *rightNum)); break;
+            case '<': pushResult(new IntExpression(*leftNum < *rightNum)); break;
+            case '>': pushResult(new IntExpression(*leftNum > *rightNum)); break;
+            case BE: pushResult(new IntExpression(*leftNum <= *rightNum)); break;
+            case GE: pushResult(new IntExpression(*leftNum >= *rightNum)); break;
+            default: reportError("Unknown comparison operator"); break;
+        }
+    } else {
+        StringLiteral* leftStr = dynamic_cast<StringLiteral*>(left);
+        StringLiteral* rightStr = dynamic_cast<StringLiteral*>(right);
+        if (leftStr && rightStr) {
+            switch (binary->operator_->Tag) {
+                // case EQ: pushResult(new IntExpression(*leftStr == *rightStr)); break;
+                // case NE: pushResult(new IntExpression(*leftStr != *rightStr)); break;
+                // case '<': pushResult(new IntExpression(*leftStr < *rightStr)); break;
+                // case '>': pushResult(new IntExpression(*leftStr > *rightStr)); break;
+                // case BE: pushResult(new IntExpression(*leftStr <= *rightStr)); break;
+                // case GE: pushResult(new IntExpression(*leftStr >= *rightStr)); break;
+                default: reportError("Unknown comparison operator"); break;
+            }
+        } else {
+            reportError("Invalid operands for comparison operation");
         }
     }
+}
+
+void Interpreter::executeLogicalOperation(BinaryExpression* binary, Expression* left, Expression* right) {
+    // 逻辑运算：直接使用运算符重载
+    BoolExpression* leftBool = dynamic_cast<BoolExpression*>(left);
+    BoolExpression* rightBool = dynamic_cast<BoolExpression*>(right);
     
-    // 处理混合类型的加法运算
-    if (arith->operator_->Tag == '+' || arith->operator_->Tag == '.') {
-        if (leftNum && rightStr) {
-            // 数字 + 字符串
-            string numStr = to_string(leftNum->getIntValue());
-            StringNode* result = new StringNode(numStr);
-            result->append(rightStr->toString());
-            return result;
-        } else if (leftStr && rightNum) {
-            // 字符串 + 数字
-            StringNode* result = new StringNode(leftStr->toString());
-            result->append(to_string(rightNum->getIntValue()));
-            return result;
-        } else if (leftStr && rightChar) {
-            // 字符串 + 字符
-            StringNode* result = new StringNode(leftStr->toString());
-            result->append(string(1, rightChar->value));
-            return result;
-        } else if (leftChar && rightStr) {
-            // 字符 + 字符串
-            StringNode* result = new StringNode(string(1, leftChar->value));
-            result->append(rightStr->toString());
-            return result;
-        } else if (leftChar && rightChar) {
-            // 字符 + 字符
-            string result = string(1, leftChar->value) + string(1, rightChar->value);
-            return new StringLiteral(result);
+    if (leftBool && rightBool) {
+        switch (binary->operator_->Tag) {
+            case AND: pushResult(new BoolExpression(*leftBool && *rightBool)); break;
+            case OR: pushResult(new BoolExpression(*leftBool || *rightBool)); break;
+            default: reportError("Unknown logical operator"); break;
         }
+    } else {
+        reportError("Invalid operands for logical operation");
     }
-    
-    // 其他类型不匹配的情况
-    cout << "Error: Type mismatch in arithmetic expression" << endl;
-    return nullptr;
 }
 
 // 字符表达式求值
-Expression* Interpreter::evaluateCharExpression(CharExpression* charExpr) {
-    if (!charExpr) return nullptr;
+void Interpreter::visit(CharExpression* charExpr) {
+    if (!charExpr) return;
     
-    // 字符表达式直接返回
-    return charExpr;
+    // 字符表达式直接推入结果栈
+    pushResult(charExpr);
 }
 
 // 字符串字面量求值
-Expression* Interpreter::evaluateStringLiteral(StringLiteral* strLit) {
-    if (!strLit) return nullptr;
+void Interpreter::visit(StringLiteral* strLit) {
+    if (!strLit) return;
     
-    // 字符串字面量直接返回
-    return strLit;
-}
-
-// 字符串拼接表达式求值
-Expression* Interpreter::evaluateStringConcatenationExpression(StringConcatenationExpression* concat) {
-    if (!concat || !concat->left || !concat->right) return nullptr;
-    
-    // 求值左右操作数
-    Expression* left = evaluate(concat->left);
-    Expression* right = evaluate(concat->right);
-    
-    if (!left || !right) return nullptr;
-    
-    // 将左右操作数转换为字符串
-    string leftStr = convertToString(left);
-    string rightStr = convertToString(right);
-    
-    // 拼接字符串
-    string result = leftStr + rightStr;
-    
-    // 返回新的字符串字面量
-    return new StringLiteral(result);
-}
-
-// 将表达式转换为字符串的辅助函数
-string Interpreter::convertToString(Expression* expr) {
-    if (!expr) return "";
-    
-    // 根据表达式类型进行转换
-    if (StringLiteral* strLit = dynamic_cast<StringLiteral*>(expr)) {
-        return strLit->toString();
-    } else if (CharExpression* charExpr = dynamic_cast<CharExpression*>(expr)) {
-        return string(1, charExpr->value);
-    } else if (NumberExpression* numExpr = dynamic_cast<NumberExpression*>(expr)) {
-        return to_string(numExpr->getIntValue());
-
-    } else if (IdentifierExpression* idExpr = dynamic_cast<IdentifierExpression*>(expr)) {
-        // 对于标识符，先求值再转换
-        Expression* value = evaluate(idExpr);
-        if (value) {
-            return convertToString(value);
-        }
-    }
-    
-    // 默认情况，调用toString方法
-    return expr->toString();
+    // 字符串字面量直接推入结果栈
+    pushResult(strLit);
 }
 
 // 数组节点求值
-Expression* Interpreter::evaluateArrayNode(ArrayNode* array) {
-    if (!array) return nullptr;
+void Interpreter::visit(ArrayNode* array) {
+    if (!array) return;
     
     // 对数组中的每个元素进行求值
     for (size_t i = 0; i < array->getElementCount(); ++i) {
         Expression* element = array->getElement(i);
         if (element) {
-            Expression* evaluated = evaluate(element);
+            element->accept(this);
+            Expression* evaluated = popResult();
             if (evaluated) {
                 array->setElement(i, evaluated);
             }
         }
     }
     
-    return array;
+    pushResult(array);
 }
 
 // 字典节点求值
-Expression* Interpreter::evaluateDictNode(DictNode* dict) {
-    if (!dict) return nullptr;
+void Interpreter::visit(DictNode* dict) {
+    if (!dict) return;
     
     // 对字典中的每个值进行求值
     vector<string> keys = dict->getKeys();
     for (const string& key : keys) {
         Expression* value = dict->getEntry(key);
         if (value) {
-            Expression* evaluated = evaluate(value);
+            value->accept(this);
+            Expression* evaluated = popResult();
             if (evaluated) {
                 dict->setEntry(key, evaluated);
             }
         }
     }
     
-    return dict;
+    pushResult(dict);
 }
 
-// 字符串节点求值
-Expression* Interpreter::evaluateStringNode(StringNode* strNode) {
-    if (!strNode) return nullptr;
-    
-    // 字符串节点直接返回
-    return strNode;
-}
 
-// 访问表达式求值
-Expression* Interpreter::evaluateAccessExpression(AccessExpression* access) {
-    if (!access || !access->target || !access->key) return nullptr;
+
+// 访问表达式求值 - 使用运行时类型检查消除dynamic_cast
+void Interpreter::visit(AccessExpression* access) {
+    if (!access || !access->target || !access->key) return;
     
     // 求值目标和键
-    Expression* target = evaluate(access->target);
-    Expression* key = evaluate(access->key);
+    evaluate(access->target);
+    Expression* target = popResult();
+    evaluate(access->key);
+    Expression* key = popResult();
     
-    if (!target || !key) return nullptr;
+    if (!target || !key) return;
     
-    // 执行访问操作
-    if (StringNode* strNode = dynamic_cast<StringNode*>(target)) {
-        return strNode->access(key);
-    } else if (ArrayNode* arrayNode = dynamic_cast<ArrayNode*>(target)) {
-        return arrayNode->access(key);
-    }  else if (DictNode* dictNode = dynamic_cast<DictNode*>(target)) {
-        return dictNode->access(key);
+    // 检查目标是否为支持访问操作的类型
+    AccessibleExpression* accessibleTarget = dynamic_cast<AccessibleExpression*>(target);
+    if (!accessibleTarget) {
+        reportError("Target expression does not support access operations");
+        return;
     }
-
-    cout << "Unknown target type" << endl;
-    return nullptr;
+    
+    // 直接调用access方法，无需进一步的dynamic_cast
+    Expression* result = accessibleTarget->access(key);
+    pushResult(result);
 }
 
 // 函数调用表达式求值
-Expression* Interpreter::evaluateCallExpression(CallExpression* call) {
-    if (!call || !call->callee) return nullptr;
+void Interpreter::visit(CallExpression* call) {
+    if (!call || !call->callee) return;
     
     // 检查是否是内置函数
     if (IdentifierExpression* idExpr = dynamic_cast<IdentifierExpression*>(call->callee)) {
         string funcName = idExpr->getName();
         if (isBuiltinFunction(funcName)) {
-            return executeBuiltinFunction(funcName, call->arguments);
+            Expression* result = executeBuiltinFunction(funcName, call->arguments);
+            pushResult(result);
+            return;
         }
     }
     
     // 求值所有参数
     vector<Expression*> evaluatedArgs;
     for (Expression* arg : call->arguments) {
-        Expression* evaluatedArg = evaluate(arg);
+        arg->accept(this);
+        Expression* evaluatedArg = popResult();
         if (evaluatedArg) {
             evaluatedArgs.push_back(evaluatedArg);
         }
@@ -547,82 +562,77 @@ Expression* Interpreter::evaluateCallExpression(CallExpression* call) {
         
         // 首先检查是否是内置函数
         if (isBuiltinFunction(funcName)) {
-            return executeBuiltinFunction(funcName, evaluatedArgs);
+            Expression* result = executeBuiltinFunction(funcName, evaluatedArgs);
+            pushResult(result);
+            return;
         }
         
         // 然后查找用户定义的函数
         FunctionDefinition* funcDef = lookupFunction(funcName);
         if (!funcDef) {
             cout << "Error: Function not found: " << funcName << endl;
-            return nullptr;
+            return;
         }
         
         LOG_DEBUG("Calling function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
-        return executeFunction(funcDef, evaluatedArgs);
+        
+        // 进入新的作用域
+        enterScope();
+        
+        // 绑定参数到局部变量
+        const vector<string>& params = funcDef->prototype->parameters;
+        for (size_t i = 0; i < params.size() && i < evaluatedArgs.size(); ++i) {
+            Expression* paramValue = evaluatedArgs[i];
+            if (paramValue) {
+                defineVariable(params[i], paramValue);
+                LOG_DEBUG("Bound parameter '" + params[i] + "'");
+            }
+        }
+        
+        // 执行函数体
+        Expression* result = nullptr;
+        LOG_DEBUG("Executing function body with " + to_string(funcDef->body->statements.size()) + " statements");
+        for (size_t i = 0; i < funcDef->body->statements.size(); ++i) {
+            Statement* stmt = funcDef->body->statements[i];
+            LOG_DEBUG("Executing statement " + to_string(i) + ": " + (stmt ? typeid(*stmt).name() : "null"));
+            
+            stmt->accept(this);
+            // 检查是否有返回值
+            if (!resultStack.empty()) {
+                result = popResult();
+                break;
+            }
+        }
+        
+        // 退出作用域
+        exitScope();
+        
+        pushResult(result);
+        return;
     }
     
     cout << "Error: Function not found or not callable" << endl;
-    return nullptr;
 }
 
-Expression* Interpreter::executeReturn(ReturnStatement* returnStmt) {
-    if (!returnStmt || !returnStmt->returnValue) return nullptr;
+void Interpreter::visit(MethodCallExpression* methodCall) {
+    if (!methodCall) return;
+    
+    // 暂时简单实现，后续可以完善
+    reportError("Method call not implemented yet");
+}
+
+void Interpreter::visit(ReturnStatement* returnStmt) {
+    if (!returnStmt || !returnStmt->returnValue) return;
     LOG_DEBUG("Executing return statement");
     Expression* result = evaluate(returnStmt->returnValue);
-    LOG_DEBUG("Return value: " + (result ? result->toString() : "null"));
-    return result;
+    LOG_DEBUG("Return value: " + (result ? result->getLocation() : "null"));
+    pushResult(result);
 }
 
-// 执行函数
-Expression* Interpreter::executeFunction(FunctionDefinition* funcDef, vector<Expression*>& args) {
-    if (!funcDef || !funcDef->prototype || !funcDef->body) return nullptr;
-    
-    LOG_DEBUG("Executing function '" + funcDef->prototype->name + "'");
-    
-    // 进入新的作用域
-    enterScope();
-    
-    // 绑定参数到局部变量
-    const vector<string>& params = funcDef->prototype->parameters;
-    for (size_t i = 0; i < params.size() && i < args.size(); ++i) {
-        // 复制参数以避免内存问题
-        Expression* paramValue = evaluate(args[i]);
-        if (paramValue) {
-            defineVariable(params[i], paramValue);
-            LOG_DEBUG("Bound parameter '" + params[i] + "' = " + paramValue->toString());
-        }
-    }
-    
-    // 执行函数体
-    Expression* result = nullptr;
-    LOG_DEBUG("Executing function body with " + to_string(funcDef->body->statements.size()) + " statements");
-    for (size_t i = 0; i < funcDef->body->statements.size(); ++i) {
-        Statement* stmt = funcDef->body->statements[i];
-        LOG_DEBUG("Executing statement " + to_string(i) + ": " + (stmt ? typeid(*stmt).name() : "null"));
-        
-        ReturnResult returnResult = execute(stmt);
-        if (returnResult.hasReturn) {
-            // 遇到了return语句
-            LOG_DEBUG("Function returned: " + (returnResult.value ? returnResult.value->toString() : "null"));
-            result = returnResult.value;
-            break;
-        }
-    }
-    
-    // 复制返回值以避免内存问题
-    Expression* returnValue = nullptr;
-    if (result) {
-        returnValue = evaluate(result);
-    }
-    
-    // 退出作用域
-    exitScope();
-    
-    return returnValue;
-}
+
 
 // 执行函数定义
-void Interpreter::executeFunctionDefinition(FunctionDefinition* funcDef) {
+void Interpreter::visit(FunctionDefinition* funcDef) {
     if (!funcDef || !funcDef->prototype) return;
     
     string funcName = funcDef->prototype->name;
@@ -640,121 +650,9 @@ void Interpreter::executeFunctionDefinition(FunctionDefinition* funcDef) {
     delete forwardDecl;
 }
 
-// 字符串拼接
-Expression* Interpreter::stringConcatenation(Expression* left, Expression* right) {
-    StringLiteral* leftStr = dynamic_cast<StringLiteral*>(left);
-    StringLiteral* rightStr = dynamic_cast<StringLiteral*>(right);
-    
-    if (leftStr && rightStr) {
-        string result = leftStr->toString() + rightStr->toString();
-        return new StringLiteral(result);
-    }
-    
-    reportError("String concatenation requires string operands");
-    return nullptr;
-}
-
-// 字符串比较
-Expression* Interpreter::stringComparison(Expression* left, Expression* right, const string& op) {
-    StringLiteral* leftStr = dynamic_cast<StringLiteral*>(left);
-    StringLiteral* rightStr = dynamic_cast<StringLiteral*>(right);
-    
-    if (leftStr && rightStr) {
-        string leftVal = leftStr->toString();
-        string rightVal = rightStr->toString();
-        bool result = false;
-        
-        if (op == "==") result = (leftVal == rightVal);
-        else if (op == "!=") result = (leftVal != rightVal);
-        else if (op == "<") result = (leftVal < rightVal);
-        else if (op == ">") result = (leftVal > rightVal);
-        else if (op == "<=") result = (leftVal <= rightVal);
-        else if (op == ">=") result = (leftVal >= rightVal);
-        
-        // 返回布尔值（这里简化处理，实际应该返回布尔字面量）
-        return new StringLiteral(result ? "true" : "false");
-    }
-    
-    reportError("String comparison requires string operands");
-    return nullptr;
-}
-
-// 字符串索引访问
-Expression* Interpreter::stringIndexing(StringNode* str, Expression* index) {
-    if (!str || !index) return nullptr;
-    
-    // 求值索引
-    Expression* evaluatedIndex = evaluate(index);
-    if (!evaluatedIndex) return nullptr;
-    
-    // 执行访问操作
-    return str->access(evaluatedIndex);
-}
-
-// 字符串长度
-Expression* Interpreter::stringLength(StringNode* str) {
-    if (!str) return nullptr;
-    
-    // 返回字符串长度（这里简化处理，实际应该返回数字字面量）
-    string lengthStr = to_string(str->length());
-    return new StringLiteral(lengthStr);
-}
-
-// 字符串子串
-Expression* Interpreter::stringSubstring(StringNode* str, Expression* start, Expression* length) {
-    if (!str || !start || !length) return nullptr;
-    
-    // 求值起始位置和长度
-    Expression* evaluatedStart = evaluate(start);
-    Expression* evaluatedLength = evaluate(length);
-    
-    if (!evaluatedStart || !evaluatedLength) return nullptr;
-    
-    // 这里简化处理，实际应该解析数字并调用substring方法
-    return str;
-}
-
-// 语句执行
-ReturnResult Interpreter::execute(Statement* stmt) {
-    if (!stmt) return ReturnResult();
-    
-    // 根据语句类型调用相应的执行方法
-    if (ImportStatement* importStmt = dynamic_cast<ImportStatement*>(stmt)) {
-        return executeImportStatement(importStmt);
-    } else if (ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt)) {
-        return executeExpressionStatement(exprStmt);
-    } else if (VariableDeclaration* varDecl = dynamic_cast<VariableDeclaration*>(stmt)) {
-        return executeVariableDeclaration(varDecl);
-    } else if (IfStatement* ifStmt = dynamic_cast<IfStatement*>(stmt)) {
-        return executeIfStatement(ifStmt);
-    } else if (WhileStatement* whileStmt = dynamic_cast<WhileStatement*>(stmt)) {
-        return executeWhileStatement(whileStmt);
-    } else if (BlockStatement* blockStmt = dynamic_cast<BlockStatement*>(stmt)) {
-        return executeBlockStatement(blockStmt);
-    } else if (FunctionDefinition* funcDef = dynamic_cast<FunctionDefinition*>(stmt)) {
-        executeFunctionDefinition(funcDef);
-        return ReturnResult();
-    } else if (StructDefinition* structDef = dynamic_cast<StructDefinition*>(stmt)) {
-        registerStructDefinition(structDef);
-        return ReturnResult();
-    } else if (ClassDefinition* classDef = dynamic_cast<ClassDefinition*>(stmt)) {
-        registerClassDefinition(classDef);
-        return ReturnResult();
-    } else if (BreakStatement* breakStmt = dynamic_cast<BreakStatement*>(stmt)) {
-        return ReturnResult::Break();
-    } else if (ContinueStatement* continueStmt = dynamic_cast<ContinueStatement*>(stmt)) {
-        return ReturnResult::Continue();
-    } else if (ReturnStatement* returnStmt = dynamic_cast<ReturnStatement*>(stmt)) {
-        Expression* value = executeReturn(returnStmt);
-        return ReturnResult(value);
-    }
-    
-    return ReturnResult();
-}
-
 // 导入语句执行
-ReturnResult Interpreter::executeImportStatement(ImportStatement* importStmt) {
-    if (!importStmt) return ReturnResult();
+void Interpreter::visit(ImportStatement* importStmt) {
+    if (!importStmt) return;
     
     string moduleName = importStmt->moduleName;
     LOG_DEBUG("Importing module: " + moduleName);
@@ -763,7 +661,7 @@ ReturnResult Interpreter::executeImportStatement(ImportStatement* importStmt) {
     ifstream file(moduleName);
     if (!file.is_open()) {
         LOG_ERROR("Error: Cannot open module file '" + moduleName + "'");
-        return ReturnResult();
+        return;
     }
     file.close();
     
@@ -773,7 +671,7 @@ ReturnResult Interpreter::executeImportStatement(ImportStatement* importStmt) {
     
     if (!importedProgram) {
         cout << "Error: Failed to parse module '" + moduleName + "'" << endl;
-        return ReturnResult();
+        return;
     }
     
     // 执行导入的模块（在当前作用域中）
@@ -784,11 +682,10 @@ ReturnResult Interpreter::executeImportStatement(ImportStatement* importStmt) {
     delete importedProgram;
     
     LOG_DEBUG("Module import completed: " + moduleName);
-    return ReturnResult();
 }
 
 // 程序执行
-void Interpreter::execute(Program* program) {
+void Interpreter::visit(Program* program) {
     if (!program) return;
     
     for (Statement* stmt : program->statements) {
@@ -797,49 +694,23 @@ void Interpreter::execute(Program* program) {
 }
 
 // 表达式语句执行
-ReturnResult Interpreter::executeExpressionStatement(ExpressionStatement* stmt) {
-    if (!stmt || !stmt->expression) return ReturnResult();
+void Interpreter::visit(ExpressionStatement* stmt) {
+    if (!stmt || !stmt->expression) return;
     
-    evaluate(stmt->expression);
-    return ReturnResult();
+    evaluate(stmt->expression);         
 }
 
-// 变量声明执行
-ReturnResult Interpreter::executeVariableDeclaration(VariableDeclaration* decl) {
-    if (!decl) return ReturnResult();
-    
-    // 处理多个变量声明
-    for (const auto& var : decl->variables) {
-        string name = var.name;
-        Expression* value = nullptr;
-        
-        LOG_DEBUG("Declaring variable '" + name + "'");
-        
-        if (var.initializer) {
-            LOG_DEBUG("Evaluating initializer for '" + name + "': " + var.initializer->toString());
-            value = evaluate(var.initializer);
-            LOG_DEBUG("Initializer result: " + (value ? value->toString() : "null"));
-        } else {
-            // 如果没有初始化器，使用默认值0
-            value = new NumberExpression(0);
-        }
-        
-        defineVariable(name, value);
-        LOG_DEBUG("Defined variable '" + name + "' with value " + (value ? value->toString() : "null"));
-    }
-    
-    return ReturnResult();
-}
+
 
 // 条件语句执行
-ReturnResult Interpreter::executeIfStatement(IfStatement* ifStmt) {
-    if (!ifStmt || !ifStmt->condition) return ReturnResult();
+void Interpreter::visit(IfStatement* ifStmt) {
+    if (!ifStmt || !ifStmt->condition) return;
     
     Expression* condition = evaluate(ifStmt->condition);
     
     // 检查条件是否为真（非零值）
     bool conditionValue = false;
-    if (NumberExpression* numExpr = dynamic_cast<NumberExpression*>(condition)) {
+    if (IntExpression* numExpr = dynamic_cast<IntExpression*>(condition)) {
         conditionValue = (numExpr->getIntValue() != 0);
         LOG_DEBUG("Condition value: " + to_string(numExpr->getIntValue()) + " (bool: " + (conditionValue ? "true" : "false") + ")");
     }
@@ -848,28 +719,30 @@ ReturnResult Interpreter::executeIfStatement(IfStatement* ifStmt) {
         LOG_DEBUG("Executing then branch");
         // 为then分支创建独立作用域
         enterScope();
-        ReturnResult result = execute(ifStmt->thenBranch);
-        exitScope();  // 退出then分支作用域
-        if (result.hasReturn || result.hasBreak || result.hasContinue) {
-            return result;  // 传递return、break或continue值
+        try {
+            execute(ifStmt->thenBranch);
+        } catch (const ControlFlowException&) {
+            exitScope();
+            throw;  // 重新抛出控制流异常
         }
+        exitScope();  // 退出then分支作用域
     } else if (!conditionValue && ifStmt->elseBranch) {
         LOG_DEBUG("Executing else branch");
         // 为else分支创建独立作用域
         enterScope();
-        ReturnResult result = execute(ifStmt->elseBranch);
-        exitScope();  // 退出else分支作用域
-        if (result.hasReturn || result.hasBreak || result.hasContinue) {
-            return result;  // 传递return、break或continue值
+        try {
+            execute(ifStmt->elseBranch);
+        } catch (const ControlFlowException&) {
+            exitScope();
+            throw;  // 重新抛出控制流异常
         }
+        exitScope();  // 退出else分支作用域
     }
-    
-    return ReturnResult();
 }
 
 // 循环语句执行
-ReturnResult Interpreter::executeWhileStatement(WhileStatement* whileStmt) {
-    if (!whileStmt || !whileStmt->condition || !whileStmt->body) return ReturnResult();
+void Interpreter::visit(WhileStatement* whileStmt) {
+    if (!whileStmt || !whileStmt->condition || !whileStmt->body) return;
     
     while (true) {
         // 评估循环条件
@@ -877,7 +750,7 @@ ReturnResult Interpreter::executeWhileStatement(WhileStatement* whileStmt) {
         
         // 检查条件是否为真（非零值）
         bool conditionValue = false;
-        if (NumberExpression* numExpr = dynamic_cast<NumberExpression*>(condition)) {
+        if (IntExpression* numExpr = dynamic_cast<IntExpression*>(condition)) {
             conditionValue = (numExpr->getIntValue() != 0);
             LOG_DEBUG("While condition value: " + to_string(numExpr->getIntValue()) + " (bool: " + (conditionValue ? "true" : "false") + ")");
         }
@@ -888,58 +761,128 @@ ReturnResult Interpreter::executeWhileStatement(WhileStatement* whileStmt) {
             break;
         }
         
-        // 执行循环体（不创建新作用域，让变量赋值影响外层作用域）
-        LOG_DEBUG("Executing while loop body");
-        ReturnResult result;
-        
-        // 如果循环体是块语句，直接执行其中的语句而不创建新作用域
-        if (BlockStatement* block = dynamic_cast<BlockStatement*>(whileStmt->body)) {
-            for (Statement* stmt : block->statements) {
-                result = execute(stmt);
-                if (result.hasReturn) {
-                    return result;  // 传递return值
+        // 执行循环体（无论是单个语句还是语句块，都会抛出相同的异常）
+        // 注意：不创建新作用域，让循环体内的变量赋值影响外层作用域
+        try {
+            if (BlockStatement* block = dynamic_cast<BlockStatement*>(whileStmt->body)) {
+                // 如果是块语句，直接执行其中的语句而不创建新作用域
+                for (Statement* stmt : block->statements) {
+                    execute(stmt);
                 }
-                if (result.hasBreak) {
-                    return ReturnResult();  // 退出循环
-                }
-                if (result.hasContinue) {
-                    break;  // 跳过当前迭代，继续下一次循环
-                }
+            } else {
+                // 如果是单个语句，正常执行
+                execute(whileStmt->body);
             }
-        } else {
-            // 如果不是块语句，正常执行
-            result = execute(whileStmt->body);
-            if (result.hasReturn) {
-                return result;  // 传递return值
-            }
-            if (result.hasBreak) {
-                return ReturnResult();  // 退出循环
-            }
-            if (result.hasContinue) {
-                continue;  // 跳过当前迭代，继续下一次循环
-            }
+        } catch (const BreakException&) {
+            return;  // 退出循环
+        } catch (const ContinueException&) {
+            continue;  // 跳过当前迭代，继续下一次循环
+        } catch (const ReturnException&) {
+            throw;  // 重新抛出return异常
         }
     }
+}
+
+// for循环语句执行
+void Interpreter::visit(ForStatement* forStmt) {
+    if (!forStmt || !forStmt->condition || !forStmt->body) return;
     
-    return ReturnResult();
+    // 执行初始化表达式
+    if (forStmt->initializer) {
+        evaluate(forStmt->initializer);
+    }
+    
+    while (true) {
+        // 评估循环条件
+        Expression* condition = evaluate(forStmt->condition);
+        
+        // 检查条件是否为真（非零值）
+        bool conditionValue = false;
+        if (IntExpression* numExpr = dynamic_cast<IntExpression*>(condition)) {
+            conditionValue = (numExpr->getIntValue() != 0);
+            LOG_DEBUG("For condition value: " + to_string(numExpr->getIntValue()) + " (bool: " + (conditionValue ? "true" : "false") + ")");
+        }
+        
+        // 如果条件为假，退出循环
+        if (!conditionValue) {
+            LOG_DEBUG("For condition is false, exiting loop");
+            break;
+        }
+        
+        // 执行循环体
+        LOG_DEBUG("Executing for loop body");
+        try {
+            execute(forStmt->body);
+        } catch (const BreakException&) {
+            return;  // 退出循环
+        } catch (const ContinueException&) {
+            // 执行增量表达式，然后继续下一次循环
+            if (forStmt->increment) {
+                evaluate(forStmt->increment);
+            }
+            continue;  // 跳过当前迭代，继续下一次循环
+        } catch (const ReturnException&) {
+            throw;  // 重新抛出return异常
+        }
+        
+        // 执行增量表达式
+        if (forStmt->increment) {
+            evaluate(forStmt->increment);
+        }
+    }
+}
+
+// do-while循环语句执行
+void Interpreter::visit(DoWhileStatement* doWhileStmt) {
+    if (!doWhileStmt || !doWhileStmt->condition || !doWhileStmt->body) return;
+    
+    do {
+        // 执行循环体
+        LOG_DEBUG("Executing do-while loop body");
+        try {
+            execute(doWhileStmt->body);
+        } catch (const BreakException&) {
+            return;  // 退出循环
+        } catch (const ContinueException&) {
+            continue;  // 跳过当前迭代，继续下一次循环
+        } catch (const ReturnException&) {
+            throw;  // 重新抛出return异常
+        }
+        
+        // 评估循环条件
+        Expression* condition = evaluate(doWhileStmt->condition);
+        
+        // 检查条件是否为真（非零值）
+        bool conditionValue = false;
+        if (IntExpression* numExpr = dynamic_cast<IntExpression*>(condition)) {
+            conditionValue = (numExpr->getIntValue() != 0);
+            LOG_DEBUG("Do-while condition value: " + to_string(numExpr->getIntValue()) + " (bool: " + (conditionValue ? "true" : "false") + ")");
+        }
+        
+        // 如果条件为假，退出循环
+        if (!conditionValue) {
+            LOG_DEBUG("Do-while condition is false, exiting loop");
+            break;
+        }
+    } while (true);
 }
 
 // 语句块执行
-ReturnResult Interpreter::executeBlockStatement(BlockStatement* block) {
-    if (!block) return ReturnResult();
+void Interpreter::visit(BlockStatement* block) {
+    if (!block) return;
     
     enterScope();
     
-    for (Statement* stmt : block->statements) {
-        ReturnResult result = execute(stmt);
-        if (result.hasReturn || result.hasBreak || result.hasContinue) {
-            exitScope();
-            return result;  // 传递return、break或continue值
+    try {
+        for (Statement* stmt : block->statements) {
+            execute(stmt);
         }
+    } catch (const ControlFlowException&) {
+        exitScope();
+        throw;  // 重新抛出控制流异常
     }
-    
-    exitScope();
-    return ReturnResult();
+
+    exitScope();  
 }
 
 // 注册内置函数
@@ -956,15 +899,7 @@ void Interpreter::registerBuiltinFunctions() {
     builtinFunctions["cin"] = [this](vector<Expression*>& args) -> Expression* {
         return executeCin(args);
     };
-    
-    builtinFunctions["length"] = [this](vector<Expression*>& args) -> Expression* {
-        return executeStringLength(args);
-    };
-    
-    builtinFunctions["substring"] = [this](vector<Expression*>& args) -> Expression* {
-        return executeStringSubstring(args);
-    };
-    
+
     // 将内置函数作为全局符号注册到全局作用域
     if (globalScope) {
         // 创建内置函数标识符并注册到全局作用域
@@ -980,7 +915,11 @@ Expression* Interpreter::executePrint(vector<Expression*>& args) {
     for (Expression* arg : args) {
         Expression* evaluated = evaluate(arg);
         if (evaluated) {
-            cout << evaluated->toString();
+            if (LeafExpression* leaf = dynamic_cast<LeafExpression*>(evaluated)) {
+                cout << leaf->toString();
+            } else {
+                cout << "Uncalculated expression: " << evaluated->getLocation() << endl;
+            }
         }
     }
 
@@ -1001,63 +940,27 @@ Expression* Interpreter::executeCount(vector<Expression*>& args) {
 
     // 如果是数组，返回数组长度
     if (ArrayNode* array = dynamic_cast<ArrayNode*>(arg)) {
-        return new NumberExpression((int)array->getElementCount());
+        return new IntExpression((int)array->getElementCount());
     }
 
     // 如果是字符串，返回字符串长度
-    StringLiteral* str = dynamic_cast<StringLiteral*>(arg);
-    if (str) {
-        return new NumberExpression((int)str->length());
+    if (StringLiteral* str = dynamic_cast<StringLiteral*>(arg)) {
+        return new IntExpression((int)str->length());
     }
 
     // 如果是字典，返回字典的键值对数量
-    DictNode* dict = dynamic_cast<DictNode*>(arg);
-    if (dict) {
-        return new NumberExpression(dict->getEntryCount());
+    if (DictNode* dict = dynamic_cast<DictNode*>(arg)) {
+        return new IntExpression(dict->getEntryCount());
     }
     
     // 对于其他类型，返回1（表示单个元素）
-    return new NumberExpression(1);
+    return new IntExpression(1);
 }
 
 Expression* Interpreter::executeCin(vector<Expression*>& args) {
     string input;
     cin >> input;
     return new StringLiteral(input);
-}
-
-Expression* Interpreter::executeStringLength(vector<Expression*>& args) {
-    if (args.empty()) return nullptr;
-    
-    Expression* arg = evaluate(args[0]);
-    if (!arg) return nullptr;
-    
-    StringLiteral* str = dynamic_cast<StringLiteral*>(arg);
-    if (str) {
-        return new StringLiteral(to_string(str->length()));
-    }
-    
-    reportError("length() requires a string argument");
-    return nullptr;
-}
-
-Expression* Interpreter::executeStringSubstring(vector<Expression*>& args) {
-    if (args.size() < 3) return nullptr;
-    
-    Expression* strArg = evaluate(args[0]);
-    Expression* startArg = evaluate(args[1]);
-    Expression* lengthArg = evaluate(args[2]);
-    
-    if (!strArg || !startArg || !lengthArg) return nullptr;
-    
-    StringLiteral* str = dynamic_cast<StringLiteral*>(strArg);
-    if (str) {
-        // 这里简化处理，实际应该解析数字并调用substring方法
-        return str;
-    }
-    
-    reportError("substring() requires string arguments");
-    return nullptr;
 }
 
 // 错误处理
@@ -1073,7 +976,7 @@ void Interpreter::reportTypeError(const string& expected, const string& actual) 
 void Interpreter::printScope() {
     cout << "Current scope variables:" << endl;
     for (const auto& pair : currentScope->variables) {
-        cout << "  " << pair.first << " = " << pair.second->toString() << endl;
+        cout << "  " << pair.first << "(uncalculated)" << endl;
     }
     cout << "Current scope functions:" << endl;
     for (const auto& pair : currentScope->functions) {
@@ -1126,8 +1029,8 @@ void Interpreter::registerClassDefinition(ClassDefinition* classDef) {
 }
 
 // 结构体实例化求值
-Expression* Interpreter::evaluateStructInstantiation(StructInstantiationExpression* structInst) {
-    if (!structInst) return nullptr;
+void Interpreter::visit(StructInstantiationExpression* structInst) {
+    if (!structInst) return;
     
     string structName = structInst->structName->getName();
     
@@ -1135,7 +1038,7 @@ Expression* Interpreter::evaluateStructInstantiation(StructInstantiationExpressi
     auto it = structDefinitions.find(structName);
     if (it == structDefinitions.end()) {
         reportError("Undefined struct: " + structName);
-        return nullptr;
+        return;
     }
     
     StructDefinition* structDef = it->second;
@@ -1146,13 +1049,17 @@ Expression* Interpreter::evaluateStructInstantiation(StructInstantiationExpressi
     // 初始化所有成员为默认值
     for (const auto& member : structDef->members) {
         if (member.defaultValue) {
-            instance->setEntry(member.name, evaluate(member.defaultValue));
+            member.defaultValue->accept(this);
+            Expression* defaultValue = popResult();
+            instance->setEntry(member.name, defaultValue);
         } else {
             // 根据类型设置默认值
             if (member.type == "string") {
                 instance->setEntry(member.name, new StringLiteral(""));
-            } else if (member.type == "int" || member.type == "double") {
-                instance->setEntry(member.name, new NumberExpression(0));
+            } else if (member.type == "int") {
+                instance->setEntry(member.name, new IntExpression(0));
+            } else if (member.type == "double") {
+                instance->setEntry(member.name, new DoubleExpression(0));
             } else {
                 instance->setEntry(member.name, new StringLiteral(""));
             }
@@ -1161,15 +1068,17 @@ Expression* Interpreter::evaluateStructInstantiation(StructInstantiationExpressi
     
     // 应用提供的字段值
     for (const auto& field : structInst->fieldValues) {
-        instance->setEntry(field.first, evaluate(field.second));
+        field.second->accept(this);
+        Expression* fieldValue = popResult();
+        instance->setEntry(field.first, fieldValue);
     }
     
-    return instance;
+    pushResult(instance);
 }
 
 // 类实例化求值
-Expression* Interpreter::evaluateClassInstantiation(ClassInstantiationExpression* classInst) {
-    if (!classInst) return nullptr;
+void Interpreter::visit(ClassInstantiationExpression* classInst) {
+    if (!classInst) return;
     
     string className = classInst->className->getName();
     
@@ -1177,7 +1086,7 @@ Expression* Interpreter::evaluateClassInstantiation(ClassInstantiationExpression
     auto it = classDefinitions.find(className);
     if (it == classDefinitions.end()) {
         reportError("Undefined class: " + className);
-        return nullptr;
+        return;
     }
     
     ClassDefinition* classDef = it->second;
@@ -1189,7 +1098,9 @@ Expression* Interpreter::evaluateClassInstantiation(ClassInstantiationExpression
     for (const auto& member : classDef->members) {
         if (member.visibility == "public") {
             if (member.defaultValue) {
-                instance->setEntry(member.name, evaluate(member.defaultValue));
+                member.defaultValue->accept(this);
+                Expression* defaultValue = popResult();
+                instance->setEntry(member.name, defaultValue);
             } else {
                 // 根据类型设置默认值
                 if (member.type == "string") {
@@ -1210,22 +1121,25 @@ Expression* Interpreter::evaluateClassInstantiation(ClassInstantiationExpression
         size_t argIndex = 0;
         for (const auto& member : classDef->members) {
             if (member.visibility == "public" && argIndex < classInst->arguments.size()) {
-                instance->setEntry(member.name, evaluate(classInst->arguments[argIndex]));
+                classInst->arguments[argIndex]->accept(this);
+                Expression* argValue = popResult();
+                instance->setEntry(member.name, argValue);
                 argIndex++;
             }
         }
     }
     
-    return instance;
+    pushResult(instance);
 }
 
 // 成员访问求值
-Expression* Interpreter::evaluateMemberAccess(MemberAccessExpression* memberAccess) {
-    if (!memberAccess) return nullptr;
+void Interpreter::visit(MemberAccessExpression* memberAccess) {
+    if (!memberAccess) return;
     
     // 求值对象
-    Expression* object = evaluate(memberAccess->object);
-    if (!object) return nullptr;
+    memberAccess->object->accept(this);
+    Expression* object = popResult();
+    if (!object) return;
     
     string memberName = memberAccess->memberName;
     
@@ -1233,13 +1147,131 @@ Expression* Interpreter::evaluateMemberAccess(MemberAccessExpression* memberAcce
     if (DictNode* dict = dynamic_cast<DictNode*>(object)) {
         Expression* member = dict->getEntry(memberName);
         if (member) {
-            return member;
+            pushResult(member);
         } else {
             reportError("Member '" + memberName + "' not found in struct instance");
-            return nullptr;
+            return;
         }
     } else {
         reportError("Cannot access member '" + memberName + "' on non-struct object");
-        return nullptr;
     }
+}
+
+// 添加缺失的visit方法实现
+void Interpreter::visit(IntExpression* intExpr) {
+    if (!intExpr) return;
+    pushResult(intExpr);
+}
+
+void Interpreter::visit(DoubleExpression* doubleExpr) {
+    if (!doubleExpr) return;
+    pushResult(doubleExpr);
+}
+
+void Interpreter::visit(BoolExpression* boolExpr) {
+    if (!boolExpr) return;
+    pushResult(boolExpr);
+}
+
+void Interpreter::visit(SwitchStatement* switchStmt) {
+    if (!switchStmt) return;
+    // 暂时简单实现，后续可以完善
+    reportError("Switch statement not implemented yet");
+}
+
+void Interpreter::visit(CaseStatement* caseStmt) {
+    if (!caseStmt) return;
+    // 暂时简单实现，后续可以完善
+    reportError("Case statement not implemented yet");
+}
+
+void Interpreter::visit(DefaultStatement* defaultStmt) {
+    if (!defaultStmt) return;
+    // 暂时简单实现，后续可以完善
+    reportError("Default statement not implemented yet");
+}
+
+void Interpreter::visit(FunctionPrototype* funcProto) {
+    if (!funcProto) return;
+    // 函数原型不需要执行，只是声明
+    LOG_DEBUG("Function prototype: " + funcProto->name);
+}
+
+
+
+void Interpreter::visit(BreakStatement* breakStmt) {
+    if (!breakStmt) return;
+    // 暂时简单实现，后续可以完善
+    reportError("Break statement not implemented yet");
+}
+
+void Interpreter::visit(ContinueStatement* continueStmt) {
+    if (!continueStmt) return;
+    // 暂时简单实现，后续可以完善
+    reportError("Continue statement not implemented yet");
+}
+
+// CastExpression访问方法实现
+void Interpreter::visit(CastExpression<IntExpression>* expr) {
+    if (!expr) return;
+    // 执行类型转换操作
+    executeCastOperation<IntExpression>(expr);
+}
+
+void Interpreter::visit(CastExpression<DoubleExpression>* expr) {
+    if (!expr) return;
+    // 执行类型转换操作
+    executeCastOperation<DoubleExpression>(expr);
+}
+
+void Interpreter::visit(CastExpression<StringLiteral>* expr) {
+    if (!expr) return;
+    // 执行类型转换操作
+    executeCastOperation<StringLiteral>(expr);
+}
+
+void Interpreter::visit(CastExpression<CharExpression>* expr) {
+    if (!expr) return;
+    // 执行类型转换操作
+    executeCastOperation<CharExpression>(expr);
+}
+
+void Interpreter::visit(CastExpression<BoolExpression>* expr) {
+    if (!expr) return;
+    // 执行类型转换操作
+    executeCastOperation<BoolExpression>(expr);
+}
+
+void Interpreter::visit(StructDefinition* structDef) {
+    if (!structDef) return;
+    registerStructDefinition(structDef);
+}
+
+void Interpreter::visit(ClassDefinition* classDef) {
+    if (!classDef) return;
+    registerClassDefinition(classDef);
+}
+
+void Interpreter::visit(ThrowStatement* throwStmt) {
+    if (!throwStmt) return;
+    // 暂时简单实现，后续可以完善
+    reportError("Throw statement not implemented yet");
+}
+
+void Interpreter::visit(TryStatement* tryStmt) {
+    if (!tryStmt) return;
+    // 暂时简单实现，后续可以完善
+    reportError("Try statement not implemented yet");
+}
+
+void Interpreter::visit(CatchStatement* catchStmt) {
+    if (!catchStmt) return;
+    // 暂时简单实现，后续可以完善
+    reportError("Catch statement not implemented yet");
+}
+
+void Interpreter::visit(FinallyStatement* finallyStmt) {
+    if (!finallyStmt) return;
+    // 暂时简单实现，后续可以完善
+    reportError("Finally statement not implemented yet");
 }
