@@ -1,6 +1,6 @@
 测试结果报告
 ============================================================
-测试时间: 2025-08-28 04:47:29
+测试时间: 2025-08-28 05:48:03
 
 文件: Text.txt
 状态: PASS
@@ -14,7 +14,7 @@ SYNTAX ERROR line[001]: expected 59, got 305
 文件: Text_compatible.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -23,16 +23,16 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 文件: Text_core.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[002]: expected operator, got 43
+SYNTAX ERROR line[004]: expected ')', got ')'
 
 ----------------------------------------
 文件: Text_new.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -44,7 +44,7 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 耗时: 0.01秒
 退出码: 1
 输出:
-SYNTAX ERROR line[003]: expected operator, got 43
+SYNTAX ERROR line[018]: expected ';', got ';'
 
 ----------------------------------------
 文件: Text_simple.txt
@@ -57,27 +57,27 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 
 ----------------------------------------
 文件: debug_import.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
-退出码: 1
+状态: FAIL
+消息: 测试失败，退出码: -6
+耗时: 0.18秒
+退出码: -6
 输出:
-LEXICAL ERROR line[003]: unrecognized character '\x0a'
+terminate called after throwing an instance of 'RuntimeException'
+  what():  Runtime Error: Function not found: simpleFunc
 
 ----------------------------------------
 文件: debug_string.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
-退出码: 1
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
 输出:
-LEXICAL ERROR line[001]: unrecognized character '\x0a'
-
+"hello"
 ----------------------------------------
 文件: module_geometry.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -86,7 +86,7 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 文件: module_math.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -95,7 +95,7 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 文件: module_utils.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -103,23 +103,36 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 ----------------------------------------
 文件: simple_module.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
+消息: 测试通过
 耗时: 0.00秒
-退出码: 1
+退出码: 0
 输出:
 DEBUG: parseReturnStatement() - starting
 DEBUG: parseReturnStatement() - parsing return value
-SYNTAX ERROR line[002]: expected operator, got 42
+DEBUG: parseReturnStatement() - expecting ';' token
+DEBUG: parseReturnStatement() - ';' matched
 
 ----------------------------------------
 文件: simple_test.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
+消息: 测试通过
 耗时: 0.01秒
-退出码: 1
+退出码: 0
 输出:
-LEXICAL ERROR line[006]: unrecognized character '\x23'
-
+510123456"
+Hello, World!
+""
+Test arr: 
+"12345"
+Test dict: 
+"123"
+Test dict array: 
+"12345"
+Test str: 
+""Hello, World!""
+Test str array: 
+"Hello, World"
+"
 ----------------------------------------
 文件: test_all_operators.txt
 状态: PASS
@@ -127,22 +140,19 @@ LEXICAL ERROR line[006]: unrecognized character '\x23'
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[004]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_arithmetic.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
-输出:
-SYNTAX ERROR line[001]: expected operator, got 43
-
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.14秒
+退出码: -11
 ----------------------------------------
 文件: test_arithmetic_logic.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -151,25 +161,22 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 文件: test_assignment.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_basic.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
-退出码: 1
-输出:
-LEXICAL ERROR line[001]: unrecognized character '\x23'
-
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
 ----------------------------------------
 文件: test_break_continue.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -181,9 +188,7 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: unexpected token in expression
-SYNTAX ERROR line[001]: unexpected token in expression
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[003]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_char_escape.txt
@@ -192,17 +197,67 @@ SYNTAX ERROR line[001]: expected operator, got 43
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[007]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_char_string_concat.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[004]: expected ')', got ')'
 
+----------------------------------------
+文件: test_cin_assignment.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+----------------------------------------
+文件: test_cin_basic.txt
+状态: PASS
+消息: 测试通过
+耗时: 2.85秒
+退出码: 0
+输出:
+"x = "1"
+""x = ""12""
+"
+----------------------------------------
+文件: test_cin_mixed.txt
+状态: TIMEOUT
+消息: 测试超时（30秒）
+耗时: 3.00秒
+退出码: -1
+----------------------------------------
+文件: test_cin_multiple.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+----------------------------------------
+文件: test_cin_simple.txt
+状态: PASS
+消息: 测试通过
+耗时: 2.87秒
+退出码: 0
+输出:
+"21"
+----------------------------------------
+文件: test_cin_three_params.txt
+状态: PASS
+消息: 测试通过
+耗时: 2.93秒
+退出码: 0
+输出:
+"a=""21"", b=""22"", c=""22"
+----------------------------------------
+文件: test_cin_two_params.txt
+状态: TIMEOUT
+消息: 测试超时（30秒）
+耗时: 3.00秒
+退出码: -1
 ----------------------------------------
 文件: test_class_instantiation.txt
 状态: PASS
@@ -216,7 +271,7 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 文件: test_complex_instantiation.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
+耗时: 0.01秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -234,10 +289,10 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 文件: test_concat.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
+耗时: 0.01秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[009]: expected ';', got ';'
 
 ----------------------------------------
 文件: test_debug.txt
@@ -251,19 +306,20 @@ SYNTAX ERROR line[001]: expected operator, got 43
 文件: test_debug_break_continue.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
+耗时: 0.01秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
 
 ----------------------------------------
 文件: test_division.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+状态: FAIL
+消息: 测试失败，退出码: -6
+耗时: 0.19秒
+退出码: -6
 输出:
-SYNTAX ERROR line[001]: expected operator, got 47
+terminate called after throwing an instance of 'std::logic_error'
+  what():  basic_string::_M_construct null not valid
 
 ----------------------------------------
 文件: test_do_while_loop.txt
@@ -272,16 +328,16 @@ SYNTAX ERROR line[001]: expected operator, got 47
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[002]: unexpected token in statement
+SYNTAX ERROR line[004]: unexpected token in statement
 
 ----------------------------------------
 文件: test_dot_concatenation.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 输出:
-LEXICAL ERROR line[001]: unrecognized character '\x0a'
+0Error: Cannot access member 'str2' on non-struct object
 
 ----------------------------------------
 文件: test_errors.txt
@@ -317,14 +373,14 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[002]: unexpected token in expression
-SYNTAX ERROR line[002]: expected 59, got 305
+SYNTAX ERROR line[003]: unexpected token in expression
+SYNTAX ERROR line[003]: expected 59, got 305
 
 ----------------------------------------
 文件: test_function_advanced.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -347,19 +403,31 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 输出:
 DEBUG: parseReturnStatement() - starting
 DEBUG: parseReturnStatement() - parsing return value
-SYNTAX ERROR line[002]: expected operator, got 43
+DEBUG: parseReturnStatement() - expecting ';' token
+DEBUG: parseReturnStatement() - ';' matched
+DEBUG: parseReturnStatement() - starting
+DEBUG: parseReturnStatement() - parsing return value
+DEBUG: parseReturnStatement() - expecting ';' token
+DEBUG: parseReturnStatement() - ';' matched
+DEBUG: parseReturnStatement() - starting
+DEBUG: parseReturnStatement() - parsing return value
+DEBUG: parseReturnStatement() - expecting ';' token
+DEBUG: parseReturnStatement() - ';' matched
+SYNTAX ERROR line[020]: expected ')', got '+'
 
 ----------------------------------------
 文件: test_function_definition.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 输出:
 DEBUG: parseReturnStatement() - starting
 DEBUG: parseReturnStatement() - parsing return value
-SYNTAX ERROR line[002]: expected operator, got 43
-
+DEBUG: parseReturnStatement() - expecting ';' token
+DEBUG: parseReturnStatement() - ';' matched
+"result = "11"
+"
 ----------------------------------------
 文件: test_function_minimal.txt
 状态: PASS
@@ -382,7 +450,7 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 文件: test_function_simple.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -396,6 +464,12 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
 
+----------------------------------------
+文件: test_hash_comment.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
 ----------------------------------------
 文件: test_import_advanced.txt
 状态: PASS
@@ -417,12 +491,13 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 ----------------------------------------
 文件: test_import_debug.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
+消息: 测试通过
 耗时: 0.01秒
-退出码: 1
+退出码: 0
 输出:
-LEXICAL ERROR line[003]: unrecognized character '\x0a'
-
+"x = "10"
+""max(x, 5) = "10"
+"
 ----------------------------------------
 文件: test_import_error.txt
 状态: PASS
@@ -434,13 +509,10 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 
 ----------------------------------------
 文件: test_int_double.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
-输出:
-SYNTAX ERROR line[002]: expected operator, got 43
-
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.21秒
+退出码: -11
 ----------------------------------------
 文件: test_lexical_error.txt
 状态: PASS
@@ -448,7 +520,7 @@ SYNTAX ERROR line[002]: expected operator, got 43
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_lexical_error_char.txt
@@ -457,16 +529,16 @@ SYNTAX ERROR line[001]: expected operator, got 43
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_lexical_error_escape.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_lexical_error_real.txt
@@ -475,7 +547,7 @@ SYNTAX ERROR line[001]: expected operator, got 43
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_lexical_error_string.txt
@@ -484,16 +556,24 @@ SYNTAX ERROR line[001]: expected operator, got 43
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_logic_conversion.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
+耗时: 0.01秒
 退出码: 1
 输出:
-SYNTAX ERROR line[003]: expected operator, got 43
+DEBUG: parseReturnStatement() - starting
+DEBUG: parseReturnStatement() - parsing return value
+DEBUG: parseReturnStatement() - expecting ';' token
+DEBUG: parseReturnStatement() - ';' matched
+DEBUG: parseReturnStatement() - starting
+DEBUG: parseReturnStatement() - parsing return value
+DEBUG: parseReturnStatement() - expecting ';' token
+DEBUG: parseReturnStatement() - ';' matched
+SYNTAX ERROR line[017]: expected ')', got '+'
 
 ----------------------------------------
 文件: test_logic_string.txt
@@ -502,7 +582,7 @@ SYNTAX ERROR line[003]: expected operator, got 43
 耗时: 0.00秒
 退出码: 1
 输出:
-LEXICAL ERROR line[002]: unrecognized character '\x0a'
+LEXICAL ERROR line[004]: unrecognized character '\x0a'
 
 ----------------------------------------
 文件: test_memory.txt
@@ -511,43 +591,41 @@ LEXICAL ERROR line[002]: unrecognized character '\x0a'
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_mixed_operators.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.19秒
+退出码: -11
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+Error: Cannot access member 'mixed1' on non-struct object
 
 ----------------------------------------
 文件: test_mixed_plus.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
-
+42
 ----------------------------------------
 文件: test_mixed_simple.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
-
+10
 ----------------------------------------
 文件: test_mixed_working.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 输出:
-LEXICAL ERROR line[001]: unrecognized character '\x0a'
+0Error: Cannot access member 'b' on non-struct object
 
 ----------------------------------------
 文件: test_modern.txt
@@ -562,10 +640,10 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 文件: test_multiple_vars.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
+耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_nested_break_continue.txt
@@ -579,12 +657,11 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 ----------------------------------------
 文件: test_number.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
+消息: 测试通过
 耗时: 0.00秒
-退出码: 1
+退出码: 0
 输出:
-LEXICAL ERROR line[001]: unrecognized character '\x0a'
-
+10
 ----------------------------------------
 文件: test_operator_overloading.txt
 状态: PASS
@@ -597,36 +674,21 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 ----------------------------------------
 文件: test_operators.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
-输出:
-LEXICAL ERROR line[001]: unrecognized character '\x0a'
-
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 ----------------------------------------
 文件: test_optimizer.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
+消息: 测试通过
 耗时: 0.01秒
-退出码: 1
-输出:
-SYNTAX ERROR line[001]: expected operator, got 43
-
+退出码: 0
 ----------------------------------------
 文件: test_recursive_function.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.01秒
-退出码: 1
-输出:
-DEBUG: parseReturnStatement() - starting
-DEBUG: parseReturnStatement() - parsing return value
-DEBUG: parseReturnStatement() - expecting ';' token
-DEBUG: parseReturnStatement() - ';' matched
-DEBUG: parseReturnStatement() - starting
-DEBUG: parseReturnStatement() - parsing return value
-SYNTAX ERROR line[004]: expected operator, got 42
-
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.20秒
+退出码: -11
 ----------------------------------------
 文件: test_results.txt
 状态: PASS
@@ -643,26 +705,22 @@ LEXICAL ERROR line[001]: unrecognized character '\xe6'
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_simple.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
+消息: 测试通过
 耗时: 0.00秒
-退出码: 1
+退出码: 0
 输出:
-SYNTAX ERROR line[003]: expected operator, got 43
-
+423.14"hello"true52
 ----------------------------------------
 文件: test_simple_bool.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
-输出:
-SYNTAX ERROR line[003]: expected operator, got 43
-
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.18秒
+退出码: -11
 ----------------------------------------
 文件: test_simple_break.txt
 状态: PASS
@@ -674,54 +732,54 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 
 ----------------------------------------
 文件: test_simple_continue.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
-输出:
-SYNTAX ERROR line[005]: expected operator, got 43
-
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.17秒
+退出码: -11
 ----------------------------------------
 文件: test_simple_div.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+状态: FAIL
+消息: 测试失败，退出码: -6
+耗时: 0.19秒
+退出码: -6
 输出:
-SYNTAX ERROR line[001]: expected operator, got 47
+terminate called after throwing an instance of 'std::logic_error'
+  what():  basic_string::_M_construct null not valid
 
 ----------------------------------------
 文件: test_simple_function.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
-输出:
-DEBUG: parseReturnStatement() - starting
-DEBUG: parseReturnStatement() - parsing return value
-SYNTAX ERROR line[002]: expected operator, got 43
-
-----------------------------------------
-文件: test_simple_function_call.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 输出:
 DEBUG: parseReturnStatement() - starting
 DEBUG: parseReturnStatement() - parsing return value
 DEBUG: parseReturnStatement() - expecting ';' token
 DEBUG: parseReturnStatement() - ';' matched
-LEXICAL ERROR line[004]: unrecognized character '\x0a'
-
+8
+----------------------------------------
+文件: test_simple_function_call.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: parseReturnStatement() - starting
+DEBUG: parseReturnStatement() - parsing return value
+DEBUG: parseReturnStatement() - expecting ';' token
+DEBUG: parseReturnStatement() - ';' matched
+"result = "42"
+"
 ----------------------------------------
 文件: test_simple_import.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+状态: FAIL
+消息: 测试失败，退出码: -6
+耗时: 0.15秒
+退出码: -6
 输出:
-LEXICAL ERROR line[004]: unrecognized character '\x0a'
+terminate called after throwing an instance of 'RuntimeException'
+  what():  Runtime Error: Function not found: simpleFunc
 
 ----------------------------------------
 文件: test_simple_logic.txt
@@ -730,17 +788,22 @@ LEXICAL ERROR line[004]: unrecognized character '\x0a'
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[003]: expected operator, got 43
+SYNTAX ERROR line[008]: expected ';', got '>'
 
 ----------------------------------------
 文件: test_simple_mixed.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
+消息: 测试通过
 耗时: 0.00秒
-退出码: 1
+退出码: 0
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
-
+10
+----------------------------------------
+文件: test_simple_operator.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
 ----------------------------------------
 文件: test_simple_operators.txt
 状态: PASS
@@ -757,17 +820,16 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_simple_plus.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
+消息: 测试通过
 耗时: 0.00秒
-退出码: 1
+退出码: 0
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
-
+30
 ----------------------------------------
 文件: test_simple_print.txt
 状态: PASS
@@ -778,28 +840,18 @@ SYNTAX ERROR line[001]: expected operator, got 43
 "Hello World"
 ----------------------------------------
 文件: test_simple_recursive.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
-输出:
-DEBUG: parseReturnStatement() - starting
-DEBUG: parseReturnStatement() - parsing return value
-DEBUG: parseReturnStatement() - expecting ';' token
-DEBUG: parseReturnStatement() - ';' matched
-DEBUG: parseReturnStatement() - starting
-DEBUG: parseReturnStatement() - parsing return value
-SYNTAX ERROR line[004]: expected operator, got 45
-
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.18秒
+退出码: -11
 ----------------------------------------
 文件: test_simple_string.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
+消息: 测试通过
 耗时: 0.00秒
-退出码: 1
+退出码: 0
 输出:
-LEXICAL ERROR line[001]: unrecognized character '\x0a'
-
+"Hello"
 ----------------------------------------
 文件: test_simple_struct.txt
 状态: PASS
@@ -807,17 +859,14 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[004]: expected 59, got 257
+SYNTAX ERROR line[006]: expected 59, got 257
 
 ----------------------------------------
 文件: test_simple_while.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
-输出:
-SYNTAX ERROR line[004]: expected operator, got 43
-
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.19秒
+退出码: -11
 ----------------------------------------
 文件: test_single_function.txt
 状态: PASS
@@ -830,20 +879,19 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 ----------------------------------------
 文件: test_string_array.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 输出:
-LEXICAL ERROR line[001]: unrecognized character '\x23'
-
+He"Hello"
 ----------------------------------------
 文件: test_string_debug.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
+消息: 测试通过
 耗时: 0.00秒
-退出码: 1
+退出码: 0
 输出:
-LEXICAL ERROR line[001]: unrecognized character '\x0a'
+0Error: Cannot access member 'str2' on non-struct object
 
 ----------------------------------------
 文件: test_string_escape.txt
@@ -856,17 +904,15 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 
 ----------------------------------------
 文件: test_string_literal.txt
-状态: PASS
-消息: 测试通过
-耗时: 0.01秒
-退出码: 0
-输出:
-"This is a string literal"42true
+状态: TIMEOUT
+消息: 测试超时（30秒）
+耗时: 3.00秒
+退出码: -1
 ----------------------------------------
 文件: test_string_operators.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
+耗时: 0.01秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -874,11 +920,11 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 ----------------------------------------
 文件: test_string_plus.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+0Error: Cannot determine compatible type for operation
 
 ----------------------------------------
 文件: test_struct_advanced.txt
@@ -893,7 +939,7 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 文件: test_struct_class.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
+耗时: 0.01秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -902,7 +948,7 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 文件: test_struct_only.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
+耗时: 0.01秒
 退出码: 1
 输出:
 LEXICAL ERROR line[001]: unrecognized character '\x0a'
@@ -919,20 +965,19 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 ----------------------------------------
 文件: test_subtraction.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 输出:
-SYNTAX ERROR line[001]: expected operator, got 45
-
+2
 ----------------------------------------
 文件: test_syntax_error.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
+耗时: 0.01秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_syntax_error2.txt
@@ -941,16 +986,16 @@ SYNTAX ERROR line[001]: expected operator, got 43
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[002]: expected ')', got ')'
 
 ----------------------------------------
 文件: test_syntax_error_invalid_operator.txt
 状态: PASS
 消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
+耗时: 0.01秒
 退出码: 1
 输出:
-LEXICAL ERROR line[001]: unrecognized character '\x24'
+SYNTAX ERROR line[003]: expected 59, got 257
 
 ----------------------------------------
 文件: test_syntax_error_missing_paren.txt
@@ -959,7 +1004,7 @@ LEXICAL ERROR line[001]: unrecognized character '\x24'
 耗时: 0.00秒
 退出码: 1
 输出:
-SYNTAX ERROR line[001]: expected operator, got 43
+SYNTAX ERROR line[001]: expected ')', got ';'
 
 ----------------------------------------
 文件: test_syntax_error_missing_semicolon.txt
@@ -999,30 +1044,27 @@ LEXICAL ERROR line[001]: unrecognized character '\x0a'
 
 ----------------------------------------
 文件: test_utils_functions.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+状态: FAIL
+消息: 测试失败，退出码: -6
+耗时: 0.20秒
+退出码: -6
 输出:
-SYNTAX ERROR line[003]: unexpected token in expression
-SYNTAX ERROR line[003]: expected ')', got ')'
+terminate called after throwing an instance of 'RuntimeException'
+  what():  Runtime Error: Function not found: printHeader
 
 ----------------------------------------
 文件: test_variable_assignment.txt
-状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
-输出:
-SYNTAX ERROR line[002]: expected operator, got 43
-
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.20秒
+退出码: -11
 ----------------------------------------
 文件: test_working_mixed.txt
 状态: PASS
-消息: 预期的语法/词法错误，测试通过
-耗时: 0.00秒
-退出码: 1
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
 输出:
-LEXICAL ERROR line[001]: unrecognized character '\x0a'
+0Error: Cannot access member 'b' on non-struct object
 
 ----------------------------------------

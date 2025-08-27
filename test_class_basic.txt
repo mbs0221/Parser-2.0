@@ -1,0 +1,7 @@
+# 定义类
+class Student {
+    public string name;
+    public int age;
+}
+
+print("Class defined successfully");

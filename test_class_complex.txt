@@ -1,0 +1,16 @@
+struct Student {
+    string name;
+    int age;
+    double score;
+}
+
+let student1 = Student("Alice", 20, 95.5);
+let student2 = Student("Bob", 22, 88.0);
+
+print(student1.name);
+print(student1.age);
+print(student1.score);
+
+print(student2.name);
+print(student2.age);
+print(student2.score);

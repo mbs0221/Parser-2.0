@@ -1,0 +1,75 @@
+# 测试数学函数
+print("=== 数学函数测试 ===\n");
+
+let x = -5;
+let y = 10;
+let z = 3.14;
+
+print("abs(-5) = ");
+print(abs(x));
+print("\n");
+
+print("max(10, 5, 8) = ");
+print(max(y, 5, 8));
+print("\n");
+
+print("min(10, 5, 8) = ");
+print(min(y, 5, 8));
+print("\n");
+
+print("pow(2, 3) = ");
+print(pow(2, 3));
+print("\n");
+
+# 测试字符串函数
+print("\n=== 字符串函数测试 ===\n");
+
+let str = "Hello World";
+print("length('Hello World') = ");
+print(length(str));
+print("\n");
+
+print("substring('Hello World', 0, 5) = ");
+print(substring(str, 0, 5));
+print("\n");
+
+print("upper('hello') = ");
+print(upper("hello"));
+print("\n");
+
+print("lower('WORLD') = ");
+print(lower("WORLD"));
+print("\n");
+
+# 测试类型转换函数
+print("\n=== 类型转换函数测试 ===\n");
+
+let num_str = "123";
+let num_int = to_int(num_str);
+print("to_int('123') = ");
+print(num_int);
+print("\n");
+
+let double_str = "3.14";
+let num_double = to_double(double_str);
+print("to_double('3.14') = ");
+print(num_double);
+print("\n");
+
+let str_result = to_string(42);
+print("to_string(42) = ");
+print(str_result);
+print("\n");
+
+# 测试随机数函数
+print("\n=== 随机数函数测试 ===\n");
+
+let rand1 = random();
+print("random() = ");
+print(rand1);
+print("\n");
+
+let rand2 = random(100);
+print("random(100) = ");
+print(rand2);
+print("\n");

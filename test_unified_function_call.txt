@@ -1,0 +1,34 @@
+# 测试统一函数调用接口
+
+# 内置函数调用
+let x = -5;
+let abs_result = abs(x);
+print("abs(-5) = ");
+print(abs_result);
+print("\n");
+
+# 用户函数定义
+function multiply(a, b) {
+    return a * b;
+}
+
+# 用户函数调用
+let mult_result = multiply(4, 3);
+print("multiply(4, 3) = ");
+print(mult_result);
+print("\n");
+
+# 混合调用
+let str = "hello";
+let len = length(str);
+print("length('hello') = ");
+print(len);
+print("\n");
+
+function greet(name) {
+    return "Hello, " + name;
+}
+
+let greeting = greet("World");
+print(greeting);
+print("\n");

@@ -1,0 +1,9 @@
+struct Student {
+    string name;
+    int age;
+}
+
+let student1 = Student("Alice", 20);
+
+print(student1.name);
+print(student1.age);

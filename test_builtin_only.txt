@@ -1,0 +1,2 @@
+let x = abs(-5);
+print(x);

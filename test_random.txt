@@ -1,0 +1,6 @@
+let rand1 = random();
+print(rand1);
+print("\n");
+
+let rand2 = random(10);
+print(rand2);

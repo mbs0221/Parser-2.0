@@ -1,0 +1,12 @@
+# 定义结构体
+struct Student {
+    string name;
+    int age;
+}
+
+# 创建实例
+let student1 = Student("Alice", 20);
+
+# 访问成员
+print(student1.name);
+print(student1.age);

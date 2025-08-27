@@ -628,10 +628,6 @@ Expression* Parser::parseCallExpression(Expression* calleeExpr) {
     }
 }
 
-
-
-
-
 // 解析函数声明 - 返回Prototype语句
 FunctionPrototype* Parser::parsePrototype() {
     match(FUNCTION);

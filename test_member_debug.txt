@@ -1,0 +1,9 @@
+class Student {
+    public string name;
+    public int age;
+}
+
+let student1 = Student("Alice", 20);
+print("Student created");
+print("Name: ");
+print(student1.name);

@@ -1,0 +1,11 @@
+# 内置函数
+let x = abs(-5);
+print(x);
+
+# 用户函数
+function add(a, b) {
+    return a + b;
+}
+
+let y = add(3, 4);
+print(y);
