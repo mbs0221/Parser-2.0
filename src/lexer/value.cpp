@@ -45,15 +45,7 @@ Operator *Operator::Question = new Operator('?', "?", 1, false);
 Operator *Operator::Colon = new Operator(':', ":", 1, false);
 // NULL_VALUE 应该是 Value 类型，不应该是 Operator
 
-// 标点符号
-Operator *Operator::Semicolon = new Operator(';', ";", 0, true);
-Operator *Operator::Comma = new Operator(',', ",", 0, true);
-Operator *Operator::LParen = new Operator('(', "(", 0, true);
-Operator *Operator::RParen = new Operator(')', ")", 0, true);
-Operator *Operator::LBracket = new Operator('[', "[", 0, true);
-Operator *Operator::RBracket = new Operator(']', "]", 0, true);
-Operator *Operator::LBrace = new Operator('{', "{", 0, true);
-Operator *Operator::RBrace = new Operator('}', "}", 0, true);
+// 标点符号不是运算符，在词法分析器中直接返回Token类型
 
 // 访问修饰符
 Visibility *Visibility::Public = new Visibility(PUBLIC, VIS_PUBLIC);

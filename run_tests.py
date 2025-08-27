@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 class TestRunner:
-    def __init__(self, parser_path="build/bin/parser", test_dir="tests", verbose=False):
+    def __init__(self, parser_path="build/bin/parser_main", test_dir="tests", verbose=False):
         self.parser_path = parser_path
         self.test_dir = test_dir
         self.verbose = verbose
@@ -207,7 +207,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='批量测试Parser-2.0项目')
-    parser.add_argument('--parser', default='build/bin/parser', 
+    parser.add_argument('--parser', default='build/bin/parser_main', 
                        help='parser可执行文件路径')
     parser.add_argument('--test-dir', default='tests', 
                        help='测试文件目录')

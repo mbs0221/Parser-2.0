@@ -81,6 +81,7 @@ private:
     void move();
     bool match(int tag);
     Operator* matchOperator();
+    bool isOperator(int tag);
     Word* matchWord();
     string matchIdentifier();
     Type* matchType();

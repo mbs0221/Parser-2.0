@@ -900,8 +900,8 @@ Expression* Parser::parseMethodCall() {
 
 // 匹配操作符
 Operator* Parser::matchOperator() {
-    // 检查是否为运算符范围（300-399）
-    if (look->Tag >= 300 && look->Tag <= 399) {
+    // 检查是否为运算符（ASCII 字符或 enum 类型）
+    if (isOperator(look->Tag)) {
         Operator* op = static_cast<Operator*>(look);
         move();
         return op;
@@ -909,6 +909,27 @@ Operator* Parser::matchOperator() {
     printf("SYNTAX ERROR line[%03d]: expected operator, got %d\n", lex.line, look->Tag);
     exit(1);
     return nullptr;
+}
+
+// 判断是否为运算符
+bool Parser::isOperator(int tag) {
+    // ASCII 字符运算符
+    if (tag >= 32 && tag <= 126) {
+        switch (tag) {
+            case '+': case '-': case '*': case '/': case '%':
+            case '<': case '>': case '=': case '!':
+            case '&': case '|': case '^': case '~':
+            case '?': case ':': case '.':
+                return true;
+        }
+    }
+    
+    // enum 类型运算符
+    if (tag >= 300 && tag <= 399) {
+        return true;
+    }
+    
+    return false;
 }
 
 // 语法分析器 - 匹配Tag预定义一个语法元素

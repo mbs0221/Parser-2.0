@@ -31,7 +31,7 @@ protected:
 	Value *match_decimal();
 	Value *match_hex();
 	Value *match_oct();
-	Operator *match_other();
+	Token *match_other();
 	Token *skip_comment();
 };
 

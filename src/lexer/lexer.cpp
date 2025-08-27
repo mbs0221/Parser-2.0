@@ -57,7 +57,7 @@ Token *Lexer::scan(){//LL(1)
 		column++;
 		if (peek == ' ' || peek == '\t')continue;
 		else if (peek == '\r')continue; // 忽略回车符
-		else if (peek == '\n'){ column = 0; line++; }
+		else if (peek == '\n'){ column = 0; line++; continue; }
 		else if (peek == '/'){
 			Token *t;
 			if (t = skip_comment()){
@@ -67,6 +67,11 @@ Token *Lexer::scan(){//LL(1)
 			break;
 		}
 		else break;
+	}
+	
+	// 检查是否到达文件末尾
+	if (inf.eof()){
+		return new Token(END_OF_FILE);
 	}
 	if (peek == '\''){
 		return match_char();
@@ -216,7 +221,7 @@ Value *Lexer::match_oct(){
 	return new Integer(val);
 }
 
-Operator *Lexer::match_other(){
+Token *Lexer::match_other(){
 	// 处理多字符运算符
 	if (peek == '=') {
 		inf.read(&peek, 1);
@@ -315,46 +320,27 @@ Operator *Lexer::match_other(){
 	} else if (peek == '%') {
 		inf.read(&peek, 1);
 		return Operator::Mod;  // 使用静态常量
-	} else if (peek == ';') {
+	} else if (peek == '^') {
 		inf.read(&peek, 1);
-		return Operator::Semicolon;  // 使用静态常量
-	} else if (peek == ',') {
+		return Operator::BitXor;  // 使用静态常量
+	} else if (peek == '~') {
 		inf.read(&peek, 1);
-		return Operator::Comma;  // 使用静态常量
-	} else if (peek == '(') {
-		// inf.read(&peek, 1);
-		return Operator::LParen;  // 使用静态常量
-	} else if (peek == ')') {
-		// inf.read(&peek, 1);
-		return Operator::RParen;  // 使用静态常量
-	} else if (peek == '[') {
+		return Operator::BitNot;  // 使用静态常量
+	} else if (peek == '?') {
 		inf.read(&peek, 1);
-		return Operator::LBracket;  // 使用静态常量
-	} else if (peek == ']') {
+		return Operator::Question;  // 使用静态常量
+	} else if (peek == ':') {
 		inf.read(&peek, 1);
-		return Operator::RBracket;  // 使用静态常量
-	} else if (peek == '{') {
-		inf.read(&peek, 1);
-		return Operator::LBrace;  // 使用静态常量
-	} else if (peek == '}') {
-		inf.read(&peek, 1);
-		return Operator::RBrace;  // 使用静态常量
+		return Operator::Colon;  // 使用静态常量
 	} else if (peek == '.') {
 		inf.read(&peek, 1);
 		return Operator::Dot;  // 使用静态常量
-	} else if (peek == ':') {
-		return Operator::Colon;  // 使用静态常量
-	} else if (peek == ',') {
-		return Operator::Comma;  // 使用静态常量
-	} else if (peek == ';') {
-		return Operator::Semicolon;  // 使用静态常量
-	} else if (peek == '?') {
-		return Operator::Question;  // 使用静态常量
-	} else if (peek == '~') {
-		return Operator::BitNot;  // 使用静态常量
-	} else if (peek == '^') {
-		return Operator::BitXor;  // 使用静态常量
 	} else {
+		// 其他字符返回Token类型
+		if (peek > 31 && peek < 127){
+			// inf.read(&peek, 1);
+			return new Token(peek);
+		}
 		// 无法识别的字符
 		printf("LEXICAL ERROR line[%03d]: unrecognized character '\\x%02x'\n", line, (unsigned char)peek);
 		exit(1);  // 强制退出
