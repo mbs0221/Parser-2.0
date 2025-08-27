@@ -1,8 +1,10 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "lexer.h"
-#include "inter.h"
+#include "lexer/lexer.h"
+#include "parser/inter.h"
+#include "parser/expression.h"
+#include "parser/statement.h"
 #include <string>
 #include <list>
 #include <map>
@@ -14,9 +16,6 @@ public:
     Program *parse(const std::string &file);
 
 protected:
-    void move();
-    bool match(int Tag);
-    
     // 程序解析
     Program* parseProgram();
     
@@ -32,14 +31,9 @@ protected:
     ReturnStatement* parseReturnStatement();
     ThrowStatement* parseThrowStatement();
     TryStatement* parseTryStatement();
-    CatchStatement* parseCatchStatement();
-    FinallyStatement* parseFinallyStatement();
     SwitchStatement* parseSwitchStatement();
-    CaseStatement* parseCaseStatement();
-    DefaultStatement* parseDefaultStatement();
     BlockStatement* parseBlock();
     ExpressionStatement* parseExpressionStatement();
-    ExpressionStatement* parsePrintStatement();
     
     // 函数解析
     FunctionDefinition* parseFunction();
@@ -47,34 +41,26 @@ protected:
     
     // 表达式解析
     Expression* parseExpression();
-    Expression* parseAssignment();
-    Expression* parseCompare();
-    Expression* parseAdditive();
-    Expression* parseTerm();
-    Expression* parseUnary();
-    Expression* parseFactor();
-    Expression* parseParentheses();
-    Expression* parseReal();
-    Expression* parseInt();
-    Expression* parseIdentifier();
-    Expression* parseCall(IdentifierExpression* calleeExpr);
-    AccessExpression* parseAccess(IdentifierExpression* id);
-    
-    // 字符串解析
-    StringLiteral* parseStringLiteral();
-    CharExpression* parseCharLiteral();
-    
+    Expression* parseExpressionWithPrecedence(int minPrecedence);
+    Expression* parsePrimary();
+    Expression* parsePostfix(Expression* expr);
+    bool isBinaryOperator(int tag);
+    Expression* parseConstant();
+    Expression* parseCall(VariableExpression* calleeExpr);
+    Expression* parseAccess(VariableExpression* id);
+    Expression* parseStructInstantiation(VariableExpression* structName);
+    Expression* parseMemberAccess();
+    Expression* parseMethodCall();
+
     // 数组和字典解析
-    ArrayNode* parseArray();
-    DictNode* parseDict();
+    Expression* parseArray();
+    Expression* parseDict();
     
     // 结构体和类解析
     StructDefinition* parseStruct();
     ClassDefinition* parseClass();
     ClassMethod* parseClassMethod();
-    Expression* parseStructInstantiation(IdentifierExpression* structName);
-    Expression* parseMemberAccess();
-    Expression* parseMethodCall();
+
     
     // 类型解析
     Type* parseType();
@@ -84,6 +70,19 @@ private:
     Token *look;
     int depth = 0;
     // Parser不再管理作用域，只负责生成AST
+    
+    // 私有helper方法
+    bool move();
+    bool match(int tag);
+    Operator* matchOperator();
+    Integer* matchInt();
+    Double* matchDouble();
+    Char* matchChar();
+    Bool* matchBool();
+    String* matchString();
+    Word* matchWord();
+    string matchIdentifier();
+    void matchToken(int tag);
 };
 
 #endif

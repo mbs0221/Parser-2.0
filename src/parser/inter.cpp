@@ -1,4 +1,4 @@
-#include "inter.h"
+#include "parser/inter.h"
 
 // 添加缺失的accept方法实现
 void IntExpression::accept(ASTVisitor* visitor) {
@@ -25,7 +25,7 @@ void DictNode::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
 
-void IdentifierExpression::accept(ASTVisitor* visitor) {
+void VariableExpression::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
 

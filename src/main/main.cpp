@@ -1,6 +1,5 @@
 #include "parser.h"
 #include "interpreter.h"
-// #include "ast_optimizer.h"  // 暂时注释掉优化器
 #include "logger.h"
 #include <iostream>
 #include <string>

@@ -42,7 +42,7 @@ public:
     void visit(ExpressionStatement* stmt) override;
     void visit(BlockStatement* stmt) override;
     void visit(ImportStatement* stmt) override;
-    void visit(IdentifierExpression* expr) override;
+    void visit(VariableExpression* expr) override;
 
     void visit(StringLiteral* expr) override;
     void visit(CharExpression* expr) override;

@@ -1,14 +1,5 @@
-#include "lexer.h"
-#include "inter.h"
-
-// 静态成员定义
-Word *Word::Temp = new Word(TEMP, "TEMP");
-Type *Type::Int = new Type(INT, "int", 4);
-Type *Type::Double = new Type(DOUBLE, "double", 16);
-Integer *Integer::True = new Integer(1);
-Integer *Integer::False = new Integer(0);
-
-
+#include "lexer/lexer.h"
+#include "lexer/value.h"
 
 // 词法分析器实现
 Lexer::Lexer(){
@@ -23,9 +14,9 @@ Lexer::Lexer(){
 	words["case"] = new Word(CASE, "case");
 	words["begin"] = new Word(BEGIN, "begin");
 	words["end"] = new Word(END, "end");
-	words["true"] = Integer::True;
-	words["false"] = Integer::False;
-	words["null"] = new Word(NULL, "null");
+	words["true"] = new Bool(true);
+	words["false"] = new Bool(false);
+	words["null"] = new Word(NULL_VALUE, "null");
 	words["let"] = new Word(LET, "let");
 	words["break"] = new Word(BREAK, "break");
 	words["continue"] = new Word(CONTINUE, "continue");
@@ -86,13 +77,12 @@ Token *Lexer::scan(){//LL(1)
 	} else if (isdigit(peek)){
 		return match_number();
 	} else {
+		// match_other现在返回Operator*，但Operator继承自Token，所以可以直接返回
 		return match_other();
 	}
 }// a, b, c, int;
 
-
-
-Token *Lexer::match_char(){
+Value *Lexer::match_char(){
 	char c; // '
 	inf.read(&peek, 1);
 	if (peek == '\\'){// '\a
@@ -144,7 +134,7 @@ Token *Lexer::match_id(){
 	return w;
 }
 
-Token *Lexer::match_number(){
+Value *Lexer::match_number(){
 	if (peek == '0'){
 		inf.read(&peek, 1);
 		if (peek == 'x'){
@@ -160,7 +150,7 @@ Token *Lexer::match_number(){
 	}
 }
 
-Token *Lexer::match_decimal(){
+Value *Lexer::match_decimal(){
 	int val = 0;
 	bool isFloat = false;
 	double floatVal = 0.0;
@@ -198,7 +188,7 @@ Token *Lexer::match_decimal(){
 	}
 }
 
-Token *Lexer::match_hex(){
+Value *Lexer::match_hex(){
 	int val = 0;
 	inf.read(&peek, 1);
 	do{
@@ -217,7 +207,7 @@ Token *Lexer::match_hex(){
 	return new Integer(val);
 }
 
-Token *Lexer::match_oct(){
+Value *Lexer::match_oct(){
 	int val = 0;
 	do{
 		val = val * 8 + peek - '0';
@@ -227,84 +217,115 @@ Token *Lexer::match_oct(){
 	return new Integer(val);
 }
 
-Token *Lexer::match_other(){
+Operator *Lexer::match_other(){
 	// 处理多字符运算符
 	if (peek == '=') {
 		inf.read(&peek, 1);
 		if (peek == '=') {
 			// ==
 			inf.read(&peek, 1);
-			return new Word(EQ, "==");
+			return Operator::EQ;  // 使用静态常量
 		} else {
 			// =
 			inf.seekg(-1, ios_base::cur);
-			return new Token('=');
+			return new Operator(ASSIGN, "=", 2, false);  // 赋值运算符，优先级2，右结合
 		}
 	} else if (peek == '!') {
 		inf.read(&peek, 1);
 		if (peek == '=') {
 			// !=
 			inf.read(&peek, 1);
-			return new Word(NE, "!=");
+			return Operator::NE;  // 使用静态常量
 		} else {
 			// !
 			inf.seekg(-1, ios_base::cur);
-			return new Token('!');
+			return Operator::Not;  // 使用静态常量
 		}
 	} else if (peek == '<') {
 		inf.read(&peek, 1);
 		if (peek == '=') {
 			// <=
 			inf.read(&peek, 1);
-			return new Word(BE, "<=");
+			return Operator::LE;  // 使用静态常量
 		} else {
 			// <
 			inf.seekg(-1, ios_base::cur);
-			return new Token('<');
+			return Operator::LT;  // 使用静态常量
 		}
 	} else if (peek == '>') {
 		inf.read(&peek, 1);
 		if (peek == '=') {
 			// >=
 			inf.read(&peek, 1);
-			return new Word(GE, ">=");
+			return Operator::GE;  // 使用静态常量
 		} else {
 			// >
 			inf.seekg(-1, ios_base::cur);
-			return new Token('>');
+			return Operator::GT;  // 使用静态常量
 		}
 	} else if (peek == '&') {
 		inf.read(&peek, 1);
 		if (peek == '&') {
 			// &&
 			inf.read(&peek, 1);
-			return new Word(AND, "&&");
+			return Operator::AND;  // 使用静态常量
 		} else {
 			// &
 			inf.seekg(-1, ios_base::cur);
-			return new Token('&');
+			return Operator::BitAnd;  // 使用静态常量
 		}
 	} else if (peek == '|') {
 		inf.read(&peek, 1);
 		if (peek == '|') {
 			// ||
 			inf.read(&peek, 1);
-			return new Word(OR, "||");
+			return Operator::OR;  // 使用静态常量
 		} else {
 			// |
 			inf.seekg(-1, ios_base::cur);
-			return new Token('|');
+			return Operator::BitOr;  // 使用静态常量
 		}
+	} else if (peek == '+') {
+		inf.read(&peek, 1);
+		if (peek == '+') {
+			// ++
+			inf.read(&peek, 1);
+			return Operator::Increment;  // 使用静态常量
+		} else {
+			// +
+			inf.seekg(-1, ios_base::cur);
+			return Operator::Add;  // 使用静态常量
+		}
+	} else if (peek == '-') {
+		inf.read(&peek, 1);
+		if (peek == '-') {
+			// --
+			inf.read(&peek, 1);
+			return Operator::Decrement;  // 使用静态常量
+		} else {
+			// -
+			inf.seekg(-1, ios_base::cur);
+			return Operator::Sub;  // 使用静态常量
+		}
+	} else if (peek == '*') {
+		inf.read(&peek, 1);
+		return Operator::Mul;  // 使用静态常量
+	} else if (peek == '/') {
+		inf.read(&peek, 1);
+		return Operator::Div;  // 使用静态常量
+	} else if (peek == '%') {
+		inf.read(&peek, 1);
+		return Operator::Mod;  // 使用静态常量
 	} else {
 		// 检查是否为可识别的字符
 		if (peek >= 32 && peek <= 126) {  // 可打印ASCII字符
 			// 单字符运算符
-			return new Token(peek);
+			return new Operator(peek, string(1, peek), 0, true);  // 默认优先级0，左结合
 		} else if (peek == '\n' || peek == '\r') {
-			// 忽略换行符，继续扫描下一个字符
-			column = 0;
-			line++;
-			return scan();
+			// 换行符应该在scan()方法中处理，不应该在这里处理
+			// 如果到达这里，说明有逻辑错误
+			printf("LEXICAL ERROR line[%03d]: unexpected newline in operator\n", line);
+			exit(1);
 		} else {
 			// 无法识别的字符
 			printf("LEXICAL ERROR line[%03d]: unrecognized character '\\x%02x'\n", line, (unsigned char)peek);
@@ -347,7 +368,7 @@ Token *Lexer::skip_comment(){
 	return nullptr;
 }
 
-Token *Lexer::match_string(){
+Value *Lexer::match_string(){
 	string str;
 	inf.read(&peek, 1); // 跳过开始的引号
 	
@@ -384,5 +405,5 @@ Token *Lexer::match_string(){
 	// inf.read(&peek, 1);
 	
 	// 返回字符串字面量token
-	return new Word(STR, str);
+	return new String(str);
 }

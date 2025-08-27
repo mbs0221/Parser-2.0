@@ -8,25 +8,23 @@ class AST;
 class Expression;
 class Statement;
 class Program;
+class Value;
 
 // 表达式类型
-class IntExpression;
-class DoubleExpression;
-class BoolExpression;
-class IdentifierExpression;
+class ConstantExpression;
+class VariableExpression;
 class UnaryExpression;
 class BinaryExpression;
 class AssignmentExpression;
 class StringLiteral;
-class CharExpression;
 class ArrayNode;
 class DictNode;
 class AccessExpression;
 class CallExpression;
 class MethodCallExpression;
 
-// 类型转换表达式模板前向声明
-template<typename T> class CastExpression;
+// 类型转换表达式前向声明
+class CastExpression;
 
 class StructInstantiationExpression;
 class ClassInstantiationExpression;
@@ -56,36 +54,28 @@ class CaseStatement;
 class DefaultStatement;
 class FunctionPrototype;
 
-// 通用AST访问者接口 - 标准访问者模式，使用void返回类型
+// 通用AST访问者接口 - 表达式返回Value类型，语句保持void返回类型
 class ASTVisitor {
 public:
     virtual ~ASTVisitor() = default;
     
-    // 具体的访问方法 - 标准访问者模式，void返回类型
-    virtual void visit(IntExpression* expr) = 0;
-    virtual void visit(DoubleExpression* expr) = 0;
-    virtual void visit(BoolExpression* expr) = 0;
-    virtual void visit(IdentifierExpression* expr) = 0;
-    virtual void visit(UnaryExpression* expr) = 0;
-    virtual void visit(BinaryExpression* expr) = 0;
-    virtual void visit(AssignmentExpression* expr) = 0;
-    virtual void visit(StringLiteral* expr) = 0;
-    virtual void visit(CharExpression* expr) = 0;
-    virtual void visit(ArrayNode* expr) = 0;
-    virtual void visit(DictNode* expr) = 0;
-    virtual void visit(AccessExpression* expr) = 0;
-    virtual void visit(CallExpression* expr) = 0;
-    virtual void visit(MethodCallExpression* expr) = 0;
-    virtual void visit(CastExpression<IntExpression>* expr) = 0;
-    virtual void visit(CastExpression<DoubleExpression>* expr) = 0;
-    // virtual void visit(CastExpression<StringLiteral>* expr) = 0;
-    virtual void visit(CastExpression<CharExpression>* expr) = 0;
-    virtual void visit(CastExpression<BoolExpression>* expr) = 0;
+    // 表达式访问方法 - 返回Value类型
+    virtual Value* visit(ConstantExpression* expr) = 0;
+    virtual Value* visit(VariableExpression* expr) = 0;
+    virtual Value* visit(UnaryExpression* expr) = 0;
+    virtual Value* visit(BinaryExpression* expr) = 0;
+    virtual Value* visit(CastExpression* expr) = 0;
+    virtual Value* visit(StringLiteral* expr) = 0;
+    virtual Value* visit(ArrayNode* expr) = 0;
+    virtual Value* visit(DictNode* expr) = 0;
+    virtual Value* visit(AccessExpression* expr) = 0;
+    virtual Value* visit(CallExpression* expr) = 0;
+    virtual Value* visit(MethodCallExpression* expr) = 0;
 
 
-    virtual void visit(StructInstantiationExpression* expr) = 0;
-    virtual void visit(ClassInstantiationExpression* expr) = 0;
-    virtual void visit(MemberAccessExpression* expr) = 0;
+    virtual Value* visit(StructInstantiationExpression* expr) = 0;
+    virtual Value* visit(ClassInstantiationExpression* expr) = 0;
+    virtual Value* visit(MemberAccessExpression* expr) = 0;
     
     // 语句访问方法 - 标准访问者模式，void返回类型
     virtual void visit(ImportStatement* stmt) = 0;
