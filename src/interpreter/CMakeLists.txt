@@ -33,7 +33,7 @@ target_link_libraries(interpreter parser)
 
 # 设置输出目录
 set_target_properties(interpreter PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     CXX_STANDARD 11
     CXX_STANDARD_REQUIRED ON
 )

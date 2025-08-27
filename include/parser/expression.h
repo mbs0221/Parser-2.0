@@ -194,15 +194,6 @@ struct BuiltinFunctionExpression : public Expression {
 };
 
 // ==================== 结构体和类相关表达式 ====================
-// 结构体成员定义
-struct StructMember {
-    string name;
-    string type;
-    Expression* defaultValue;
-    
-    StructMember(const string& n, const string& t, Expression* def = nullptr)
-        : name(n), type(t), defaultValue(def) {}
-};
 
 // 结构体实例化表达式
 struct StructInstantiationExpression : public Expression {

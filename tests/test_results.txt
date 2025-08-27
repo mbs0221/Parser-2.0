@@ -1,0 +1,2671 @@
+测试结果报告
+============================================================
+测试时间: 2025-08-27 00:01:16
+
+文件: Text.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.01秒
+退出码: 1
+输出:
+SYNTAX ERROR line[001]: expected ';', got '='
+
+----------------------------------------
+文件: Text_compatible.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 6
+DEBUG: Creating Integer token with value 7
+DEBUG: Creating Integer token with value 8
+DEBUG: Creating Integer token with value 9
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 9
+DEBUG: Creating Integer token with value 30
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 85
+DEBUG: Creating Integer token with value 90
+DEBUG: Creating Integer token with value 78
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: Text_core.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 15
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 4
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: Text_new.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 6
+DEBUG: Creating Integer token with value 7
+DEBUG: Creating Integer token with value 8
+DEBUG: Creating Integer token with value 9
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 11
+DEBUG: Creating Integer token with value 12
+DEBUG: Creating Integer token with value 13
+DEBUG: Creating Integer token with value 14
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 8
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 6
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: count() argument evaluation failed
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: Text_no_comments.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 30
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: Text_simple.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 30
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: debug_import.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+Uncalculated expression: unknown
+10Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Function not found: simpleFunc
+Uncalculated expression: unknown
+0Uncalculated expression: unknown
+
+----------------------------------------
+文件: debug_string.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+Uncalculated expression: unknown
+
+----------------------------------------
+文件: module_geometry.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+
+----------------------------------------
+文件: module_math.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 2
+
+----------------------------------------
+文件: module_utils.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2147483647
+DEBUG: Creating Integer token with value -2147483648
+
+----------------------------------------
+文件: simple_module.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 42
+
+----------------------------------------
+文件: simple_test.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 6
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 6
+DEBUG: Creating Integer token with value 7
+DEBUG: Creating Integer token with value 8
+DEBUG: Creating Integer token with value 9
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 11
+510123456Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_all_operators.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 10
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_arithmetic_logic.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 123
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 25
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: x
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_assignment.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_basic.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+----------------------------------------
+文件: test_break_continue.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 7
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+4Uncalculated expression: unknown
+Uncalculated expression: unknown
+5Uncalculated expression: unknown
+Uncalculated expression: unknown
+5Uncalculated expression: unknown
+Uncalculated expression: unknown
+6Uncalculated expression: unknown
+Uncalculated expression: unknown
+7Uncalculated expression: unknown
+Uncalculated expression: unknown
+8Uncalculated expression: unknown
+Uncalculated expression: unknown
+9Uncalculated expression: unknown
+Uncalculated expression: unknown
+10Uncalculated expression: unknown
+Uncalculated expression: unknown
+10Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+6Uncalculated expression: unknown
+Uncalculated expression: unknown
+4Uncalculated expression: unknown
+10Uncalculated expression: unknown
+Uncalculated expression: unknown
+5Uncalculated expression: unknown
+15Uncalculated expression: unknown
+Uncalculated expression: unknown
+6Uncalculated expression: unknown
+21Uncalculated expression: unknown
+Uncalculated expression: unknown
+7Uncalculated expression: unknown
+28Uncalculated expression: unknown
+Uncalculated expression: unknown
+8Uncalculated expression: unknown
+36Uncalculated expression: unknown
+Uncalculated expression: unknown
+9Uncalculated expression: unknown
+45Uncalculated expression: unknown
+Uncalculated expression: unknown
+10Uncalculated expression: unknown
+55Uncalculated expression: unknown
+Uncalculated expression: unknown
+55Uncalculated expression: unknown
+Error: Break statement not implemented yet
+
+----------------------------------------
+文件: test_builtin.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_char_escape.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_char_string_concat.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+Uncalculated expression: unknown
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_class_instantiation.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 85
+DEBUG: Creating Integer token with value 25
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_complex_instantiation.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 85
+DEBUG: Creating Integer token with value 22
+DEBUG: Creating Integer token with value 90
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 30
+DEBUG: Creating Integer token with value 5
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_comprehensive.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.21秒
+退出码: -11
+输出:
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 15
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 30
+DEBUG: Creating Integer token with value 35
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_concat.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+SYNTAX ERROR line[015]: unexpected token in statement
+
+----------------------------------------
+文件: test_debug_break_continue.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+4Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Error: Break statement not implemented yet
+Error: Continue statement not implemented yet
+
+----------------------------------------
+文件: test_division.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 3
+3
+----------------------------------------
+文件: test_do_while_loop.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+SYNTAX ERROR line[004]: unexpected token in statement
+
+----------------------------------------
+文件: test_dot_concatenation.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+0
+----------------------------------------
+文件: test_errors.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+SYNTAX ERROR line[005]: expected ';', got '('
+
+----------------------------------------
+文件: test_float_debug.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Double token with value 3.140000
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_float_support.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Double token with value 3.140000
+DEBUG: Creating Double token with value 2.500000
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Double token with value 3.500000
+DEBUG: Creating Double token with value 5.500000
+DEBUG: Creating Integer token with value 2
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_for_loop.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+SYNTAX ERROR line[003]: unexpected token in factor
+SYNTAX ERROR line[003]: expected ';', got '='
+
+----------------------------------------
+文件: test_function_advanced.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.20秒
+退出码: -11
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 8
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 15
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 7
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 90
+DEBUG: Creating Integer token with value 80
+DEBUG: Creating Integer token with value 70
+DEBUG: Creating Integer token with value 95
+DEBUG: Creating Integer token with value 85
+DEBUG: Creating Integer token with value 75
+DEBUG: Creating Integer token with value 65
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_function_basic.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_function_call.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.18秒
+退出码: -11
+----------------------------------------
+文件: test_function_definition.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 10
+Uncalculated expression: unknown
+11Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_function_minimal.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.17秒
+退出码: -11
+----------------------------------------
+文件: test_function_operator.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.19秒
+退出码: -11
+输出:
+DEBUG: Creating Integer token with value 15
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 8
+DEBUG: Creating Integer token with value 7
+DEBUG: Creating Integer token with value 3
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_function_simple.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.19秒
+退出码: -11
+输出:
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_function_unary.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.14秒
+退出码: -11
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_import_advanced.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.14秒
+退出码: -11
+输出:
+DEBUG: Creating Integer token with value 15
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 7
+DEBUG: Creating Integer token with value 8
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 100
+DEBUG: Creating Integer token with value 200
+DEBUG: Creating Integer token with value 50
+DEBUG: Creating Integer token with value 30
+DEBUG: Creating Integer token with value 42
+DEBUG: Creating Integer token with value 6
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 6
+DEBUG: Creating Integer token with value 8
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2147483647
+DEBUG: Creating Integer token with value -2147483648
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+Uncalculated expression: unknown
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_import_basic.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.19秒
+退出码: -11
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 6
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 8
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2147483647
+DEBUG: Creating Integer token with value -2147483648
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_import_debug.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+Uncalculated expression: unknown
+10Uncalculated expression: unknown
+Error: Function not found: max
+Uncalculated expression: unknown
+0Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_import_error.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+SYNTAX ERROR line[003]: unexpected token in factor
+SYNTAX ERROR line[005]: expected 59, got 304
+
+----------------------------------------
+文件: test_int_double.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Double token with value 3.140000
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Double token with value 2.500000
+DEBUG: Creating Integer token with value 10
+15550205.6400000.6400007.8500001.25600013.14000025.000000101-100Error: Unary minus requires numeric operand
+
+----------------------------------------
+文件: test_lexical_error.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_lexical_error_char.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+LEXICAL ERROR line[003]: unterminated character literal
+
+----------------------------------------
+文件: test_lexical_error_escape.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+LEXICAL ERROR line[003]: invalid escape sequence '\k'
+
+----------------------------------------
+文件: test_lexical_error_real.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 6
+DEBUG: Creating Integer token with value 7
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_lexical_error_string.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+LEXICAL ERROR line[003]: unterminated string literal
+
+----------------------------------------
+文件: test_logic_conversion.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.16秒
+退出码: -11
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 10
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_logic_string.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 10
+0Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+
+----------------------------------------
+文件: test_memory.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_mixed_operators.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 42
+0Error: Invalid operands for arithmetic operation
+Error: Cannot access member 'mixed1' on non-struct object
+Error: Invalid operands for arithmetic operation
+Error: Cannot access member 'mixed2' on non-struct object
+Error: Cannot access member 'mixed1' on non-struct object
+
+----------------------------------------
+文件: test_mixed_plus.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 42
+0Error: Invalid operands for arithmetic operation
+
+----------------------------------------
+文件: test_mixed_simple.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+0Error: Invalid operands for arithmetic operation
+
+----------------------------------------
+文件: test_mixed_working.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+0
+----------------------------------------
+文件: test_modern.txt
+状态: PASS
+消息: 测试通过
+耗时: 2.18秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 6
+DEBUG: Creating Integer token with value 7
+DEBUG: Creating Integer token with value 8
+DEBUG: Creating Integer token with value 9
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 9
+DEBUG: Creating Integer token with value 30
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 85
+DEBUG: Creating Integer token with value 90
+DEBUG: Creating Integer token with value 78
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: count() argument evaluation failed
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Undefined variable: str
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_multiple_vars.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 20
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_nested_break_continue.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+1Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+2Uncalculated expression: unknown
+2Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+3Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+4Uncalculated expression: unknown
+4Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+1Uncalculated expression: unknown
+5Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+2Uncalculated expression: unknown
+6Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+3Uncalculated expression: unknown
+7Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+4Uncalculated expression: unknown
+8Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+1Uncalculated expression: unknown
+9Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+2Uncalculated expression: unknown
+10Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+3Uncalculated expression: unknown
+11Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+4Uncalculated expression: unknown
+12Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+12Uncalculated expression: unknown
+Error: Break statement not implemented yet
+
+----------------------------------------
+文件: test_number.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+10
+----------------------------------------
+文件: test_operator_overloading.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 15
+DEBUG: Creating Integer token with value 3
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_operators.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 10
+Error: Cannot access member 'a' on non-struct object
+Error: Cannot access member 'b' on non-struct object
+Error: Cannot access member 'sum' on non-struct object
+Error: Cannot access member 'diff' on non-struct object
+Error: Cannot access member 'gt' on non-struct object
+Error: Cannot access member 'lt' on non-struct object
+Error: Cannot access member 'eq' on non-struct object
+Error: Cannot access member 'ne' on non-struct object
+Error: Cannot access member 'ge' on non-struct object
+Error: Cannot access member 'le' on non-struct object
+Error: Cannot access member 'and_result' on non-struct object
+Error: Cannot access member 'or_result' on non-struct object
+
+----------------------------------------
+文件: test_recursive_function.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 5
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+
+----------------------------------------
+文件: test_scope.txt
+状态: SEGFAULT
+消息: 段错误（程序结束时的内存清理问题）
+耗时: 0.19秒
+退出码: -11
+输出:
+DEBUG: Creating Integer token with value 100
+DEBUG: Creating Integer token with value 50
+DEBUG: Creating Integer token with value 200
+DEBUG: Creating Integer token with value 300
+DEBUG: Creating Integer token with value 400
+DEBUG: Creating Integer token with value 4
+DEBUG: Creating Integer token with value 500
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 600
+DEBUG: Creating Integer token with value 500
+DEBUG: Creating Integer token with value 700
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_simple_bool.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+
+----------------------------------------
+文件: test_simple_break.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+4Uncalculated expression: unknown
+Uncalculated expression: unknown
+5Uncalculated expression: unknown
+Uncalculated expression: unknown
+5Uncalculated expression: unknown
+Error: Break statement not implemented yet
+
+----------------------------------------
+文件: test_simple_continue.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+4Uncalculated expression: unknown
+Error: Continue statement not implemented yet
+
+----------------------------------------
+文件: test_simple_div.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 2
+5
+----------------------------------------
+文件: test_simple_function.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+8
+----------------------------------------
+文件: test_simple_function_call.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 42
+Uncalculated expression: unknown
+42Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_simple_import.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+Uncalculated expression: unknown
+10Uncalculated expression: unknown
+Error: Function not found: simpleFunc
+Uncalculated expression: unknown
+0Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Undefined variable: MODULE_CONSTANT
+
+----------------------------------------
+文件: test_simple_logic.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 10
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+
+----------------------------------------
+文件: test_simple_mixed.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+0Error: Invalid operands for arithmetic operation
+
+----------------------------------------
+文件: test_simple_operators.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 10
+Error: Cannot access member 'a' on non-struct object
+Error: Cannot access member 'b' on non-struct object
+Error: Cannot access member 'sum' on non-struct object
+Error: Cannot access member 'diff' on non-struct object
+Error: Cannot access member 'gt' on non-struct object
+Error: Cannot access member 'lt' on non-struct object
+Error: Cannot access member 'eq' on non-struct object
+Error: Cannot access member 'ne' on non-struct object
+Error: Cannot access member 'and_result' on non-struct object
+Error: Cannot access member 'or_result' on non-struct object
+
+----------------------------------------
+文件: test_simple_pass.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_simple_plus.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 20
+30
+----------------------------------------
+文件: test_simple_recursive.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+Error: Invalid operands for arithmetic operation
+
+----------------------------------------
+文件: test_simple_string.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_simple_struct.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 25
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_simple_while.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 3
+DEBUG: Creating Integer token with value 1
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+4Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_single_function.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_string_array.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+00Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_string_debug.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+0
+----------------------------------------
+文件: test_string_escape.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_string_operators.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 123
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Error: Invalid operands for comparison operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for comparison operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for comparison operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for comparison operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for comparison operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for comparison operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for comparison operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands for arithmetic operation
+
+----------------------------------------
+文件: test_string_plus.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_struct_advanced.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 30
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 95
+DEBUG: Creating Integer token with value 90
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_struct_class.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.01秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 85
+SYNTAX ERROR line[044]: expected ';', got ')'
+
+----------------------------------------
+文件: test_struct_only.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 30
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_struct_simple.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 20
+DEBUG: Creating Integer token with value 85
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_subtraction.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 3
+Error: Invalid operands for arithmetic operation
+
+----------------------------------------
+文件: test_syntax_error.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+SYNTAX ERROR line[003]: unexpected token in factor
+SYNTAX ERROR line[005]: expected 59, got 304
+
+----------------------------------------
+文件: test_syntax_error2.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 3
+SYNTAX ERROR line[004]: unexpected token in factor
+SYNTAX ERROR line[006]: expected 59, got 304
+
+----------------------------------------
+文件: test_syntax_error_invalid_operator.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+SYNTAX ERROR line[003]: expected 59, got 266
+
+----------------------------------------
+文件: test_syntax_error_missing_paren.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+SYNTAX ERROR line[002]: expected 41, got 266
+
+----------------------------------------
+文件: test_syntax_error_missing_semicolon.txt
+状态: PASS
+消息: 预期的语法/词法错误，测试通过
+耗时: 0.00秒
+退出码: 1
+输出:
+DEBUG: Creating Integer token with value 1
+SYNTAX ERROR line[002]: expected ';', got '('
+
+----------------------------------------
+文件: test_unary_minus.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Integer token with value 5
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands in binary expression
+Error: Invalid operands for arithmetic operation
+Error: Invalid operands in binary expression
+
+----------------------------------------
+文件: test_unified_ast.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 30
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_unified_ast_working.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 25
+DEBUG: Creating Integer token with value 30
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_utils_functions.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+DEBUG: Creating Double token with value 3.140000
+DEBUG: Creating Integer token with value 5
+DEBUG: Creating Integer token with value 15
+DEBUG: Creating Integer token with value 7
+Error: Function not found: max
+Error: Function not found: min
+Error: Function not found: abs
+Error: Function not found: printHeader
+Error: Function not found: printResult
+Error: Function not found: printResult
+Error: Function not found: printResult
+Error: Function not found: printResult
+Error: Function not found: printResult
+Error: Function not found: printResult
+Error: Function not found: printSeparator
+Error: Function not found: println
+Error: Function not found: println
+Error: Function not found: println
+Error: Function not found: println
+Error: Function not found: printSeparator
+Error: Function not found: printHeader
+Error: Function not found: printResult
+Error: Function not found: printResult
+Error: Function not found: printResult
+Error: Function not found: printLine
+Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_variable_assignment.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.01秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 1
+DEBUG: Creating Integer token with value 2
+DEBUG: Creating Integer token with value 1
+Uncalculated expression: unknown
+1Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+Uncalculated expression: unknown
+3Uncalculated expression: unknown
+Uncalculated expression: unknown
+2Uncalculated expression: unknown
+
+----------------------------------------
+文件: test_working_mixed.txt
+状态: PASS
+消息: 测试通过
+耗时: 0.00秒
+退出码: 0
+输出:
+DEBUG: Creating Integer token with value 10
+0
+----------------------------------------

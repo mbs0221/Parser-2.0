@@ -13,6 +13,18 @@ using namespace std;
 // 前向声明
 class BlockStatement;
 
+// 结构体成员定义
+struct StructMember {
+    string name;
+    string type;
+    string visibility;  // "public", "private", "protected"
+    Expression* defaultValue;
+    
+    StructMember(const string& memberName, const string& memberType, 
+                const string& memberVisibility = "public", Expression* defaultVal = nullptr)
+        : name(memberName), type(memberType), visibility(memberVisibility), defaultValue(defaultVal) {}
+};
+
 // 标识符基类 - 用于统一管理变量、函数、结构体、类定义
 class Identifier : public Statement {
 public:

@@ -1,0 +1,3 @@
+let x = 5 + 3.14;
+let y = "Hello" + 42;
+let z = true && 1;

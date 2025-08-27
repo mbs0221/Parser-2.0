@@ -16,16 +16,33 @@ endif()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LOG4CPP REQUIRED log4cpp)
 
+# 启用测试
+enable_testing()
+
+# 查找Google Test测试框架
+find_package(GTest REQUIRED)
+if(GTest_FOUND)
+    message(STATUS "Google Test found")
+else()
+    message(FATAL_ERROR "Google Test not found, please install libgtest-dev")
+endif()
+
+# 设置输出目录
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+# 设置全局包含目录
+include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/Parser)
+include_directories(${LOG4CPP_INCLUDE_DIRS})
+
 # 添加子目录
 add_subdirectory(src/lexer)
 add_subdirectory(src/parser)
 add_subdirectory(src/interpreter)
 add_subdirectory(src/optimizer)
 add_subdirectory(src/main)
-
-# 设置全局包含目录
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/Parser)
-include_directories(${LOG4CPP_INCLUDE_DIRS})
+add_subdirectory(src/tests)
 
 

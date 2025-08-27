@@ -1,6 +1,6 @@
-#include "parser.h"
-#include "interpreter.h"
-#include "logger.h"
+#include "parser/parser.h"
+#include "interpreter/interpreter.h"
+#include "interpreter/logger.h"
 #include <iostream>
 #include <string>
 #include <getopt.h>
