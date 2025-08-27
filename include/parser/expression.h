@@ -8,7 +8,7 @@ using namespace std;
 
 // 前向声明
 struct ConstantExpression;
-struct StringLiteral;
+// StringLiteral已移动到value.h中作为String类型
 
 // ==================== 常量表达式 ====================
 // 常量表达式节点 - 直接使用Value类型（Value现在是Token的子类）
@@ -193,44 +193,7 @@ struct BuiltinFunctionExpression : public Expression {
 };
 
 // ==================== 结构体和类相关表达式 ====================
-
-// 结构体实例化表达式
-struct StructInstantiationExpression : public Expression {
-    VariableExpression* structName;
-    map<string, Expression*> memberValues;
-    
-    StructInstantiationExpression(VariableExpression* name, map<string, Expression*> values)
-        : structName(name), memberValues(values) {}
-    
-    string getLocation() const override {
-        return "struct instantiation";
-    }
-    
-    void accept(ASTVisitor* visitor) override;
-    
-    int getTypePriority() const override {
-        return 0;
-    }
-};
-
-// 类实例化表达式
-struct ClassInstantiationExpression : public Expression {
-    VariableExpression* className;
-    map<string, Expression*> memberValues;
-    
-    ClassInstantiationExpression(VariableExpression* name, map<string, Expression*> values)
-        : className(name), memberValues(values) {}
-    
-    string getLocation() const override {
-        return "class instantiation";
-    }
-    
-    void accept(ASTVisitor* visitor) override;
-    
-    int getTypePriority() const override {
-        return 0;
-    }
-};
+// 注意：StructInstantiationExpression和ClassInstantiationExpression已移除，使用CallExpression替代
 
 // 成员访问表达式
 struct MemberAccessExpression : public Expression {

@@ -1,4 +1,4 @@
-#include "parser/scope.h"
+#include "interpreter/scope.h"
 #include "parser/function.h"
 #include "parser/inter.h"
 #include "lexer/value.h"
@@ -187,6 +187,34 @@ bool ScopeManager::isFunctionDefinedInCurrentScope(const string& name) const {
         }
     }
     return false;
+}
+
+void ScopeManager::defineFunction(const string& name, UserFunction* func) {
+    defineIdentifier(name, func);
+}
+
+void ScopeManager::defineStruct(const string& name, StructDefinition* structDef) {
+    defineIdentifier(name, structDef);
+}
+
+void ScopeManager::defineClass(const string& name, ClassDefinition* classDef) {
+    defineIdentifier(name, classDef);
+}
+
+StructDefinition* ScopeManager::lookupStruct(const string& name) {
+    Identifier* identifier = lookupIdentifier(name);
+    if (identifier && identifier->getIdentifierType() == "StructDefinition") {
+        return dynamic_cast<StructDefinition*>(identifier);
+    }
+    return nullptr;
+}
+
+ClassDefinition* ScopeManager::lookupClass(const string& name) {
+    Identifier* identifier = lookupIdentifier(name);
+    if (identifier && identifier->getIdentifierType() == "ClassDefinition") {
+        return dynamic_cast<ClassDefinition*>(identifier);
+    }
+    return nullptr;
 }
 
 

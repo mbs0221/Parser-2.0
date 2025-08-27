@@ -1,11 +1,11 @@
-#include "interpreter.h"
-#include "expression.h"
-#include "function.h"
-#include "inter.h"
-#include "lexer.h"
-#include "logger.h"
-#include "value.h"
-#include "builtin.h"
+#include "interpreter/interpreter.h"
+#include "parser/expression.h"
+#include "parser/function.h"
+#include "parser/inter.h"
+#include "lexer/lexer.h"
+#include "interpreter/logger.h"
+#include "lexer/value.h"
+#include "interpreter/builtin.h"
 #include <iostream>
 #include <sstream>
 #include <typeinfo>
@@ -24,8 +24,6 @@ Interpreter::Interpreter() {
 Interpreter::~Interpreter() {
     // ScopeManager在析构函数中自动清理
 }
-
-// 作用域管理 - 直接使用scopeManager
 
 // 主求值方法
 void Interpreter::visit(AST* node) {
@@ -141,91 +139,59 @@ void Interpreter::executeCastOperation(CastExpression<T>* cast) {
             reportError("Failed to convert operand to target type");
         }
     } else {
-        // 对于非LeafExpression类型，尝试特殊处理
-        if (typeid(T) == typeid(StringLiteral)) {
-            // 特殊处理：将任何类型转换为字符串
-            StringLiteral* strExpr = dynamic_cast<StringLiteral*>(operand);
-            if (strExpr) {
-                pushResult(strExpr);
-            } else {
-                // 对于其他类型，创建默认字符串
-                pushResult(new StringLiteral(""));
-            }
-        } else {
-            reportError("Cannot convert non-leaf expression to target type");
-        }
+        // 对于非LeafExpression类型，报告错误
+        reportError("Cannot convert non-leaf expression to target type");
     }
 }
 
 // 赋值表达式现在使用BinaryExpression处理，在visit(BinaryExpression*)中实现
 
-// 一元表达式求值 - 后序遍历模式
-void Interpreter::visit(UnaryExpression* unary) {
+// 一元表达式求值
+Value* Interpreter::visit(UnaryExpression* unary) {
     if (!unary || !unary->operand || !unary->operator_) {
         reportError("Invalid unary expression");
-        return;
+        return nullptr;
     }
     
-    // 后序遍历：先处理操作数
+    // 处理操作数
     Value* operand = visit(unary->operand);
-    
-    // 从栈中pop出操作数
     if (!operand) {
         reportError("Invalid operand in unary expression");
         return nullptr;
     }
 
-    // 如果操作数不是BoolExpression，则转换为BoolExpression
-    if (typeid(*operand) != typeid(BoolExpression)) {
-        operand = new CastExpression<BoolExpression>(operand);
-        operand = visit(operand);
-    }
-    
     // 根据操作符类型进行处理
     switch (unary->operator_->Tag) {
         case '!': {
-            BoolExpression* expr = dynamic_cast<BoolExpression*>(operand);
-            if (expr) {
-                pushResult(new BoolExpression(!expr->getBool()));
+            // 逻辑非操作
+            if (Integer* intVal = dynamic_cast<Integer*>(operand)) {
+                return new Bool(intVal->getValue() == 0);
+            } else if (Double* doubleVal = dynamic_cast<Double*>(operand)) {
+                return new Bool(doubleVal->getValue() == 0.0);
+            } else if (Bool* boolVal = dynamic_cast<Bool*>(operand)) {
+                return new Bool(!boolVal->getValue());
+            } else if (String* strVal = dynamic_cast<String*>(operand)) {
+                return new Bool(strVal->getValue().empty());
             } else {
                 reportError("Invalid operand for logical NOT operator");
+                return nullptr;
             }
-            break;
         }
         case '-': {
-            IntExpression* intOperand = dynamic_cast<IntExpression*>(operand);
-            if (intOperand) {
-                pushResult(new IntExpression(-(*intOperand)));
+            // 一元负号操作
+            if (Integer* intVal = dynamic_cast<Integer*>(operand)) {
+                return new Integer(-intVal->getValue());
+            } else if (Double* doubleVal = dynamic_cast<Double*>(operand)) {
+                return new Double(-doubleVal->getValue());
             } else {
-                DoubleExpression* doubleOperand = dynamic_cast<DoubleExpression*>(operand);
-                if (doubleOperand) {
-                    pushResult(new DoubleExpression(-(*doubleOperand)));
-                } else {
-                    reportError("Invalid operand for unary minus operator");
-                }
+                reportError("Invalid operand for unary minus operator");
+                return nullptr;
             }
-            break;
         }
         default:
             reportError("Unknown unary operator Tag " + to_string(unary->operator_->Tag));
-            break;
+            return nullptr;
     }
-}
-
-Expression* Interpreter::insertCastExpression(Expression* target, Expression* source) {
-    if (typeid(*target) == typeid(IntExpression)) {
-        return new CastExpression<IntExpression>(source);
-    } else if (typeid(*target) == typeid(DoubleExpression)) {
-        return new CastExpression<DoubleExpression>(source);
-    } else if (typeid(*target) == typeid(BoolExpression)) {
-        return new CastExpression<BoolExpression>(source);
-    } else if (typeid(*target) == typeid(CharExpression)) {
-        return new CastExpression<CharExpression>(source);
-    } else if (typeid(*target) == typeid(StringLiteral)) {
-        return new CastExpression<StringLiteral>(source);
-    }
-    reportError("Cannot convert expression to target type");
-    return source;
 }
 
 // 二元运算表达式求值 - 返回Value类型
@@ -366,173 +332,88 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
 
 Value* Interpreter::calculate(Integer* left, Integer* right, int op) {
     switch (op) {
-        case '+': return new Integer(left->getValue() + right->getValue());
-        case '-': return new Integer(left->getValue() - right->getValue());
-        case '*': return new Integer(left->getValue() * right->getValue());
-        case '/': return new Integer(left->getValue() / right->getValue());
-        case '%': return new Integer(left->getValue() % right->getValue());
+        case '+': return new Integer(*left + *right);
+        case '-': return new Integer(*left - *right);
+        case '*': return new Integer(*left * *right);
+        case '/': return new Integer(*left / *right);
+        case '%': return new Integer(*left % *right);
         default: return new Integer(0);
     }
 }
 
 Value* Interpreter::calculate(Double* left, Double* right, int op) {
     switch (op) {
-        case '+': return new Double(left->getValue() + right->getValue());
-        case '-': return new Double(left->getValue() - right->getValue());
-        case '*': return new Double(left->getValue() * right->getValue());
-        case '/': return new Double(left->getValue() / right->getValue());
+        case '+': return new Double(*left + *right);
+        case '-': return new Double(*left - *right);
+        case '*': return new Double(*left * *right);
+        case '/': return new Double(*left / *right);
         default: return new Double(0.0);
     }
 }
 
 Value* Interpreter::calculate(Bool* left, Bool* right, int op) {
     switch (op) {
-        case AND: return new Bool(left->getValue() && right->getValue());
-        case OR: return new Bool(left->getValue() || right->getValue());
+        case AND: return new Bool(*left && *right);
+        case OR: return new Bool(*left || *right);
         default: return new Bool(false);
     }
 }
 
 Value* Interpreter::calculate(Char* left, Char* right, int op) {
     switch (op) {
-        case '+': return new String(string(1, left->getValue()) + string(1, right->getValue()));
-        default: return new Char(left->getValue());
+        case '+': return new Char(*left + *right);
+        default: return new Char(*left);
     }
 }
 
 Value* Interpreter::calculate(String* left, String* right, int op) {
     switch (op) {
-        case '+': return new String(left->getValue() + right->getValue());
-        default: return new String(left->getValue());
+        case '+': return new String(*left + *right);
+        default: return new String("");
     }
 }
 
-CharExpression* Interpreter::calculate(CharExpression* left, CharExpression* right, int op) {
-    switch (op) {
-        case '+': return new CharExpression(left->value + right->value);
-        default: return new CharExpression(0);
-    }
-}
-
-DoubleExpression* Interpreter::calculate(DoubleExpression* left, DoubleExpression* right, int op) {
-    switch (op) {
-        case '+': return new DoubleExpression(*left + *right);
-        case '-': return new DoubleExpression(*left - *right);
-        case '*': return new DoubleExpression(*left * *right);
-        case '/': return new DoubleExpression(*left / *right);
-        default: return new DoubleExpression(0);
-    }
-}
-
-StringLiteral* Interpreter::calculate(StringLiteral* left, StringLiteral* right, int op) {
-    switch (op) {
-        case '+': return new StringLiteral(*left + *right);
-        default: return new StringLiteral("");
-    }
-}
-
-// 字符表达式求值
-void Interpreter::visit(CharExpression* charExpr) {
-    if (!charExpr) return;
-    LOG_DEBUG("CharExpression: " + to_string(charExpr->value));
-    
-    // 字符表达式直接推入结果栈
-    pushResult(charExpr);
-}
+// CharExpression的visit方法已移除，使用value.h中的Char
 
 // 字符串字面量求值
-void Interpreter::visit(StringLiteral* strLit) {
-    if (!strLit) return;
-    LOG_DEBUG("StringLiteral: " + strLit->toString());
+// StringLiteral的visit方法已移除，使用value.h中的String
 
-    // 字符串字面量直接推入结果栈
-    pushResult(strLit);
-}
+// ArrayNode和DictNode的visit方法已移除，使用value.h中的Array和Dict
 
-// 数组节点求值
-void Interpreter::visit(ArrayNode* array) {
-    if (!array) return;
-    
-    // 对数组中的每个元素进行求值
-    for (size_t i = 0; i < array->getElementCount(); ++i) {
-        Expression* element = array->getElement(i);
-        if (element) {
-            visit(element);
-            Expression* evaluated = popResult();
-            if (evaluated) {
-                array->setElement(i, evaluated);
-            }
-        }
-    }
-    
-    pushResult(array);
-}
-
-// 字典节点求值
-void Interpreter::visit(DictNode* dict) {
-    if (!dict) return;
-    
-    // 对字典中的每个值进行求值
-    vector<string> keys = dict->getKeys();
-    for (const string& key : keys) {
-        Expression* value = dict->getEntry(key);
-        if (value) {
-            visit(value);
-            Expression* evaluated = popResult();
-            if (evaluated) {
-                dict->setEntry(key, evaluated);
-            }
-        }
-    }
-    
-    pushResult(dict);
-}
-
-// 访问表达式求值 - 使用运行时类型检查消除dynamic_cast
-void Interpreter::visit(AccessExpression* access) {
-    if (!access || !access->target || !access->key) return;
+// 访问表达式求值
+Value* Interpreter::visit(AccessExpression* access) {
+    if (!access || !access->target || !access->key) return nullptr;
     
     // 求值目标和键
-    visit(access->target);
-    Expression* target = popResult();
-    visit(access->key);
-    Expression* key = popResult();
+    Value* target = visit(access->target);
+    Value* key = visit(access->key);
     
-    if (!target || !key) return;
+    if (!target || !key) return nullptr;
     
-    // 检查目标是否为支持访问操作的类型
-    AccessibleExpression* accessibleTarget = dynamic_cast<AccessibleExpression*>(target);
-    if (!accessibleTarget) {
-        reportError("Target expression does not support access operations");
-        return;
-    }
-    
-    // 直接调用access方法，无需进一步的dynamic_cast
-    Expression* result = accessibleTarget->access(key);
-    pushResult(result);
+    // TODO: 实现访问操作，暂时返回nullptr
+    // 需要根据target和key的类型来实现具体的访问逻辑
+    return nullptr;
 }
 
 // 函数调用表达式求值
-void Interpreter::visit(CallExpression* call) {
-    if (!call || !call->callee) return;
+Value* Interpreter::visit(CallExpression* call) {
+    if (!call || !call->callee) return nullptr;
     
     // 检查是否是内置函数
     if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(call->callee)) {
         string funcName = varExpr->name;
         if (isBuiltinFunction(funcName)) {
-            Expression* result = executeBuiltinFunction(funcName, call->arguments);
-            pushResult(result);
-            return;
+            return executeBuiltinFunction(funcName, call->arguments);
         }
     }
     
     // 求值所有参数
     vector<Expression*> evaluatedArgs;
     for (Expression* arg : call->arguments) {
-        visit(arg);
-        Expression* evaluatedArg = popResult();
+        Value* evaluatedArg = visit(arg);
         if (evaluatedArg) {
-            evaluatedArgs.push_back(evaluatedArg);
+            // TODO: 需要将Value*转换为Expression*，暂时跳过
+            // evaluatedArgs.push_back(evaluatedArg);
         }
     }
     
@@ -542,16 +423,13 @@ void Interpreter::visit(CallExpression* call) {
         
         // 首先检查是否是内置函数
         if (isBuiltinFunction(funcName)) {
-            Expression* result = executeBuiltinFunction(funcName, evaluatedArgs);
-            pushResult(result);
-            return;
+            return executeBuiltinFunction(funcName, evaluatedArgs);
         }
         
         // 然后查找用户定义的函数
         UserFunction* funcDef = lookupFunction(funcName);
         if (!funcDef) {
-            cout << "Error: Function not found: " << funcName << endl;
-            return;
+            throw RuntimeException("Function not found: " + funcName);
         }
         
         LOG_DEBUG("Calling function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
@@ -594,20 +472,19 @@ void Interpreter::visit(CallExpression* call) {
     cout << "Error: Function not found or not callable" << endl;
 }
 
-void Interpreter::visit(MethodCallExpression* methodCall) {
-    if (!methodCall) return;
+Value* Interpreter::visit(MethodCallExpression* methodCall) {
+    if (!methodCall) return nullptr;
     
     // 暂时简单实现，后续可以完善
-    reportError("Method call not implemented yet");
+    throw RuntimeException("Method call not implemented yet");
 }
 
 void Interpreter::visit(ReturnStatement* returnStmt) {
     if (!returnStmt || !returnStmt->returnValue) return;
     LOG_DEBUG("Executing return statement");
-    visit(returnStmt->returnValue);
-    Expression* result = popResult();
-    LOG_DEBUG("Return value: " + (result == nullptr ? "null" : result->getLocation()));
-    pushResult(result);
+    Value* result = visit(returnStmt->returnValue);
+    LOG_DEBUG("Return value: " + (result == nullptr ? "null" : "evaluated"));
+    // 返回值应该通过异常机制处理，这里暂时忽略
 }
 
 
@@ -895,101 +772,9 @@ void Interpreter::printCallStack() {
     }
 }
 
-// 结构体实例化求值
-Value* Interpreter::visit(StructInstantiationExpression* structInst) {
-    if (!structInst) return nullptr;
-    
-    string structName = structInst->structName->getName();
-    
-    // 查找结构体定义
-    StructDefinition* structDef = scopeManager.lookupStruct(structName);
-    if (!structDef) {
-        reportError("Undefined struct: " + structName);
-        return nullptr;
-    }
-    
-    // 创建一个字典来存储结构体实例
-    Dict* instance = new Dict();
-    
-    // 初始化所有成员为默认值
-    for (const auto& member : structDef->members) {
-        if (member.defaultValue) {
-            Value* defaultValue = visit(member.defaultValue);
-            instance->setEntry(member.name, defaultValue);
-        } else {
-            // 根据类型设置默认值
-            if (member.type == "string") {
-                instance->setEntry(member.name, new String(""));
-            } else if (member.type == "int") {
-                instance->setEntry(member.name, new Integer(0));
-            } else if (member.type == "double") {
-                instance->setEntry(member.name, new Double(0.0));
-            } else {
-                instance->setEntry(member.name, new String(""));
-            }
-        }
-    }
-    
-    // 应用提供的字段值
-    for (const auto& field : structInst->fieldValues) {
-        Value* fieldValue = visit(field.second);
-        instance->setEntry(field.first, fieldValue);
-    }
-    
-    return instance;
-}
+// 结构体实例化求值 - 已移除，使用CallExpression替代
 
-// 类实例化求值
-Value* Interpreter::visit(ClassInstantiationExpression* classInst) {
-    if (!classInst) return nullptr;
-    
-    string className = classInst->className->getName();
-    
-    // 查找类定义
-    ClassDefinition* classDef = scopeManager.lookupClass(className);
-    if (!classDef) {
-        reportError("Undefined class: " + className);
-        return nullptr;
-    }
-    
-    // 创建一个字典来存储类实例
-    Dict* instance = new Dict();
-    
-    // 初始化所有公共成员为默认值
-    for (const auto& member : classDef->members) {
-        if (member.visibility == "public") {
-            if (member.defaultValue) {
-                Value* defaultValue = visit(member.defaultValue);
-                instance->setEntry(member.name, defaultValue);
-            } else {
-                // 根据类型设置默认值
-                if (member.type == "string") {
-                    instance->setEntry(member.name, new String(""));
-                } else if (member.type == "int" || member.type == "double") {
-                    instance->setEntry(member.name, new Integer(0));
-                } else {
-                    instance->setEntry(member.name, new String(""));
-                }
-            }
-        }
-    }
-    
-    // 如果有构造函数，调用构造函数
-    if (!classInst->arguments.empty()) {
-        // 这里可以添加构造函数调用的逻辑
-        // 暂时简单地将参数赋值给前几个公共成员
-        size_t argIndex = 0;
-        for (const auto& member : classDef->members) {
-            if (member.visibility == "public" && argIndex < classInst->arguments.size()) {
-                Value* argValue = visit(classInst->arguments[argIndex]);
-                instance->setEntry(member.name, argValue);
-                argIndex++;
-            }
-        }
-    }
-    
-    return instance;
-}
+// 类实例化求值 - 已移除，使用CallExpression替代
 
 // 成员访问求值
 Value* Interpreter::visit(MemberAccessExpression* memberAccess) {
@@ -1187,11 +972,23 @@ void Interpreter::visit(FinallyStatement* finallyStmt) {
     reportError("Finally statement not implemented yet");
 }
 
+// BuiltinFunction的visit方法实现
+void Interpreter::visit(BuiltinFunction* builtinFunc) {
+    if (!builtinFunc) return;
+    
+    // 内置函数不需要执行，只是注册到作用域中
+    // 这里可以记录日志或进行其他处理
+    LOG_DEBUG("Builtin function: " + builtinFunc->name);
+    
+    // 将内置函数注册到当前作用域
+    scopeManager.defineIdentifier(builtinFunc->name, builtinFunc);
+}
+
 // 注册内置函数到作用域管理器
 void Interpreter::registerBuiltinFunctionsToScope() {
-    scopeManager.defineIdentifier("print", new BuiltinFunction("print", builtin_print, true));
-    scopeManager.defineIdentifier("count", new BuiltinFunction("count", builtin_count, true));
-    scopeManager.defineIdentifier("cin", new BuiltinFunction("cin", builtin_cin, true));
+    scopeManager.defineIdentifier("print", new BuiltinFunction("print", builtin_print));
+    scopeManager.defineIdentifier("count", new BuiltinFunction("count", builtin_count));
+    scopeManager.defineIdentifier("cin", new BuiltinFunction("cin", builtin_cin));
 }
 
 // 检查是否为内置函数
@@ -1210,7 +1007,41 @@ Value* Interpreter::executeBuiltinFunction(const string& funcName, vector<Expres
     if (identifier && identifier->getIdentifierType() == "FunctionDefinition") {
         BuiltinFunction* builtinFunc = dynamic_cast<BuiltinFunction*>(identifier);
         if (builtinFunc && builtinFunc->isBuiltin()) {
-            return builtinFunc->execute(args);
+            // 将Expression*参数转换为Variable*参数
+            vector<Variable*> variableArgs;
+            for (Expression* arg : args) {
+                // 直接求值表达式并转换为Value*
+                Value* argValue = nullptr;
+                
+                if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(arg)) {
+                    argValue = constExpr->value;
+                } else if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(arg)) {
+                    // 查找变量值
+                    Variable* var = scopeManager.lookupVariable(varExpr->name);
+                    if (var) {
+                        argValue = var->getValue();
+                    } else {
+                        argValue = new Integer(0); // 默认值
+                    }
+                } else {
+                    // 对于其他类型的表达式，暂时使用默认值
+                    argValue = new Integer(0);
+                }
+                
+                // 创建临时变量
+                Variable* var = new Variable("temp", Type::Int, argValue);
+                variableArgs.push_back(var);
+            }
+            
+            // 调用内置函数
+            Value* result = builtinFunc->func(variableArgs);
+            
+            // 清理临时变量
+            for (Variable* var : variableArgs) {
+                delete var;
+            }
+            
+            return result;
         }
     }
     reportError("Builtin function not found: " + funcName);

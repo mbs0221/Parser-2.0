@@ -52,24 +52,8 @@ void TryStatement::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
 
-void CatchStatement::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
-void FinallyStatement::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
 // ==================== Switch语句类型 ====================
 void SwitchStatement::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
-void CaseStatement::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
-void DefaultStatement::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
 

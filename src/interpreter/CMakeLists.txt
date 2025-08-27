@@ -5,6 +5,7 @@ set(INTERPRETER_SOURCES
     ${CMAKE_SOURCE_DIR}/src/interpreter/interpreter.cpp
     ${CMAKE_SOURCE_DIR}/src/interpreter/logger.cpp
     ${CMAKE_SOURCE_DIR}/src/interpreter/builtin.cpp
+    ${CMAKE_SOURCE_DIR}/src/interpreter/scope.cpp
 )
 
 # 设置头文件
@@ -13,6 +14,7 @@ set(INTERPRETER_HEADERS
     ${CMAKE_SOURCE_DIR}/include/interpreter/logger.h
     ${CMAKE_SOURCE_DIR}/include/interpreter/builtin.h
     ${CMAKE_SOURCE_DIR}/include/interpreter/control_flow.h
+    ${CMAKE_SOURCE_DIR}/include/interpreter/scope.h
 )
 
 # 创建interpreter静态库

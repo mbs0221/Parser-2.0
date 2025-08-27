@@ -16,9 +16,7 @@ class VariableExpression;
 class UnaryExpression;
 class BinaryExpression;
 class AssignmentExpression;
-class StringLiteral;
-class ArrayNode;
-class DictNode;
+// StringLiteral、ArrayNode、DictNode已移动到value.h中作为CompositeValue类型
 class AccessExpression;
 class CallExpression;
 class MethodCallExpression;
@@ -26,8 +24,7 @@ class MethodCallExpression;
 // 类型转换表达式前向声明
 class CastExpression;
 
-class StructInstantiationExpression;
-class ClassInstantiationExpression;
+// StructInstantiationExpression和ClassInstantiationExpression已移除，使用CallExpression替代
 class MemberAccessExpression;
 
 // 语句类型
@@ -47,11 +44,9 @@ class ContinueStatement;
 class ReturnStatement;
 class ThrowStatement;
 class TryStatement;
-class CatchStatement;
-class FinallyStatement;
+// CatchStatement和FinallyStatement已合并到TryStatement中
 class SwitchStatement;
-class CaseStatement;
-class DefaultStatement;
+// CaseStatement和DefaultStatement已合并到SwitchStatement中
 class FunctionPrototype;
 
 // function.h中定义的类
@@ -72,16 +67,13 @@ public:
     virtual Value* visit(UnaryExpression* expr) = 0;
     virtual Value* visit(BinaryExpression* expr) = 0;
     virtual Value* visit(CastExpression* expr) = 0;
-    virtual Value* visit(StringLiteral* expr) = 0;
-    virtual Value* visit(ArrayNode* expr) = 0;
-    virtual Value* visit(DictNode* expr) = 0;
+    // StringLiteral、ArrayNode、DictNode的visit方法已移除，使用value.h中的String、Array、Dict
     virtual Value* visit(AccessExpression* expr) = 0;
     virtual Value* visit(CallExpression* expr) = 0;
     virtual Value* visit(MethodCallExpression* expr) = 0;
 
 
-    virtual Value* visit(StructInstantiationExpression* expr) = 0;
-    virtual Value* visit(ClassInstantiationExpression* expr) = 0;
+    // StructInstantiationExpression和ClassInstantiationExpression的visit方法已移除，使用CallExpression
     virtual Value* visit(MemberAccessExpression* expr) = 0;
     
     // 语句访问方法 - 标准访问者模式，void返回类型
@@ -101,11 +93,9 @@ public:
     virtual void visit(ReturnStatement* stmt) = 0;
     virtual void visit(ThrowStatement* stmt) = 0;
     virtual void visit(TryStatement* stmt) = 0;
-    virtual void visit(CatchStatement* stmt) = 0;
-    virtual void visit(FinallyStatement* stmt) = 0;
+    // CatchStatement和FinallyStatement的visit方法已移除，合并到TryStatement中
     virtual void visit(SwitchStatement* stmt) = 0;
-    virtual void visit(CaseStatement* stmt) = 0;
-    virtual void visit(DefaultStatement* stmt) = 0;
+    // CaseStatement和DefaultStatement的visit方法已移除，合并到SwitchStatement中
     virtual void visit(FunctionPrototype* stmt) = 0;
     
     // function.h中定义的类的访问方法

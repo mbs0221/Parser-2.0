@@ -41,15 +41,7 @@ void BuiltinFunctionExpression::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
 
-// ==================== StructInstantiationExpression实现 ====================
-void StructInstantiationExpression::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
-// ==================== ClassInstantiationExpression实现 ====================
-void ClassInstantiationExpression::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
+// StructInstantiationExpression和ClassInstantiationExpression的accept方法已移除，使用CallExpression替代
 
 // ==================== MemberAccessExpression实现 ====================
 void MemberAccessExpression::accept(ASTVisitor* visitor) {

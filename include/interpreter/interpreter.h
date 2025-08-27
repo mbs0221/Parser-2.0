@@ -1,15 +1,15 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
-#include "inter.h"
-#include "parser.h"
-#include "control_flow.h"
-#include "ast_visitor.h"
-#include "scope.h"
-#include "function.h"
-#include "value.h"
-#include "expression.h"
-#include "statement.h"
+#include "parser/inter.h"
+#include "parser/parser.h"
+#include "interpreter/control_flow.h"
+#include "parser/ast_visitor.h"
+#include "interpreter/scope.h"
+#include "parser/function.h"
+#include "lexer/value.h"
+#include "parser/expression.h"
+#include "parser/statement.h"
 #include <string>
 #include <list>
 #include <map>
@@ -47,13 +47,10 @@ public:
     Value* visit(BinaryExpression* expr) override;
     // 赋值表达式现在使用BinaryExpression处理
     Value* visit(CastExpression* expr) override;
-    Value* visit(ArrayNode* expr) override;
-    Value* visit(DictNode* expr) override;
-    Value* visit(StringLiteral* expr) override;
+    // ArrayNode、DictNode、StringLiteral的visit方法已移除，使用value.h中的Array、Dict、String
     Value* visit(AccessExpression* expr) override;
     Value* visit(CallExpression* expr) override;
-    Value* visit(StructInstantiationExpression* expr) override;
-    Value* visit(ClassInstantiationExpression* expr) override;
+    // StructInstantiationExpression和ClassInstantiationExpression的visit方法已移除，使用CallExpression
     Value* visit(MemberAccessExpression* expr) override;
     Value* visit(MethodCallExpression* expr) override;
 
@@ -74,12 +71,17 @@ public:
     void visit(ReturnStatement* stmt) override;
     void visit(ThrowStatement* stmt) override;
     void visit(TryStatement* stmt) override;
-    void visit(CatchStatement* stmt) override;
-    void visit(FinallyStatement* stmt) override;
+    // CatchStatement和FinallyStatement的visit方法已移除，合并到TryStatement中
     void visit(SwitchStatement* stmt) override;
-    void visit(CaseStatement* stmt) override;
-    void visit(DefaultStatement* stmt) override;
+    // CaseStatement和DefaultStatement的visit方法已移除，合并到SwitchStatement中
     void visit(FunctionPrototype* stmt) override;
+
+    // ASTVisitor接口实现 - function.h中定义的类的访问方法
+    void visit(Identifier* id) override;
+    void visit(Variable* var) override;
+    void visit(BuiltinFunction* func) override;
+    void visit(UserFunction* func) override;
+    void visit(ClassMethod* method) override;
 
     // ASTVisitor接口实现 - 程序访问方法
     void visit(Program* program) override;

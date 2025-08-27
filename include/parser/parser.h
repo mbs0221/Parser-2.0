@@ -34,10 +34,8 @@ protected:
     ThrowStatement* parseThrowStatement();
     TryStatement* parseTryStatement();
     SwitchStatement* parseSwitchStatement();
-    CaseStatement* parseCaseStatement();
-    DefaultStatement* parseDefaultStatement();
-    CatchStatement* parseCatchStatement();
-    FinallyStatement* parseFinallyStatement();
+    // parseCaseStatement和parseDefaultStatement已合并到parseSwitchStatement中
+    // parseCatchStatement和parseFinallyStatement已合并到parseTryStatement中
     BlockStatement* parseBlock();
     ExpressionStatement* parseExpressionStatement();
     

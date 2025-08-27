@@ -44,11 +44,10 @@ public:
     void visit(ImportStatement* stmt) override;
     void visit(VariableExpression* expr) override;
 
-    void visit(StringLiteral* expr) override;
+    // StringLiteral的visit方法已移除，使用value.h中的String
     void visit(CharExpression* expr) override;
     void visit(BoolExpression* expr) override;
-    void visit(ArrayNode* expr) override;
-    void visit(DictNode* expr) override;
+    // ArrayNode、DictNode的visit方法已移除，使用value.h中的Array、Dict
     void visit(AssignmentExpression* expr) override;
     void visit(BinaryExpression* expr) override;
     void visit(UnaryExpression* expr) override;
@@ -59,20 +58,17 @@ public:
     void visit(MethodCallExpression* expr) override;
     void visit(CastExpression<IntExpression>* expr) override;
     void visit(CastExpression<DoubleExpression>* expr) override;
-    void visit(CastExpression<StringLiteral>* expr) override;
+    // CastExpression<StringLiteral>的visit方法已移除，使用value.h中的String
     void visit(CastExpression<CharExpression>* expr) override;
     void visit(CastExpression<BoolExpression>* expr) override;
-    void visit(StructInstantiationExpression* expr) override;
-    void visit(ClassInstantiationExpression* expr) override;
+    // StructInstantiationExpression和ClassInstantiationExpression的visit方法已移除，使用CallExpression
     void visit(MemberAccessExpression* expr) override;
     void visit(StructDefinition* stmt) override;
     void visit(ThrowStatement* stmt) override;
     void visit(TryStatement* stmt) override;
-    void visit(CatchStatement* stmt) override;
-    void visit(FinallyStatement* stmt) override;
+    // CatchStatement和FinallyStatement的visit方法已移除，合并到TryStatement中
     void visit(SwitchStatement* stmt) override;
-    void visit(CaseStatement* stmt) override;
-    void visit(DefaultStatement* stmt) override;
+    // CaseStatement和DefaultStatement的visit方法已移除，合并到SwitchStatement中
     void visit(FunctionPrototype* stmt) override;
 
 private:

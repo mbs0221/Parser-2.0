@@ -37,4 +37,31 @@ public:
     ContinueException() : ControlFlowException("Continue") {}
 };
 
+// 运行时异常
+class RuntimeException : public ControlFlowException {
+public:
+    RuntimeException(const std::string& msg) : ControlFlowException("Runtime Error: " + msg) {}
+};
+
+// 类型错误异常
+class TypeErrorException : public ControlFlowException {
+public:
+    TypeErrorException(const std::string& expected, const std::string& actual) 
+        : ControlFlowException("Type Error: expected " + expected + ", got " + actual) {}
+};
+
+// 未定义标识符异常
+class UndefinedIdentifierException : public ControlFlowException {
+public:
+    UndefinedIdentifierException(const std::string& name) 
+        : ControlFlowException("Undefined identifier: " + name) {}
+};
+
+// 函数调用异常
+class FunctionCallException : public ControlFlowException {
+public:
+    FunctionCallException(const std::string& funcName, const std::string& reason) 
+        : ControlFlowException("Function call error in '" + funcName + "': " + reason) {}
+};
+
 #endif // CONTROL_FLOW_H

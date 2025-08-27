@@ -1,8 +1,8 @@
 #ifndef BUILTIN_H
 #define BUILTIN_H
 
-#include "value.h"
-#include "function.h"
+#include "lexer/value.h"
+#include "parser/function.h"
 
 #include <vector>
 

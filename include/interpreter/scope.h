@@ -69,6 +69,10 @@ public:
     void defineStruct(const string& name, StructDefinition* structDef);
     void defineClass(const string& name, ClassDefinition* classDef);
     
+    // 查找方法
+    StructDefinition* lookupStruct(const string& name);
+    ClassDefinition* lookupClass(const string& name);
+    
     // 获取当前作用域
     Scope* getCurrentScope() const { return currentScope; }
     

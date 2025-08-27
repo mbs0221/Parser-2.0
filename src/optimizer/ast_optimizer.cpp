@@ -420,13 +420,7 @@ void TypeCastOptimizer::visit(CastExpression<BoolExpression>* expr) {
     }
 }
 
-void TypeCastOptimizer::visit(StructInstantiationExpression* expr) {
-    // 暂时简单实现
-}
-
-void TypeCastOptimizer::visit(ClassInstantiationExpression* expr) {
-    // 暂时简单实现
-}
+// StructInstantiationExpression和ClassInstantiationExpression的visit方法已移除，使用CallExpression替代
 
 void TypeCastOptimizer::visit(MemberAccessExpression* expr) {
     // 暂时简单实现

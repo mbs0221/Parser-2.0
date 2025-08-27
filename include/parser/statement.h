@@ -129,63 +129,47 @@ struct ThrowStatement : public Statement {
     void accept(ASTVisitor* visitor) override;
 };
 
-// Try-Catch语句
-struct CatchStatement : public Statement {
-    string exceptionType;
-    string exceptionName;
-    Statement* catchBlock;
-    
-    CatchStatement(const string& type, const string& name, Statement* stmt)
-        : exceptionType(type), exceptionName(name), catchBlock(stmt) {}
-    
-    void accept(ASTVisitor* visitor) override;
-};
-
-struct FinallyStatement : public Statement {
-    Statement* finallyBlock;
-    
-    FinallyStatement(Statement* stmt) : finallyBlock(stmt) {}
-    
-    void accept(ASTVisitor* visitor) override;
-};
-
+// Try-Catch-Finally语句 - 合并了CatchStatement和FinallyStatement
 struct TryStatement : public Statement {
     Statement* tryBlock;
-    vector<CatchStatement*> catchBlocks;
-    FinallyStatement* finallyBlock;
     
-    TryStatement(Statement* tryStmt, const vector<CatchStatement*>& catchStmts, FinallyStatement* finallyStmt = nullptr)
+    // 统一的catch结构
+    struct CatchBlock {
+        string exceptionType;
+        string exceptionName;
+        Statement* catchBlock;
+        
+        CatchBlock(const string& type, const string& name, Statement* stmt)
+            : exceptionType(type), exceptionName(name), catchBlock(stmt) {}
+    };
+    
+    vector<CatchBlock> catchBlocks;
+    Statement* finallyBlock;  // nullptr表示没有finally块
+    
+    TryStatement(Statement* tryStmt, const vector<CatchBlock>& catchStmts, Statement* finallyStmt = nullptr)
         : tryBlock(tryStmt), catchBlocks(catchStmts), finallyBlock(finallyStmt) {}
     
     void accept(ASTVisitor* visitor) override;
 };
 
 // ==================== Switch语句 ====================
-struct CaseStatement : public Statement {
-    Expression* value;
-    vector<Statement*> statements;
-    
-    CaseStatement(Expression* val, const vector<Statement*>& stmts) : value(val), statements(stmts) {}
-    
-    void accept(ASTVisitor* visitor) override;
-};
-
-struct DefaultStatement : public Statement {
-    vector<Statement*> statements;
-    
-    DefaultStatement(const vector<Statement*>& stmts) : statements(stmts) {}
-    
-    void accept(ASTVisitor* visitor) override;
-};
-
-// Switch语句
+// Switch语句 - 合并了CaseStatement和DefaultStatement
 struct SwitchStatement : public Statement {
     Expression* expression;
-    vector<CaseStatement*> cases;
-    DefaultStatement* defaultCase;
     
-    SwitchStatement(Expression* expr, const vector<CaseStatement*>& caseStmts, DefaultStatement* defaultStmt = nullptr)
-        : expression(expr), cases(caseStmts), defaultCase(defaultStmt) {}
+    // 统一的case结构，value为nullptr表示default分支
+    struct SwitchCase {
+        Expression* value;  // nullptr表示default分支
+        vector<Statement*> statements;
+        
+        SwitchCase(Expression* val, const vector<Statement*>& stmts) 
+            : value(val), statements(stmts) {}
+    };
+    
+    vector<SwitchCase> cases;
+    
+    SwitchStatement(Expression* expr, const vector<SwitchCase>& caseStmts)
+        : expression(expr), cases(caseStmts) {}
     
     void accept(ASTVisitor* visitor) override;
 };

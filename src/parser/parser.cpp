@@ -65,16 +65,8 @@ Statement* Parser::parseStatement() {
             return parseThrowStatement();
         case TRY:
             return parseTryStatement();
-        case CATCH:
-            return parseCatchStatement();
-        case FINALLY:
-            return parseFinallyStatement();
         case SWITCH:
             return parseSwitchStatement();
-        case CASE:
-            return parseCaseStatement();
-        case DEFAULT:
-            return parseDefaultStatement();
         case FUNCTION:
             return parseFunction();
         case STRUCT:
@@ -251,12 +243,12 @@ ThrowStatement* Parser::parseThrowStatement() {
     return new ThrowStatement(exception);
 }
 
-// 解析try语句
+// 解析try语句 - 合并了catch和finally
 TryStatement* Parser::parseTryStatement() {
     match(TRY);
     Statement* tryBlock = parseStatement();
-    vector<CatchStatement*> catchBlocks;
-    FinallyStatement* finallyBlock = nullptr;
+    vector<TryStatement::CatchBlock> catchBlocks;
+    Statement* finallyBlock = nullptr;
     
     while (look->Tag == CATCH) {
         match(CATCH);
@@ -265,25 +257,23 @@ TryStatement* Parser::parseTryStatement() {
         string exceptionName = matchIdentifier();
         match(RPAREN);
         Statement* catchBody = parseStatement();
-        catchBlocks.push_back(new CatchStatement(exceptionType, exceptionName, catchBody));
+        catchBlocks.push_back(TryStatement::CatchBlock(exceptionType, exceptionName, catchBody));
     }
     
     if (look->Tag == FINALLY) {
         match(FINALLY);
-        Statement* finallyBody = parseStatement();
-        finallyBlock = new FinallyStatement(finallyBody);
+        finallyBlock = parseStatement();
     }
     
     return new TryStatement(tryBlock, catchBlocks, finallyBlock);
 }
 
-// 解析switch语句
+// 解析switch语句 - 合并了case和default
 SwitchStatement* Parser::parseSwitchStatement() {
     match(SWITCH);
     Expression* condition = parseExpression();
     match(LBRACE);
-    vector<CaseStatement*> cases;
-    DefaultStatement* defaultCase = nullptr;
+    vector<SwitchStatement::SwitchCase> cases;
     
     // 解析case语句
     while (look->Tag == CASE) {
@@ -292,7 +282,7 @@ SwitchStatement* Parser::parseSwitchStatement() {
         match(COLON);
         Statement* caseBody = parseStatement();
         vector<Statement*> caseStatements = {caseBody};
-        cases.push_back(new CaseStatement(caseValue, caseStatements));
+        cases.push_back(SwitchStatement::SwitchCase(caseValue, caseStatements));
     }
     
     // 解析default语句
@@ -300,11 +290,11 @@ SwitchStatement* Parser::parseSwitchStatement() {
         match(DEFAULT);
         Statement* defaultBody = parseStatement();
         vector<Statement*> defaultStatements = {defaultBody};
-        defaultCase = new DefaultStatement(defaultStatements);
+        cases.push_back(SwitchStatement::SwitchCase(nullptr, defaultStatements));
     }
     
     match(RBRACE);
-    return new SwitchStatement(condition, cases, defaultCase);
+    return new SwitchStatement(condition, cases);
 }
 
 // 解析语句块 ({ ... })
@@ -622,12 +612,8 @@ Expression* Parser::parseCallExpression(Expression* calleeExpr) {
         // 变量表达式调用 - 可能是函数调用或类实例化
         string className = varExpr->name;
         if (!className.empty() && isupper(className[0])) {
-            // 可能是类实例化
-            map<string, Expression*> memberValues;
-            for (size_t i = 0; i < arguments.size(); ++i) {
-                memberValues["arg" + to_string(i)] = arguments[i];
-            }
-            return new ClassInstantiationExpression(varExpr, memberValues);
+            // 类实例化现在使用CallExpression
+            return new CallExpression(varExpr->name, arguments);
         } else {
             // 函数调用
             return new CallExpression(varExpr->name, arguments);
@@ -853,7 +839,8 @@ Expression* Parser::parseStructInstantiation(VariableExpression* structName) {
     
 	match(RBRACE);
     
-    return new StructInstantiationExpression(structName, fieldValues);
+    	// 结构体实例化现在使用CallExpression
+	return new CallExpression(structName->name, vector<Expression*>());
 }
 
 
