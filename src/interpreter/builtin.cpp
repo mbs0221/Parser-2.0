@@ -1,6 +1,6 @@
-#include "builtin.h"
-#include "value.h"
-#include "variable.h"
+#include "interpreter/builtin.h"
+#include "lexer/value.h"
+#include "parser/function.h"
 #include <iostream>
 #include <sstream>
 #include <typeinfo>
@@ -23,7 +23,12 @@ Value* builtin_count(vector<Variable*>& args) {
     if (args.size() == 1) {
         Variable* value = args[0];
         if (value) {
-            return new Integer(value->getValue()->size());
+            Value* val = value->getValue();
+            if (Array* array = dynamic_cast<Array*>(val)) {
+                return new Integer(array->size());
+            } else if (String* str = dynamic_cast<String*>(val)) {
+                return new Integer(str->length());
+            }
         }
     }
     return nullptr;

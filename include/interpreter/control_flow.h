@@ -21,8 +21,18 @@ public:
 
 // Return异常
 class ReturnException : public ControlFlowException {
+private:
+    void* returnValue;  // 返回值指针
+    
 public:
-    ReturnException() : ControlFlowException("Return") {}
+    ReturnException() : ControlFlowException("Return"), returnValue(nullptr) {}
+    ReturnException(void* value) : ControlFlowException("Return"), returnValue(value) {}
+    
+    // 获取返回值
+    void* getValue() const { return returnValue; }
+    
+    // 设置返回值
+    void setValue(void* value) { returnValue = value; }
 };
 
 // Break异常

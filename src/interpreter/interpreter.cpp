@@ -25,13 +25,7 @@ Interpreter::~Interpreter() {
     // ScopeManager在析构函数中自动清理
 }
 
-// 主求值方法
-void Interpreter::visit(AST* node) {
-    if (!node) return;
-    
-    // 使用访问者模式统一分发
-    node->accept(this);
-}
+// visit(AST*)方法已移除，使用具体的visit方法
 
 // 执行语句
 void Interpreter::execute(Statement* stmt) {
@@ -76,25 +70,22 @@ Value* Interpreter::visit(Expression* expr) {
 void Interpreter::visit(VariableDeclaration* decl) {
     if (!decl) return;
     
-    // 处理多个变量声明
-    for (const auto& var : decl->variables) {
-        string name = var.name;
-        Value* value = nullptr;
-        
-        if (var.initializer) {
-            value = visit(var.initializer);
-        }
-        
-        // 如果变量没有初始值，设置为默认值（数字0）
-        if (!value) {
-            value = new Integer(0);
-        }
-        
-        // 使用Variable类型存储
-        scopeManager.defineVariable(name, value);
-        
-        LOG_DEBUG("Declaring variable '" + name + "' with value " + (value == nullptr ? "null" : value->toString()));
+    string name = decl->variableName;
+    Value* value = nullptr;
+    
+    if (decl->initialValue) {
+        value = visit(decl->initialValue);
     }
+    
+    // 如果变量没有初始值，设置为默认值（数字0）
+    if (!value) {
+        value = new Integer(0);
+    }
+    
+    // 使用Variable类型存储
+    scopeManager.defineVariable(name, value);
+    
+    LOG_DEBUG(std::string("Declaring variable '") + name + "' with value " + (value == nullptr ? "null" : value->toString()));
 }
 
 // 变量引用表达式求值 - 查询作用域中的变量定义
@@ -123,46 +114,7 @@ Value* Interpreter::visit(VariableExpression* varExpr) {
     return value;
 }
 
-template<typename T>
-void Interpreter::executeCastOperation(CastExpression<T>* cast) {
-    if (!cast || !cast->operand) {
-        reportError("Invalid cast expression");
-        return;
-    }
-    
-    // 后序遍历：先处理操作数
-    visit(cast->operand);
-    
-    // 从栈中pop出操作数
-    Expression* operand = popResult();
-    if (!operand) {
-        reportError("Invalid operand in cast expression");
-        return;
-    }
 
-    // 如果操作数已经是目标类型，直接返回
-    if (typeid(*operand) == typeid(T)) {
-        LOG_DEBUG("Operand is already of target type, no conversion needed");
-        pushResult(operand);
-        return;
-    }
-    
-    // 尝试将操作数转换为LeafExpression，然后调用convert方法
-    LeafExpression* leafExpr = dynamic_cast<LeafExpression*>(operand);
-    if (leafExpr) {
-        // 使用LeafExpression的convert方法进行类型转换
-        Expression* converted = leafExpr->convert<T>();
-        if (converted) {
-            LOG_DEBUG("Successfully converted operand to target type");
-            pushResult(converted);
-        } else {
-            reportError("Failed to convert operand to target type");
-        }
-    } else {
-        // 对于非LeafExpression类型，报告错误
-        reportError("Cannot convert non-leaf expression to target type");
-    }
-}
 
 // 赋值表达式现在使用BinaryExpression处理，在visit(BinaryExpression*)中实现
 
@@ -182,7 +134,7 @@ Value* Interpreter::visit(UnaryExpression* unary) {
 
     // 根据操作符类型进行处理
     switch (unary->operator_->Tag) {
-        case '!': {
+        case NOT: {
             // 逻辑非操作
             if (Integer* intVal = dynamic_cast<Integer*>(operand)) {
                 return new Bool(intVal->getValue() == 0);
@@ -197,7 +149,7 @@ Value* Interpreter::visit(UnaryExpression* unary) {
                 return nullptr;
             }
         }
-        case '-': {
+        case MINUS: {
             // 一元负号操作
             if (Integer* intVal = dynamic_cast<Integer*>(operand)) {
                 return new Integer(-intVal->getValue());
@@ -242,7 +194,7 @@ Value* Interpreter::visit(BinaryExpression* binary) {
     LOG_DEBUG("executeBinaryOperation called with operator: " + op->getSymbol());
     
     // 3. 处理赋值操作
-    if (opTag == '=') {
+    if (opTag == ASSIGN) {
         // 检查左操作数是否为变量引用
         if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(binary->left)) {
             // 更新变量值
@@ -320,12 +272,12 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
     int opTag = op->Tag;
     
     // 逻辑运算：统一转换为布尔类型
-    if (opTag == AND || opTag == OR) {
+    if (opTag == AND_AND || opTag == OR_OR) {
         return "bool";
     }
     
     // 比较运算：检查特殊类型组合
-    if (opTag == EQ || opTag == NE || opTag == '<' || opTag == '>' || opTag == LE || opTag == GE) {
+    if (opTag == EQ_EQ || opTag == NE_EQ || opTag == LT || opTag == GT || opTag == LE || opTag == GE) {
         // 字符串比较
         if (dynamic_cast<String*>(left) && dynamic_cast<String*>(right)) {
             return "string";
@@ -352,53 +304,46 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
 
 Value* Interpreter::calculate(Integer* left, Integer* right, int op) {
     switch (op) {
-        case '+': return new Integer(*left + *right);
-        case '-': return new Integer(*left - *right);
-        case '*': return new Integer(*left * *right);
-        case '/': return new Integer(*left / *right);
-        case '%': return new Integer(*left % *right);
+        case PLUS: return new Integer(*left + *right);
+        case MINUS: return new Integer(*left - *right);
+        case MULTIPLY: return new Integer(*left * *right);
+        case DIVIDE: return new Integer(*left / *right);
+        case MODULO: return new Integer(*left % *right);
         default: return new Integer(0);
     }
 }
 
 Value* Interpreter::calculate(Double* left, Double* right, int op) {
     switch (op) {
-        case '+': return new Double(*left + *right);
-        case '-': return new Double(*left - *right);
-        case '*': return new Double(*left * *right);
-        case '/': return new Double(*left / *right);
+        case PLUS: return new Double(*left + *right);
+        case MINUS: return new Double(*left - *right);
+        case MULTIPLY: return new Double(*left * *right);
+        case DIVIDE: return new Double(*left / *right);
         default: return new Double(0.0);
     }
 }
 
 Value* Interpreter::calculate(Bool* left, Bool* right, int op) {
     switch (op) {
-        case AND: return new Bool(*left && *right);
-        case OR: return new Bool(*left || *right);
+        case AND_AND: return new Bool(*left && *right);
+        case OR_OR: return new Bool(*left || *right);
         default: return new Bool(false);
     }
 }
 
 Value* Interpreter::calculate(Char* left, Char* right, int op) {
     switch (op) {
-        case '+': return new Char(*left + *right);
+        case PLUS: return new Char(*left + *right);
         default: return new Char(*left);
     }
 }
 
 Value* Interpreter::calculate(String* left, String* right, int op) {
     switch (op) {
-        case '+': return new String(*left + *right);
+        case PLUS: return new String(*left + *right);
         default: return new String("");
     }
 }
-
-// CharExpression的visit方法已移除，使用value.h中的Char
-
-// 字符串字面量求值
-// StringLiteral的visit方法已移除，使用value.h中的String
-
-// ArrayNode和DictNode的visit方法已移除，使用value.h中的Array和Dict
 
 // 访问表达式求值 - 统一处理数组/字典访问和成员访问
 Value* Interpreter::visit(AccessExpression* access) {
@@ -435,7 +380,7 @@ Value* Interpreter::visit(AccessExpression* access) {
         if (Array* array = dynamic_cast<Array*>(target)) {
             if (Integer* index = dynamic_cast<Integer*>(key)) {
                 int idx = index->getValue();
-                if (idx >= 0 && idx < array->getSize()) {
+                if (idx >= 0 && idx < (int)array->size()) {
                     return array->getElement(idx);
                 } else {
                     reportError("Array index out of bounds: " + to_string(idx));
@@ -456,70 +401,52 @@ Value* Interpreter::visit(AccessExpression* access) {
 
 // 函数调用表达式求值
 Value* Interpreter::visit(CallExpression* call) {
-    if (!call || !call->callee) return nullptr;
-    
-    // 内置函数通过visit方法自动执行
+    if (!call) return nullptr;
     
     // 求值所有参数
-    vector<Expression*> evaluatedArgs;
+    vector<Value*> evaluatedArgs;
     for (Expression* arg : call->arguments) {
         Value* evaluatedArg = visit(arg);
         if (evaluatedArg) {
-            // TODO: 需要将Value*转换为Expression*，暂时跳过
-            // evaluatedArgs.push_back(evaluatedArg);
+            evaluatedArgs.push_back(evaluatedArg);
         }
     }
     
-    // 求值被调用者
-    if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(call->callee)) {
-        string funcName = varExpr->name;
-        
-        // 内置函数通过visit方法自动执行
-        
-        // 然后查找用户定义的函数
-        UserFunction* funcDef = dynamic_cast<UserFunction*>(scopeManager.lookupIdentifier(funcName));
-        if (!funcDef) {
-            throw RuntimeException("Function not found: " + funcName);
-        }
-        
-        LOG_DEBUG("Calling function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
-        
-        // 进入新的作用域
-        scopeManager.enterScope();
-        
+    // 使用函数名调用
+    string funcName = call->functionName;
+    
+    // 查找用户定义的函数
+    Identifier* identifier = scopeManager.lookupIdentifier(funcName);
+    if (!identifier) {
+        throw RuntimeException("Function not found: " + funcName);
+    }
+    
+    UserFunction* funcDef = dynamic_cast<UserFunction*>(identifier);
+    if (!funcDef) {
+        throw RuntimeException("Identifier '" + funcName + "' is not a function");
+    }
+    
+    LOG_DEBUG("Calling function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
+    
+    // 进入新的作用域并执行函数体
+    return withScope([&]() -> Value* {
         // 绑定参数到局部变量
-        const vector<string>& params = funcDef->prototype->parameters;
+        const vector<pair<string, Type*>>& params = funcDef->prototype->parameters;
         for (size_t i = 0; i < params.size() && i < evaluatedArgs.size(); ++i) {
-            Expression* paramValue = evaluatedArgs[i];
-            if (paramValue) {
-                scopeManager.defineVariable(params[i], paramValue);
-                LOG_DEBUG("Bound parameter '" + params[i] + "'");
-            }
+            scopeManager.defineVariable(params[i].first, evaluatedArgs[i]);
+            LOG_DEBUG("Bound parameter '" + params[i].first + "'");
         }
         
         // 执行函数体
-        Expression* result = nullptr;
-        LOG_DEBUG("Executing function body with " + to_string(funcDef->body->statements.size()) + " statements");
-        for (size_t i = 0; i < funcDef->body->statements.size(); ++i) {
-            Statement* stmt = funcDef->body->statements[i];
-            LOG_DEBUG("Executing statement " + to_string(i) + ": " + (stmt ? typeid(*stmt).name() : "null"));
-            
-            visit(stmt);
-            // 检查是否有返回值
-            if (!resultStack.empty()) {
-                result = popResult();
-                break;
-            }
+        Value* result = nullptr;
+        try {
+            execute(funcDef->body);
+        } catch (const ReturnException& e) {
+            result = static_cast<Value*>(e.getValue());
         }
         
-        // 退出作用域
-        scopeManager.exitScope();
-        
-        pushResult(result);
-        return;
-    }
-    
-    cout << "Error: Function not found or not callable" << endl;
+        return result;
+    });
 }
 
 Value* Interpreter::visit(MethodCallExpression* methodCall) {
@@ -530,38 +457,37 @@ Value* Interpreter::visit(MethodCallExpression* methodCall) {
 }
 
 void Interpreter::visit(ReturnStatement* returnStmt) {
-    if (!returnStmt || !returnStmt->returnValue) return;
-    LOG_DEBUG("Executing return statement");
-    Value* result = visit(returnStmt->returnValue);
-    LOG_DEBUG("Return value: " + (result == nullptr ? "null" : "evaluated"));
-    // 返回值应该通过异常机制处理，这里暂时忽略
+    if (!returnStmt) return;
+    
+    Value* result = nullptr;
+    if (returnStmt->returnValue) {
+        LOG_DEBUG("Executing return statement with value");
+        result = visit(returnStmt->returnValue);
+    } else {
+        LOG_DEBUG("Executing return statement without value");
+    }
+    
+    // 抛出带有返回值的ReturnException
+    throw ReturnException(result);
 }
 
 
 // 执行函数定义
-void Interpreter::visit(FunctionDefinition* funcDef) {
-    if (!funcDef || !funcDef->prototype) return;
+void Interpreter::visit(UserFunction* userFunc) {
+    if (!userFunc || !userFunc->prototype) return;
     
-    string funcName = funcDef->prototype->name;
+    string funcName = userFunc->prototype->name;
     
-    // 先注册函数原型，创建一个前向声明用于递归调用
-    FunctionDefinition* forwardDecl = new FunctionDefinition(funcDef->prototype, nullptr);
-    scopeManager.defineFunction(funcName, forwardDecl);
+    scopeManager.defineFunction(funcName, userFunc);
     
-    // 立即替换为完整的函数定义
-    scopeManager.defineFunction(funcName, funcDef);
-    
-    LOG_DEBUG("Registered function '" + funcName + "'");        
-    
-    // 清理前向声明
-    delete forwardDecl;
+    LOG_DEBUG("Registered function '" + funcName + "'");
 }
 
 // 导入语句执行
 void Interpreter::visit(ImportStatement* importStmt) {
-    if (!importStmt) return;
+    if (!importStmt || !importStmt->moduleName) return;
     
-    string moduleName = importStmt->moduleName;
+    string moduleName = importStmt->moduleName->getValue();
     LOG_DEBUG("Importing module: " + moduleName);
     
     // 检查文件是否存在
@@ -619,34 +545,24 @@ void Interpreter::visit(IfStatement* ifStmt) {
     bool conditionBool = false;
     if (Integer* intVal = dynamic_cast<Integer*>(conditionValue)) {
         conditionBool = (intVal->getValue() != 0);
-        LOG_DEBUG("Condition value: " + to_string(intVal->getValue()) + " (bool: " + (conditionBool ? "true" : "false") + ")");
+        LOG_DEBUG(std::string("Condition value: ") + to_string(intVal->getValue()) + " (bool: " + (conditionBool ? "true" : "false") + ")");
     } else if (Bool* boolVal = dynamic_cast<Bool*>(conditionValue)) {
         conditionBool = boolVal->getValue();
-        LOG_DEBUG("Condition value: " + (conditionBool ? "true" : "false"));
+        LOG_DEBUG(std::string("Condition value: ") + (conditionBool ? "true" : "false"));
     }
     
-    if (conditionBool && ifStmt->thenBranch) {
+    if (conditionBool && ifStmt->thenStatement) {
         LOG_DEBUG("Executing then branch");
         // 为then分支创建独立作用域
-        scopeManager.enterScope();
-        try {
-            execute(ifStmt->thenBranch);
-        } catch (const ControlFlowException&) {
-            scopeManager.exitScope();
-            throw;  // 重新抛出控制流异常
-        }
-        scopeManager.exitScope();  // 退出then分支作用域
-    } else if (!conditionBool && ifStmt->elseBranch) {
+        withScopeVoid([&]() {
+            execute(ifStmt->thenStatement);
+        });
+    } else if (!conditionBool && ifStmt->elseStatement) {
         LOG_DEBUG("Executing else branch");
         // 为else分支创建独立作用域
-        scopeManager.enterScope();
-        try {
-            execute(ifStmt->elseBranch);
-        } catch (const ControlFlowException&) {
-            scopeManager.exitScope();
-            throw;  // 重新抛出控制流异常
-        }
-        scopeManager.exitScope();  // 退出else分支作用域
+        withScopeVoid([&]() {
+            execute(ifStmt->elseStatement);
+        });
     }
 }
 
@@ -662,10 +578,10 @@ void Interpreter::visit(WhileStatement* whileStmt) {
         bool conditionBool = false;
         if (Integer* intVal = dynamic_cast<Integer*>(conditionValue)) {
             conditionBool = (intVal->getValue() != 0);
-            LOG_DEBUG("While condition value: " + to_string(intVal->getValue()) + " (bool: " + (conditionBool ? "true" : "false") + ")");
+            LOG_DEBUG(std::string("While condition value: ") + to_string(intVal->getValue()) + " (bool: " + (conditionBool ? "true" : "false") + ")");
         } else if (Bool* boolVal = dynamic_cast<Bool*>(conditionValue)) {
             conditionBool = boolVal->getValue();
-            LOG_DEBUG("While condition value: " + (conditionBool ? "true" : "false"));
+            LOG_DEBUG(std::string("While condition value: ") + (conditionBool ? "true" : "false"));
         }
         
         // 如果条件为假，退出循环
@@ -713,10 +629,10 @@ void Interpreter::visit(ForStatement* forStmt) {
         bool conditionBool = false;
         if (Integer* intVal = dynamic_cast<Integer*>(conditionValue)) {
             conditionBool = (intVal->getValue() != 0);
-            LOG_DEBUG("For condition value: " + to_string(intVal->getValue()) + " (bool: " + (conditionBool ? "true" : "false") + ")");
+            LOG_DEBUG(std::string("For condition value: ") + to_string(intVal->getValue()) + " (bool: " + (conditionBool ? "true" : "false") + ")");
         } else if (Bool* boolVal = dynamic_cast<Bool*>(conditionValue)) {
             conditionBool = boolVal->getValue();
-            LOG_DEBUG("For condition value: " + (conditionBool ? "true" : "false"));
+            LOG_DEBUG(std::string("For condition value: ") + (conditionBool ? "true" : "false"));
         }
         
         // 如果条件为假，退出循环
@@ -772,10 +688,10 @@ void Interpreter::visit(DoWhileStatement* doWhileStmt) {
         bool conditionBool = false;
         if (Integer* intVal = dynamic_cast<Integer*>(conditionValue)) {
             conditionBool = (intVal->getValue() != 0);
-            LOG_DEBUG("Do-while condition value: " + to_string(intVal->getValue()) + " (bool: " + (conditionBool ? "true" : "false") + ")");
+            LOG_DEBUG(std::string("Do-while condition value: ") + to_string(intVal->getValue()) + " (bool: " + (conditionBool ? "true" : "false") + ")");
         } else if (Bool* boolVal = dynamic_cast<Bool*>(conditionValue)) {
             conditionBool = boolVal->getValue();
-            LOG_DEBUG("Do-while condition value: " + (conditionBool ? "true" : "false"));
+            LOG_DEBUG(std::string("Do-while condition value: ") + (conditionBool ? "true" : "false"));
         }
         
         // 如果条件为假，退出循环
@@ -790,19 +706,14 @@ void Interpreter::visit(DoWhileStatement* doWhileStmt) {
 void Interpreter::visit(BlockStatement* block) {
     if (!block) return;
     
-    scopeManager.enterScope();
-    
-    try {
+    withScopeVoid([&]() {
         for (Statement* stmt : block->statements) {
             execute(stmt);
         }
-    } catch (const ControlFlowException&) {
-        scopeManager.exitScope();
-        throw;  // 重新抛出控制流异常
-    }
-
-    scopeManager.exitScope();  
+    });
 }
+
+// withScope函数已在头文件中定义为模板
 
 // 错误处理
 void Interpreter::reportError(const string& message) {
@@ -814,13 +725,6 @@ void Interpreter::reportTypeError(const string& expected, const string& actual) 
 }
 
 // printScope方法现在委托给ScopeManager，在头文件中已实现
-
-void Interpreter::printCallStack() {
-    cout << "Call stack:" << endl;
-    for (const string& call : callStack) {
-        cout << "  " << call << endl;
-    }
-}
 
 // 结构体实例化求值 - 已移除，使用CallExpression替代
 
@@ -975,17 +879,7 @@ void Interpreter::visit(TryStatement* tryStmt) {
     reportError("Try statement not implemented yet");
 }
 
-// BuiltinFunction的visit方法实现
-void Interpreter::visit(BuiltinFunction* builtinFunc) {
-    if (!builtinFunc) return;
-    
-    // 内置函数不需要执行，只是注册到作用域中
-    // 这里可以记录日志或进行其他处理
-    LOG_DEBUG("Builtin function: " + builtinFunc->name);
-    
-    // 将内置函数注册到当前作用域
-    scopeManager.defineIdentifier(builtinFunc->name, builtinFunc);
-}
+// BuiltinFunction不是AST节点，不需要visit方法
 
 // 注册内置函数到作用域管理器
 void Interpreter::registerBuiltinFunctionsToScope() {

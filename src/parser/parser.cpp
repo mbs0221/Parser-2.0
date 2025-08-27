@@ -659,7 +659,7 @@ Expression* Parser::parseAccess(VariableExpression* id) {
 
 
 // 解析函数声明 - 返回Prototype语句
-FunctionPrototype* Parser::x() {
+FunctionPrototype* Parser::parsePrototype() {
     match(FUNCTION);
     
     // 解析函数名

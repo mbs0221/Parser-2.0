@@ -38,8 +38,8 @@ public:
     void execute(Statement* stmt);
     void execute(Program* program);
 
-    // 语句求值方法 - 返回Value类型
-    Value* visit(Statement* stmt);
+    // 语句求值方法 - 无返回值
+    void visit(Statement* stmt) override;
     
     // 表达式求值方法 - 返回Value类型
     Value* visit(Expression* expr);
@@ -63,7 +63,7 @@ public:
     void visit(ForStatement* stmt) override;
     void visit(DoWhileStatement* stmt) override;
     void visit(BlockStatement* stmt) override;
-    void visit(FunctionDefinition* stmt) override;
+    void visit(UserFunction* stmt) override;
     void visit(StructDefinition* stmt) override;
     void visit(ClassDefinition* stmt) override;
     void visit(BreakStatement* stmt) override;
@@ -79,8 +79,6 @@ public:
     // ASTVisitor接口实现 - function.h中定义的类的访问方法
     void visit(Identifier* id) override;
     void visit(Variable* var) override;
-    void visit(BuiltinFunction* func) override;
-    void visit(UserFunction* func) override;
     void visit(ClassMethod* method) override;
 
     // ASTVisitor接口实现 - 程序访问方法
@@ -100,6 +98,33 @@ public:
     Value* calculate(Bool* left, Bool* right, int op);
     Value* calculate(Char* left, Char* right, int op);
     Value* calculate(String* left, String* right, int op);
+    
+    // 作用域管理辅助函数 - 处理有返回值的函数
+    template<typename Func>
+    auto withScope(Func func) -> decltype(func()) {
+        scopeManager.enterScope();
+        try {
+            auto result = func();
+            scopeManager.exitScope();
+            return result;
+        } catch (...) {
+            scopeManager.exitScope();
+            throw;
+        }
+    }
+    
+    // 作用域管理辅助函数 - 处理无返回值的函数
+    template<typename Func>
+    void withScopeVoid(Func func) {
+        scopeManager.enterScope();
+        try {
+            func();
+            scopeManager.exitScope();
+        } catch (...) {
+            scopeManager.exitScope();
+            throw;
+        }
+    }
     
     // 错误处理
     void reportError(const string& message);

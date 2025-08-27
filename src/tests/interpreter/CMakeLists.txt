@@ -98,6 +98,21 @@ target_link_libraries(test_builtin_functions_as_identifiers
 )
 add_test(NAME test_builtin_functions_as_identifiers COMMAND test_builtin_functions_as_identifiers)
 
+# Cast操作测试
+add_executable(test_cast_operations test_cast_operations.cpp)
+target_include_directories(test_cast_operations PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_link_libraries(test_cast_operations 
+    interpreter
+    parser
+    lexer
+    gtest
+    gtest_main
+    pthread
+)
+add_test(NAME test_cast_operations COMMAND test_cast_operations)
+
 add_executable(test_builtin_refactor test_builtin_refactor.cpp)
 target_include_directories(test_builtin_refactor PRIVATE 
     ${CMAKE_SOURCE_DIR}/include

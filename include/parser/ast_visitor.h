@@ -54,8 +54,8 @@ class ASTVisitor {
 public:
     virtual ~ASTVisitor() = default;
     
-    // 语句访问方法 - 返回Value类型
-    virtual Value* visit(Statement* stmt) = 0;
+    // 语句访问方法 - 无返回值
+    virtual void visit(Statement* stmt) = 0;
     
     // 表达式访问方法 - 返回Value类型
     virtual Value* visit(Expression* expr) = 0;
