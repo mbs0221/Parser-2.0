@@ -2,6 +2,8 @@
 #define STATEMENT_H
 
 #include "parser/inter.h"
+#include <vector>
+#include <utility>
 #include <string>
 #include <vector>
 #include <map>
@@ -38,17 +40,15 @@ struct ExpressionStatement : public Statement {
 
 // 变量声明语句
 struct VariableDeclaration : public Statement {
-    string variableName;
-    string variableType;
-    Expression* initialValue;
+    vector<pair<string, Expression*>> variables;  // 支持多个变量声明
     
-    VariableDeclaration() : variableName(""), variableType(""), initialValue(nullptr) {}
-    VariableDeclaration(const string& name, const string& type, Expression* value = nullptr)
-        : variableName(name), variableType(type), initialValue(value) {}
+    VariableDeclaration() {}
+    VariableDeclaration(const string& name, const string& type, Expression* value = nullptr) {
+        addVariable(name, value);
+    }
     
     void addVariable(const string& name, Expression* value) {
-        variableName = name;
-        initialValue = value;
+        variables.push_back(make_pair(name, value));
     }
     
     void accept(ASTVisitor* visitor) override;

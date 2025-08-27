@@ -376,7 +376,7 @@ Token *Lexer::skip_comment(){
 		else{
 			peek = '/';
 			inf.seekg(-1, ios_base::cur);
-			return new Token('/');
+			return nullptr;  // 返回nullptr，让scan()方法继续处理
 		}
 	}
 	return nullptr;

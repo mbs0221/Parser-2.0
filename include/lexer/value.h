@@ -130,7 +130,12 @@ struct Operator :Token {
 		: Token(tag), symbol(sym), precedence(prec), isLeftAssociative(leftAssoc) {}
 	
 	// 获取操作符符号
-	string getSymbol() const { return symbol; }
+	string getSymbol() const { 
+		if (symbol.empty()) {
+			return "unknown";
+		}
+		return symbol; 
+	}
 	
 	// 获取优先级
 	int getPrecedence() const { return precedence; }

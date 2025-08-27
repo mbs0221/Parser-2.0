@@ -108,22 +108,35 @@ Value* Interpreter::visit(Expression* expr) {
 void Interpreter::visit(VariableDeclaration* decl) {
     if (!decl) return;
     
-    string name = decl->variableName;
-    Value* value = nullptr;
+    LOG_DEBUG("VariableDeclaration: processing " + to_string(decl->variables.size()) + " variables");
     
-    if (decl->initialValue) {
-        value = visit(decl->initialValue);
+    // 处理多个变量声明
+    for (size_t i = 0; i < decl->variables.size(); ++i) {
+        const auto& var = decl->variables[i];
+        string name = var.first;
+        Expression* initialValue = var.second;
+        Value* value = nullptr;
+        
+        LOG_DEBUG("VariableDeclaration: processing variable " + to_string(i) + ": " + name);
+        
+        if (initialValue) {
+            LOG_DEBUG("VariableDeclaration: evaluating initial value for " + name);
+            value = visit(initialValue);
+            LOG_DEBUG("VariableDeclaration: initial value result: " + string(value ? "valid" : "null"));
+        }
+        
+        // 如果变量没有初始值，设置为默认值（数字0）
+        if (!value) {
+            LOG_DEBUG("VariableDeclaration: creating default value for " + name);
+            value = new Integer(0);
+        }
+        
+        // 使用Variable类型存储
+        LOG_DEBUG("VariableDeclaration: defining variable " + name);
+        scopeManager.defineVariable(name, value);
+        
+        LOG_DEBUG(std::string("Declaring variable '") + name + "' with value " + (value == nullptr ? "null" : value->toString()));
     }
-    
-    // 如果变量没有初始值，设置为默认值（数字0）
-    if (!value) {
-        value = new Integer(0);
-    }
-    
-    // 使用Variable类型存储
-    scopeManager.defineVariable(name, value);
-    
-    LOG_DEBUG(std::string("Declaring variable '") + name + "' with value " + (value == nullptr ? "null" : value->toString()));
 }
 
 // 变量引用表达式求值 - 查询作用域中的变量定义
@@ -142,14 +155,29 @@ Value* Interpreter::visit(VariableExpression* varExpr) {
     }
     
     Value* value = variable->getValue();
+    LOG_DEBUG("VariableExpression: looking up variable '" + name + "', value pointer: " + (value ? "valid" : "null"));
+    
     if (!value) {
         reportError("Variable has no value: " + name);
         return nullptr;
     }
 
-    LOG_DEBUG("VariableExpression: " + name + " = " + value->toString());
+    LOG_DEBUG("VariableExpression: about to call toString() on value");
     
-    return value;
+    // 添加额外的安全检查
+    if (value == nullptr) {
+        reportError("Value became null after check: " + name);
+        return nullptr;
+    }
+    
+    try {
+        string valueStr = value->toString();
+        LOG_DEBUG("VariableExpression: " + name + " = " + valueStr);
+        return value;
+    } catch (...) {
+        reportError("Exception in toString() for variable: " + name);
+        return nullptr;
+    }
 }
 
 
@@ -215,13 +243,14 @@ Value* Interpreter::visit(BinaryExpression* binary) {
     // 1. 计算左右表达式的值
     Value* left = visit(binary->left);
     Value* right = visit(binary->right);
-    LOG_DEBUG("BinaryExpression left: " + left->toString());
-    LOG_DEBUG("BinaryExpression right: " + right->toString());
-
+    
     if (!left || !right) {
         reportError("Invalid operands in binary expression");
         return nullptr;
     }
+    
+    LOG_DEBUG("BinaryExpression left: " + left->toString());
+    LOG_DEBUG("BinaryExpression right: " + right->toString());
 
     // 2. 获取操作符
     Operator* op = binary->operator_;
@@ -253,17 +282,103 @@ Value* Interpreter::visit(BinaryExpression* binary) {
         return nullptr;
     }
     
-    // 4. 创建CastExpression对左右值进行转换
-    ConstantExpression* leftConst = new ConstantExpression(left);
-    ConstantExpression* rightConst = new ConstantExpression(right);
-    CastExpression* leftCast = new CastExpression(leftConst, targetType);
-    CastExpression* rightCast = new CastExpression(rightConst, targetType);
+    // 4. 直接进行类型转换，避免创建临时对象
+    Value* convertedLeft = nullptr;
+    Value* convertedRight = nullptr;
     
-    // 5. 执行转换
-    Value* convertedLeft = visit(leftCast);
-    Value* convertedRight = visit(rightCast);
+    // 根据目标类型进行转换
+    if (targetType == "int") {
+        if (Integer* leftInt = dynamic_cast<Integer*>(left)) {
+            convertedLeft = new Integer(leftInt->getValue());
+        } else if (Double* leftDouble = dynamic_cast<Double*>(left)) {
+            convertedLeft = new Integer((int)leftDouble->getValue());
+        } else if (Bool* leftBool = dynamic_cast<Bool*>(left)) {
+            convertedLeft = new Integer(leftBool->getValue() ? 1 : 0);
+        } else {
+            convertedLeft = new Integer(0);
+        }
+        
+        if (Integer* rightInt = dynamic_cast<Integer*>(right)) {
+            convertedRight = new Integer(rightInt->getValue());
+        } else if (Double* rightDouble = dynamic_cast<Double*>(right)) {
+            convertedRight = new Integer((int)rightDouble->getValue());
+        } else if (Bool* rightBool = dynamic_cast<Bool*>(right)) {
+            convertedRight = new Integer(rightBool->getValue() ? 1 : 0);
+        } else {
+            convertedRight = new Integer(0);
+        }
+    } else if (targetType == "double") {
+        if (Integer* leftInt = dynamic_cast<Integer*>(left)) {
+            convertedLeft = new Double((double)leftInt->getValue());
+        } else if (Double* leftDouble = dynamic_cast<Double*>(left)) {
+            convertedLeft = new Double(leftDouble->getValue());
+        } else if (Bool* leftBool = dynamic_cast<Bool*>(left)) {
+            convertedLeft = new Double(leftBool->getValue() ? 1.0 : 0.0);
+        } else {
+            convertedLeft = new Double(0.0);
+        }
+        
+        if (Integer* rightInt = dynamic_cast<Integer*>(right)) {
+            convertedRight = new Double((double)rightInt->getValue());
+        } else if (Double* rightDouble = dynamic_cast<Double*>(right)) {
+            convertedRight = new Double(rightDouble->getValue());
+        } else if (Bool* rightBool = dynamic_cast<Bool*>(right)) {
+            convertedRight = new Double(rightBool->getValue() ? 1.0 : 0.0);
+        } else {
+            convertedRight = new Double(0.0);
+        }
+    } else if (targetType == "bool") {
+        if (Integer* leftInt = dynamic_cast<Integer*>(left)) {
+            convertedLeft = new Bool(leftInt->getValue() != 0);
+        } else if (Double* leftDouble = dynamic_cast<Double*>(left)) {
+            convertedLeft = new Bool(leftDouble->getValue() != 0.0);
+        } else if (Bool* leftBool = dynamic_cast<Bool*>(left)) {
+            convertedLeft = new Bool(leftBool->getValue());
+        } else {
+            convertedLeft = new Bool(false);
+        }
+        
+        if (Integer* rightInt = dynamic_cast<Integer*>(right)) {
+            convertedRight = new Bool(rightInt->getValue() != 0);
+        } else if (Double* rightDouble = dynamic_cast<Double*>(right)) {
+            convertedRight = new Bool(rightDouble->getValue() != 0.0);
+        } else if (Bool* rightBool = dynamic_cast<Bool*>(right)) {
+            convertedRight = new Bool(rightBool->getValue());
+        } else {
+            convertedRight = new Bool(false);
+        }
+    } else if (targetType == "string") {
+        if (Integer* leftInt = dynamic_cast<Integer*>(left)) {
+            convertedLeft = new String(std::to_string(leftInt->getValue()));
+        } else if (Double* leftDouble = dynamic_cast<Double*>(left)) {
+            convertedLeft = new String(std::to_string(leftDouble->getValue()));
+        } else if (Bool* leftBool = dynamic_cast<Bool*>(left)) {
+            convertedLeft = new String(leftBool->getValue() ? "true" : "false");
+        } else if (String* leftStr = dynamic_cast<String*>(left)) {
+            convertedLeft = new String(leftStr->getValue());
+        } else {
+            convertedLeft = new String("");
+        }
+        
+        if (Integer* rightInt = dynamic_cast<Integer*>(right)) {
+            convertedRight = new String(std::to_string(rightInt->getValue()));
+        } else if (Double* rightDouble = dynamic_cast<Double*>(right)) {
+            convertedRight = new String(std::to_string(rightDouble->getValue()));
+        } else if (Bool* rightBool = dynamic_cast<Bool*>(right)) {
+            convertedRight = new String(rightBool->getValue() ? "true" : "false");
+        } else if (String* rightStr = dynamic_cast<String*>(right)) {
+            convertedRight = new String(rightStr->getValue());
+        } else {
+            convertedRight = new String("");
+        }
+    }
     
-    // 6. 直接计算
+    if (!convertedLeft || !convertedRight) {
+        reportError("Failed to convert operands to target type: " + targetType);
+        return nullptr;
+    }
+    
+    // 5. 直接计算
     Value* result = nullptr;
     if (targetType == "int") {
         Integer* leftInt = dynamic_cast<Integer*>(convertedLeft);
@@ -291,11 +406,9 @@ Value* Interpreter::visit(BinaryExpression* binary) {
         }
     }
     
-    // 7. 清理临时对象
-    delete leftCast;
-    delete rightCast;
-    delete leftConst;
-    delete rightConst;
+    // 6. 清理转换后的对象
+    delete convertedLeft;
+    delete convertedRight;
     
     if (!result) {
         reportError("Type mismatch in binary expression: " + left->toString() + " " + std::string(1, opTag) + " " + right->toString());
@@ -342,23 +455,33 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
 }
 
 Value* Interpreter::calculate(Integer* left, Integer* right, int op) {
-    switch (op) {
-        case '+': return new Integer(*left + *right);
-        case '-': return new Integer(*left - *right);
-        case '*': return new Integer(*left * *right);
-        case '/': return new Integer(*left / *right);
-        case '%': return new Integer(*left % *right);
-        default: return new Integer(0);
+    try {
+        switch (op) {
+            case '+': return new Integer(*left + *right);
+            case '-': return new Integer(*left - *right);
+            case '*': return new Integer(*left * *right);
+            case '/': return new Integer(*left / *right);
+            case '%': return new Integer(*left % *right);
+            default: return new Integer(0);
+        }
+    } catch (const std::exception& e) {
+        reportError("Arithmetic error: " + string(e.what()));
+        return new Integer(0);
     }
 }
 
 Value* Interpreter::calculate(Double* left, Double* right, int op) {
-    switch (op) {
-        case '+': return new Double(*left + *right);
-        case '-': return new Double(*left - *right);
-        case '*': return new Double(*left * *right);
-        case '/': return new Double(*left / *right);
-        default: return new Double(0.0);
+    try {
+        switch (op) {
+            case '+': return new Double(*left + *right);
+            case '-': return new Double(*left - *right);
+            case '*': return new Double(*left * *right);
+            case '/': return new Double(*left / *right);
+            default: return new Double(0.0);
+        }
+    } catch (const std::exception& e) {
+        reportError("Arithmetic error: " + string(e.what()));
+        return new Double(0.0);
     }
 }
 
