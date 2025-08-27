@@ -3,6 +3,7 @@
 
 #include "lexer/value.h"
 #include "parser/function.h"
+#include "interpreter/scope.h"
 
 #include <vector>
 
@@ -37,5 +38,8 @@ Value* builtin_to_double(vector<Variable*>& args);
 // 系统函数
 Value* builtin_random(vector<Variable*>& args);
 Value* builtin_exit(vector<Variable*>& args);
+
+// 内置函数注册
+void registerBuiltinFunctionsToScope(ScopeManager& scopeManager);
 
 #endif

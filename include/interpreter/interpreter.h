@@ -87,6 +87,8 @@ public:
     Value* instantiateClass(ClassDefinition* classDef, vector<Value*>& args);
     Value* instantiateStruct(StructDefinition* structDef, vector<Value*>& args);
     Value* createDefaultValue(Type* type);
+    
+
 
     // 类型转换辅助方法
     string determineTargetType(Value* left, Value* right, Operator* op);

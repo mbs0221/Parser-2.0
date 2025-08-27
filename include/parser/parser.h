@@ -34,8 +34,6 @@ protected:
     ThrowStatement* parseThrowStatement();
     TryStatement* parseTryStatement();
     SwitchStatement* parseSwitchStatement();
-    // parseCaseStatement和parseDefaultStatement已合并到parseSwitchStatement中
-    // parseCatchStatement和parseFinallyStatement已合并到parseTryStatement中
     BlockStatement* parseBlock();
     ExpressionStatement* parseExpressionStatement();
     
@@ -52,10 +50,6 @@ protected:
     Expression* parseConstant();
     Expression* parseVariable();
     Expression* parseCallExpression(Expression* calleeExpr);
-
-    Expression* parseStructInstantiation(VariableExpression* structName);
-    Expression* parseMemberAccess();
-    Expression* parseMethodCall();
 
     // 数组和字典解析
     Expression* parseArray();

@@ -419,21 +419,13 @@ Expression* Parser::parsePostfix(Expression* expr) {
                     string memberName = matchIdentifier();
                     
                     if (look->Tag == '(') {
-                        // 方法调用：先访问方法，然后调用
-                        // 创建访问表达式获取方法
-                        ConstantExpression* memberNameExpr = new ConstantExpression(new String(memberName));
-                        Expression* methodAccess = new AccessExpression(expr, memberNameExpr);
-                        
-                        // 然后作为函数调用，将对象作为第一个参数
+                        // 方法调用：将对象作为第一个参数
                         matchToken('(');
                         vector<Expression*> arguments;
-                        
-                        // 将对象作为第一个参数（类似this指针）
-                        arguments.push_back(expr);
+                        arguments.push_back(expr); // 将对象作为第一个参数
                         
                         if (look->Tag != ')') {
                             arguments.push_back(parseExpressionWithPrecedence(0));
-                            
                             while (look->Tag == ',') {
                                 matchToken(',');
                                 arguments.push_back(parseExpressionWithPrecedence(0));
@@ -444,9 +436,7 @@ Expression* Parser::parsePostfix(Expression* expr) {
                         expr = new CallExpression(memberName, arguments);
                     } else {
                         // 成员访问
-                        // 创建字符串常量作为成员名
-                        ConstantExpression* memberNameExpr = new ConstantExpression(new String(memberName));
-                        expr = new AccessExpression(expr, memberNameExpr);
+                        expr = new AccessExpression(expr, new ConstantExpression(new String(memberName)));
                     }
                 }
                 break;
@@ -803,85 +793,7 @@ vector<pair<string, Type*>> Parser::parseParameterList() {
 }
 
 // 解析结构体实例化
-Expression* Parser::parseStructInstantiation(VariableExpression* structName) {
-	match('{');
-    
-    map<string, Expression*> fieldValues;
-    
-    if (look->Tag != '}') {
-        // 解析第一个字段
-        string fieldName = matchIdentifier();
-        
-        match(':');
-        Expression* value = parseExpression();
-        fieldValues[fieldName] = value;
-        
-        // 解析更多字段
-        while (look->Tag == ',') {
-			match(',');
-            
-            fieldName = matchIdentifier();
-            
-            match(':');
-            value = parseExpression();
-            fieldValues[fieldName] = value;
-        }
-    }
-    
-	match('}');
-    
-    	// 结构体实例化现在使用CallExpression
-	return new CallExpression(structName->name, vector<Expression*>());
-}
 
-
-
-// 解析成员访问
-Expression* Parser::parseMemberAccess() {
-    Expression* object = parseExpression();
-    
-    while (look->Tag == '.') {
-        match('.');
-        
-        string memberName = matchIdentifier();
-        
-        // 创建字符串常量作为成员名
-        ConstantExpression* memberNameExpr = new ConstantExpression(new String(memberName));
-        object = new AccessExpression(object, memberNameExpr);
-    }
-    
-    return object;
-}
-
-// 解析方法调用
-Expression* Parser::parseMethodCall() {
-    Expression* object = parseExpression();
-    
-    while (look->Tag == '.') {
-        match('.');
-        
-        string methodName = matchIdentifier();
-        
-        match('(');
-        
-        vector<Expression*> arguments;
-        
-        if (look->Tag != ')') {
-            arguments.push_back(parseExpression());
-            
-            while (look->Tag == ',') {
-                match(',');
-                arguments.push_back(parseExpression());
-            }
-        }
-        
-        match(')');
-        
-        object = new MethodCallExpression(object, methodName, arguments);
-    }
-    
-    return object;
-}
 
 // ==================== 私有Helper方法实现 ====================
 
