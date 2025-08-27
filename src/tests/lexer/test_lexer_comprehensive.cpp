@@ -98,6 +98,47 @@ TEST_F(LexerComprehensiveTest, StringOperations) {
     EXPECT_EQ(b.toString(), "\" World\"");
     EXPECT_EQ(a.getValue(), "Hello");
     EXPECT_EQ(b.getValue(), " World");
+    
+    // 测试字符串拼接运算符
+    String result1 = a + b;
+    EXPECT_EQ(result1.getValue(), "Hello World");
+    EXPECT_EQ(result1.toString(), "\"Hello World\"");
+    
+    // 测试字符串与字符拼接
+    String result2 = a + '!';
+    EXPECT_EQ(result2.getValue(), "Hello!");
+    
+    // 测试字符串与整数拼接
+    String result3 = a + 123;
+    EXPECT_EQ(result3.getValue(), "Hello123");
+    
+    // 测试字符串与浮点数拼接
+    String result4 = a + 3.14;
+    EXPECT_EQ(result4.getValue(), "Hello3.140000");
+    
+    // 测试字符串与布尔值拼接
+    String result5 = a + true;
+    EXPECT_EQ(result5.getValue(), "Hellotrue");
+    
+    String result6 = a + false;
+    EXPECT_EQ(result6.getValue(), "Hellofalse");
+    
+    // 测试全局运算符重载（其他类型在前）
+    std::string prefix = "Prefix ";
+    String result7 = prefix + a;
+    EXPECT_EQ(result7.getValue(), "Prefix Hello");
+    
+    String result8 = 'X' + a;
+    EXPECT_EQ(result8.getValue(), "XHello");
+    
+    String result9 = 456 + a;
+    EXPECT_EQ(result9.getValue(), "456Hello");
+    
+    String result10 = 2.718 + a;
+    EXPECT_EQ(result10.getValue(), "2.718000Hello");
+    
+    String result11 = true + a;
+    EXPECT_EQ(result11.getValue(), "trueHello");
 }
 
 // 测试运算符设计

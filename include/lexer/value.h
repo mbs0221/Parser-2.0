@@ -20,6 +20,7 @@ struct Type;
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <cstring>
 
 using namespace std;
 
@@ -610,7 +611,53 @@ struct String : public Array {
     Value* access(Value* key) override {
         return Array::access(key);
     }
+    
+    // 字符串拼接运算符重载
+    String operator+(const String& other) const {
+        return String(value + other.value);
+    }
+    
+    // 字符串与字符拼接
+    String operator+(char c) const {
+        return String(value + c);
+    }
+    
+    // 字符串与整数拼接（将整数转换为字符串）
+    String operator+(int num) const {
+        return String(value + to_string(num));
+    }
+    
+    // 字符串与浮点数拼接（将浮点数转换为字符串）
+    String operator+(double num) const {
+        return String(value + to_string(num));
+    }
+    
+    // 字符串与布尔值拼接
+    String operator+(bool b) const {
+        return String(value + (b ? "true" : "false"));
+    }
 };
+
+// 全局运算符重载 - 支持String与其他类型的混合运算
+inline String operator+(const std::string& str, const String& s) {
+    return String(str + s.getValue());
+}
+
+inline String operator+(char c, const String& s) {
+    return String(std::string(1, c) + s.getValue());
+}
+
+inline String operator+(int num, const String& s) {
+    return String(std::to_string(num) + s.getValue());
+}
+
+inline String operator+(double num, const String& s) {
+    return String(std::to_string(num) + s.getValue());
+}
+
+inline String operator+(bool b, const String& s) {
+    return String((b ? "true" : "false") + s.getValue());
+}
 
 // 字典类型 - 支持键值对存储
 struct Dict : public CompositeValue {
