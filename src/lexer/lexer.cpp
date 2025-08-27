@@ -126,6 +126,7 @@ Token *Lexer::match_id(){
 		inf.read(&peek, 1);
 	} while (isalnum(peek) || peek == '_');
 	inf.seekg(-1, ios_base::cur);
+	
 	if (words.find(str) != words.end()){
 		return words[str];
 	}
@@ -180,10 +181,8 @@ Value *Lexer::match_decimal(){
 	
 	// 根据是否为浮点数返回相应的Token
 	if (isFloat){
-		printf("DEBUG: Creating Double token with value %f\n", floatVal);
 		return new Double(floatVal);
 	} else {
-		printf("DEBUG: Creating Integer token with value %d\n", val);
 		return new Integer(val);
 	}
 }
@@ -316,21 +315,49 @@ Operator *Lexer::match_other(){
 	} else if (peek == '%') {
 		inf.read(&peek, 1);
 		return Operator::Mod;  // 使用静态常量
+	} else if (peek == ';') {
+		inf.read(&peek, 1);
+		return Operator::Semicolon;  // 使用静态常量
+	} else if (peek == ',') {
+		inf.read(&peek, 1);
+		return Operator::Comma;  // 使用静态常量
+	} else if (peek == '(') {
+		// inf.read(&peek, 1);
+		return Operator::LParen;  // 使用静态常量
+	} else if (peek == ')') {
+		// inf.read(&peek, 1);
+		return Operator::RParen;  // 使用静态常量
+	} else if (peek == '[') {
+		inf.read(&peek, 1);
+		return Operator::LBracket;  // 使用静态常量
+	} else if (peek == ']') {
+		inf.read(&peek, 1);
+		return Operator::RBracket;  // 使用静态常量
+	} else if (peek == '{') {
+		inf.read(&peek, 1);
+		return Operator::LBrace;  // 使用静态常量
+	} else if (peek == '}') {
+		inf.read(&peek, 1);
+		return Operator::RBrace;  // 使用静态常量
+	} else if (peek == '.') {
+		inf.read(&peek, 1);
+		return Operator::Dot;  // 使用静态常量
+	} else if (peek == ':') {
+		return Operator::Colon;  // 使用静态常量
+	} else if (peek == ',') {
+		return Operator::Comma;  // 使用静态常量
+	} else if (peek == ';') {
+		return Operator::Semicolon;  // 使用静态常量
+	} else if (peek == '?') {
+		return Operator::Question;  // 使用静态常量
+	} else if (peek == '~') {
+		return Operator::BitNot;  // 使用静态常量
+	} else if (peek == '^') {
+		return Operator::BitXor;  // 使用静态常量
 	} else {
-		// 检查是否为可识别的字符
-		if (peek >= 32 && peek <= 126) {  // 可打印ASCII字符
-			// 单字符运算符
-			return new Operator(peek, string(1, peek), 0, true);  // 默认优先级0，左结合
-		} else if (peek == '\n' || peek == '\r') {
-			// 换行符应该在scan()方法中处理，不应该在这里处理
-			// 如果到达这里，说明有逻辑错误
-			printf("LEXICAL ERROR line[%03d]: unexpected newline in operator\n", line);
-			exit(1);
-		} else {
-			// 无法识别的字符
-			printf("LEXICAL ERROR line[%03d]: unrecognized character '\\x%02x'\n", line, (unsigned char)peek);
-			exit(1);  // 强制退出
-		}
+		// 无法识别的字符
+		printf("LEXICAL ERROR line[%03d]: unrecognized character '\\x%02x'\n", line, (unsigned char)peek);
+		exit(1);  // 强制退出
 	}
 }
 

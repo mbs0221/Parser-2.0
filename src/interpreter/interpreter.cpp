@@ -27,6 +27,44 @@ Interpreter::~Interpreter() {
 
 // visit(AST*)方法已移除，使用具体的visit方法
 
+// 语句访问方法 - 无返回值
+void Interpreter::visit(Statement* stmt) {
+    if (!stmt) return;
+    
+    // 使用动态分发调用对应的visit方法
+    if (ImportStatement* importStmt = dynamic_cast<ImportStatement*>(stmt)) {
+        visit(importStmt);
+    } else if (ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt)) {
+        visit(exprStmt);
+    } else if (VariableDeclaration* varDecl = dynamic_cast<VariableDeclaration*>(stmt)) {
+        visit(varDecl);
+    } else if (IfStatement* ifStmt = dynamic_cast<IfStatement*>(stmt)) {
+        visit(ifStmt);
+    } else if (WhileStatement* whileStmt = dynamic_cast<WhileStatement*>(stmt)) {
+        visit(whileStmt);
+    } else if (ForStatement* forStmt = dynamic_cast<ForStatement*>(stmt)) {
+        visit(forStmt);
+    } else if (DoWhileStatement* doWhileStmt = dynamic_cast<DoWhileStatement*>(stmt)) {
+        visit(doWhileStmt);
+    } else if (BlockStatement* blockStmt = dynamic_cast<BlockStatement*>(stmt)) {
+        visit(blockStmt);
+    } else if (BreakStatement* breakStmt = dynamic_cast<BreakStatement*>(stmt)) {
+        visit(breakStmt);
+    } else if (ContinueStatement* continueStmt = dynamic_cast<ContinueStatement*>(stmt)) {
+        visit(continueStmt);
+    } else if (ReturnStatement* returnStmt = dynamic_cast<ReturnStatement*>(stmt)) {
+        visit(returnStmt);
+    } else if (ThrowStatement* throwStmt = dynamic_cast<ThrowStatement*>(stmt)) {
+        visit(throwStmt);
+    } else if (TryStatement* tryStmt = dynamic_cast<TryStatement*>(stmt)) {
+        visit(tryStmt);
+    } else if (SwitchStatement* switchStmt = dynamic_cast<SwitchStatement*>(stmt)) {
+        visit(switchStmt);
+    } else {
+        reportError("Unknown statement type");
+    }
+}
+
 // 执行语句
 void Interpreter::execute(Statement* stmt) {
     if (!stmt) return;
@@ -272,12 +310,13 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
     int opTag = op->Tag;
     
     // 逻辑运算：统一转换为布尔类型
-    if (opTag == AND_AND || opTag == OR_OR) {
+    if (opTag == AND_AND || opTag == OR_OR || opTag == '&' || opTag == '|') {
         return "bool";
     }
     
     // 比较运算：检查特殊类型组合
-    if (opTag == EQ_EQ || opTag == NE_EQ || opTag == LT || opTag == GT || opTag == LE || opTag == GE) {
+    if (opTag == EQ_EQ || opTag == NE_EQ || opTag == LT || opTag == GT || opTag == LE || opTag == GE ||
+        opTag == '<' || opTag == '>' || opTag == '=' || opTag == '!') {
         // 字符串比较
         if (dynamic_cast<String*>(left) && dynamic_cast<String*>(right)) {
             return "string";
@@ -415,38 +454,64 @@ Value* Interpreter::visit(CallExpression* call) {
     // 使用函数名调用
     string funcName = call->functionName;
     
-    // 查找用户定义的函数
+    // 查找函数（内置函数或用户函数）
     Identifier* identifier = scopeManager.lookupIdentifier(funcName);
     if (!identifier) {
         throw RuntimeException("Function not found: " + funcName);
     }
     
-    UserFunction* funcDef = dynamic_cast<UserFunction*>(identifier);
-    if (!funcDef) {
-        throw RuntimeException("Identifier '" + funcName + "' is not a function");
-    }
-    
-    LOG_DEBUG("Calling function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
-    
-    // 进入新的作用域并执行函数体
-    return withScope([&]() -> Value* {
-        // 绑定参数到局部变量
-        const vector<pair<string, Type*>>& params = funcDef->prototype->parameters;
-        for (size_t i = 0; i < params.size() && i < evaluatedArgs.size(); ++i) {
-            scopeManager.defineVariable(params[i].first, evaluatedArgs[i]);
-            LOG_DEBUG("Bound parameter '" + params[i].first + "'");
+    // 尝试转换为内置函数
+    BuiltinFunction* builtinFunc = dynamic_cast<BuiltinFunction*>(identifier);
+    if (builtinFunc) {
+        LOG_DEBUG("Calling builtin function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
+        
+        // 将Value*转换为Variable*（内置函数期望的参数类型）
+        vector<Variable*> args;
+        for (Value* val : evaluatedArgs) {
+            // 为内置函数参数创建临时变量，使用val的类型
+            Type* argType = val ? val->valueType : nullptr;
+            args.push_back(new Variable("", argType, val));
         }
         
-        // 执行函数体
-        Value* result = nullptr;
-        try {
-            execute(funcDef->body);
-        } catch (const ReturnException& e) {
-            result = static_cast<Value*>(e.getValue());
+        // 直接调用内置函数
+        Value* result = builtinFunc->execute(args);
+        
+        // 清理临时变量
+        for (Variable* var : args) {
+            delete var;
         }
         
         return result;
-    });
+    }
+    
+    // 尝试转换为用户函数
+    UserFunction* userFunc = dynamic_cast<UserFunction*>(identifier);
+    if (userFunc) {
+        LOG_DEBUG("Calling user function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
+        
+        // 进入新的作用域并执行函数体
+        return withScope([&]() -> Value* {
+            // 绑定参数到局部变量
+            const vector<pair<string, Type*>>& params = userFunc->prototype->parameters;
+            for (size_t i = 0; i < params.size() && i < evaluatedArgs.size(); ++i) {
+                scopeManager.defineVariable(params[i].first, evaluatedArgs[i]);
+                LOG_DEBUG("Bound parameter '" + params[i].first + "'");
+            }
+            
+            // 执行函数体
+            Value* result = nullptr;
+            try {
+                execute(userFunc->body);
+            } catch (const ReturnException& e) {
+                result = static_cast<Value*>(e.getValue());
+            }
+            
+            return result;
+        });
+    }
+    
+    // 如果既不是内置函数也不是用户函数
+    throw RuntimeException("Identifier '" + funcName + "' is not a function");
 }
 
 Value* Interpreter::visit(MethodCallExpression* methodCall) {
@@ -889,3 +954,26 @@ void Interpreter::registerBuiltinFunctionsToScope() {
 }
 
 // 内置函数通过visit方法自动执行
+
+// ==================== 缺少的虚函数实现 ====================
+
+// Identifier访问方法
+void Interpreter::visit(Identifier* id) {
+    if (!id) return;
+    // Identifier主要用于类型检查，不需要执行
+    LOG_DEBUG("Visiting identifier: " + id->name);
+}
+
+// Variable访问方法
+void Interpreter::visit(Variable* var) {
+    if (!var) return;
+    // Variable主要用于类型检查，不需要执行
+    LOG_DEBUG("Visiting variable: " + var->name);
+}
+
+// ClassMethod访问方法
+void Interpreter::visit(ClassMethod* method) {
+    if (!method) return;
+    // ClassMethod主要用于类型检查，不需要执行
+    LOG_DEBUG("Visiting class method: " + method->name);
+}

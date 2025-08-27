@@ -93,18 +93,18 @@ private:
     vector<pair<string, Type*>> parseParameterList();
 };
 
-// 模板函数实现
+// 模板函数实现 - 使用inline避免重复定义
 template<typename T>
-T* Parser::matchValue() {
+inline T* Parser::matchValue() {
     // 通用实现，会报错
     printf("SYNTAX ERROR line[%03d]: unsupported type %s\n", lex.line, typeid(T).name());
     exit(1);
     return nullptr;
 }
 
-// 模板特化
+// 模板特化 - 使用inline
 template<>
-Integer* Parser::matchValue<Integer>() {
+inline Integer* Parser::matchValue<Integer>() {
     if (look->Tag == NUM) {
         Integer* intVal = static_cast<Integer*>(look);
         move();
@@ -116,7 +116,7 @@ Integer* Parser::matchValue<Integer>() {
 }
 
 template<>
-Double* Parser::matchValue<Double>() {
+inline Double* Parser::matchValue<Double>() {
     if (look->Tag == REAL) {
         Double* doubleVal = static_cast<Double*>(look);
         move();
@@ -128,7 +128,7 @@ Double* Parser::matchValue<Double>() {
 }
 
 template<>
-String* Parser::matchValue<String>() {
+inline String* Parser::matchValue<String>() {
     if (look->Tag == STR) {
         String* stringVal = static_cast<String*>(look);
         move();
@@ -140,7 +140,7 @@ String* Parser::matchValue<String>() {
 }
 
 template<>
-Char* Parser::matchValue<Char>() {
+inline Char* Parser::matchValue<Char>() {
     if (look->Tag == CHAR) {
         Char* charVal = static_cast<Char*>(look);
         move();
@@ -152,7 +152,7 @@ Char* Parser::matchValue<Char>() {
 }
 
 template<>
-Bool* Parser::matchValue<Bool>() {
+inline Bool* Parser::matchValue<Bool>() {
     if (look->Tag == BOOL) {
         Bool* boolVal = static_cast<Bool*>(look);
         move();

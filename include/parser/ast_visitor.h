@@ -77,7 +77,6 @@ public:
     virtual void visit(ForStatement* stmt) = 0;
     virtual void visit(DoWhileStatement* stmt) = 0;
     virtual void visit(BlockStatement* stmt) = 0;
-    virtual void visit(FunctionDefinition* stmt) = 0;
     virtual void visit(StructDefinition* stmt) = 0;
     virtual void visit(ClassDefinition* stmt) = 0;
     virtual void visit(BreakStatement* stmt) = 0;
@@ -91,7 +90,6 @@ public:
     // function.h中定义的类的访问方法
     virtual void visit(Identifier* id) = 0;
     virtual void visit(Variable* var) = 0;
-    virtual void visit(BuiltinFunction* func) = 0;
     virtual void visit(UserFunction* func) = 0;
     virtual void visit(ClassMethod* method) = 0;
     

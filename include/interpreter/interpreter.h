@@ -37,14 +37,9 @@ public:
     // AST求值方法
     void execute(Statement* stmt);
     void execute(Program* program);
-
-    // 语句求值方法 - 无返回值
-    void visit(Statement* stmt) override;
     
-    // 表达式求值方法 - 返回Value类型
-    Value* visit(Expression* expr);
-
     // ASTVisitor接口实现 - 表达式访问方法
+    Value* visit(Expression* expr) override;
     Value* visit(ConstantExpression* expr) override;
     Value* visit(VariableExpression* expr) override;
     Value* visit(UnaryExpression* expr) override;
@@ -55,6 +50,7 @@ public:
     Value* visit(MethodCallExpression* expr) override;
 
     // ASTVisitor接口实现 - 语句访问方法
+    void visit(Statement* stmt) override;
     void visit(ImportStatement* stmt) override;
     void visit(ExpressionStatement* stmt) override;
     void visit(VariableDeclaration* stmt) override;

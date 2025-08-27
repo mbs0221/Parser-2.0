@@ -1,0 +1,6 @@
+let message = "This is a string literal";
+let number = 42;
+let flag = true;
+print(message);
+print(number);
+print(flag);

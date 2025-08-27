@@ -1,4 +1,3 @@
-let x = 5;
-let y = 3.14;
-let z = x + y;
-print(z);
+let x = 10;
+let y = 20;
+print(x);

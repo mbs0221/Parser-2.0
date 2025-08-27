@@ -1,8 +1,9 @@
-#include "parser/parser.h"
 #include "interpreter/interpreter.h"
 #include "interpreter/logger.h"
+#include "parser/parser.h"
 #include <iostream>
 #include <string>
+#include <cstdio>
 #include <getopt.h>
 #include <unistd.h>
 

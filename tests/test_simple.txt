@@ -1,2 +1,12 @@
-let x = 5 + 3.14;
+let x = 42;
+let y = 3.14;
+let z = "hello";
+let flag = true;
+
 print(x);
+print(y);
+print(z);
+print(flag);
+
+let result = x + 10;
+print(result);

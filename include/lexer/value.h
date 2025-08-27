@@ -72,6 +72,11 @@ struct Token{
 		Tag = 0;
 	}
 	Token(int Tag) :Tag(Tag){  }
+	
+	// 获取字面值的字符串表示
+	virtual string str() const {
+		return "token";
+	}
 };
 
 struct Word :Token{
@@ -85,6 +90,11 @@ struct Word :Token{
 	}
 	virtual Word *eval(){
 		return this;
+	}
+	
+	// 获取字面值的字符串表示
+	string str() const override {
+		return word;
 	}
 };
 
@@ -100,6 +110,11 @@ struct Type :Word{
 	virtual Type *eval(){
 		return this;
 	}
+	
+	// 获取字面值的字符串表示
+	string str() const override {
+		return word;
+	}
 };
 
 // 操作符
@@ -108,7 +123,8 @@ struct Operator :Token {
 	int precedence; // 优先级
 	bool isLeftAssociative; // 左结合性
 
-    static Operator *Add, *Sub, *Mul, *Div, *Mod, *LT, *GT, *LE, *GE, *EQ, *NE, *AND, *OR, *Not, *BitAnd, *BitOr, *BitXor, *BitNot, *LeftShift, *RightShift, *Increment, *Decrement, *Dot, *Arrow, *Question, *Colon, *NullValue;
+    static Operator *Add, *Sub, *Mul, *Div, *Mod, *LT, *GT, *LE, *GE, *EQ, *NE, *AND, *OR, *Not, *BitAnd, *BitOr, *BitXor, *BitNot, *LeftShift, *RightShift, *Increment, *Decrement, *Dot, *Arrow, *Question, *Colon;
+    static Operator *Semicolon, *Comma, *LParen, *RParen, *LBracket, *RBracket, *LBrace, *RBrace;
 	
 	Operator() : Token(0), symbol(""), precedence(0), isLeftAssociative(true) {}
 	Operator(int tag, const string& sym, int prec = 0, bool leftAssoc = true) 
@@ -125,6 +141,11 @@ struct Operator :Token {
 	
 	// 转换为字符串
 	string toString() const { return symbol; }
+	
+	// 获取字面值的字符串表示
+	string str() const override {
+		return symbol;
+	}
 };
 
 // 访问修饰符
@@ -159,6 +180,11 @@ struct Visibility : public Token {
         }
     }
     
+    // 获取字面值的字符串表示
+    string str() const override {
+        return toString();
+    }
+    
     // 判断是否为特定类型
     bool isPublic() const { return visibilityType == VIS_PUBLIC; }
     bool isPrivate() const { return visibilityType == VIS_PRIVATE; }
@@ -169,6 +195,7 @@ struct Visibility : public Token {
 // 所有值的基类 - 继承自Token
 struct Value : public Token {
     Type* valueType;  // 值的类型
+    static Value* NullValue;  // 空值
     
     Value() : Token(0), valueType(nullptr) {}
     Value(int tag, Type* type) : Token(tag), valueType(type) {}
@@ -176,6 +203,9 @@ struct Value : public Token {
     
     // 获取值的字符串表示
     virtual string toString() const { return "value"; }
+    
+    // 获取字面值的字符串表示
+    virtual string str() const { return toString(); }
     
     // 转换为布尔值 - 用于逻辑运算
     virtual bool toBool() const { return false; }
@@ -231,6 +261,11 @@ struct Bool : public Value {
     
     string toString() const override {
         return value ? "true" : "false";
+    }
+    
+    // 获取字面值的字符串表示
+    string str() const override {
+        return toString();
     }
 };
 
@@ -374,6 +409,11 @@ struct Integer : public Value {
     string toString() const override {
         return to_string(value);
     }
+    
+    // 获取字面值的字符串表示
+    string str() const override {
+        return toString();
+    }
 };
 
 // 字符值类型
@@ -409,6 +449,11 @@ struct Char : public Value {
     
     string toString() const override {
         return string(1, value);
+    }
+    
+    // 获取字面值的字符串表示
+    string str() const override {
+        return toString();
     }
 };
 
@@ -497,6 +542,11 @@ struct Double : public Value {
         oss << value;
         return oss.str();
     }
+    
+    // 获取字面值的字符串表示
+    string str() const override {
+        return toString();
+    }
 };
 
 // 复合值基类 - 支持访问操作
@@ -550,6 +600,11 @@ struct Array : public CompositeValue {
         }
         result += "]";
         return result;
+    }
+    
+    // 获取字面值的字符串表示
+    string str() const override {
+        return toString();
     }
     
     // 访问操作 - 将key作为数组下标
@@ -651,6 +706,11 @@ struct String : public Array {
     
     string toString() const override {
         return "\"" + value + "\"";
+    }
+    
+    // 获取字面值的字符串表示
+    string str() const override {
+        return value;  // 返回不带引号的字符串值
     }
     
     // 访问操作 - 继承自Array，直接使用数组索引访问
@@ -765,6 +825,11 @@ struct Dict : public CompositeValue {
         }
         result += "}";
         return result;
+    }
+    
+    // 获取字面值的字符串表示
+    string str() const override {
+        return toString();
     }
     
     // 访问操作 - 将key作为字符串去查询

@@ -124,11 +124,22 @@ struct FunctionDefinition : public Identifier {
     BlockStatement* body;
     
     FunctionDefinition(FunctionPrototype* proto, BlockStatement* funcBody)
-        : Identifier(proto->name), prototype(proto), body(funcBody) {}
+        : Identifier(proto ? proto->name : ""), prototype(proto), body(funcBody) {}
     
     // 获取标识符类型
     string getIdentifierType() const override {
         return "FunctionDefinition";
+    }
+    
+    // 虚函数：判断是否为内置函数
+    virtual bool isBuiltin() const {
+        return false;
+    }
+    
+    // 虚函数：执行函数
+    virtual Value* execute(vector<Variable*>& args) {
+        // 默认实现：用户函数需要解释器执行
+        return nullptr;
     }
     
     void accept(ASTVisitor* visitor) override;
@@ -140,23 +151,30 @@ public:
     function<Value*(vector<Variable*>&)> func;
     
     BuiltinFunction(const string& funcName, function<Value*(vector<Variable*>&)> funcPtr)
-        : FunctionDefinition(nullptr, nullptr), func(funcPtr) {
+        : FunctionDefinition(createBuiltinPrototype(funcName), nullptr), func(funcPtr) {
         name = funcName; // 设置名称
     }
     
-    bool isBuiltin() const {
+    bool isBuiltin() const override {
         return true;
     }
     
+    Value* execute(vector<Variable*>& args) override {
+        return func(args);
+    }
+    
     void accept(ASTVisitor* visitor) override;
+
+private:
+    // 为内置函数创建简单的函数原型
+    static FunctionPrototype* createBuiltinPrototype(const string& funcName) {
+        return new FunctionPrototype(funcName, {}, nullptr); // 空参数列表，无返回类型
+    }
 };
 
-// 用户函数类型 - 继承自Identifier，适合parser返回
+// 用户函数类型 - 继承自FunctionDefinition
 class UserFunction : public FunctionDefinition {
 public:
-    FunctionPrototype* prototype;
-    BlockStatement* body;
-    
     UserFunction(FunctionPrototype* proto, BlockStatement* funcBody)
         : FunctionDefinition(proto, funcBody) {}
     
@@ -165,7 +183,7 @@ public:
         return "UserFunction";
     }
     
-    bool isBuiltin() const {
+    bool isBuiltin() const override {
         return false;
     }
     
