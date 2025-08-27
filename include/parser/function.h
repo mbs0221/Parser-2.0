@@ -136,9 +136,15 @@ struct FunctionDefinition : public Identifier {
         return false;
     }
     
-    // 虚函数：执行函数
+    // 虚函数：执行函数（内置函数使用）
     virtual Value* execute(vector<Variable*>& args) {
         // 默认实现：用户函数需要解释器执行
+        return nullptr;
+    }
+    
+    // 虚函数：执行函数（用户函数使用，需要解释器上下文）
+    virtual Value* executeWithInterpreter(vector<Value*>& args, class Interpreter* interpreter) {
+        // 默认实现：内置函数不需要解释器
         return nullptr;
     }
     
@@ -186,6 +192,9 @@ public:
     bool isBuiltin() const override {
         return false;
     }
+    
+    // 重写执行方法，需要解释器上下文
+    Value* executeWithInterpreter(vector<Value*>& args, class Interpreter* interpreter) override;
     
     void accept(ASTVisitor* visitor) override;
 };

@@ -375,7 +375,8 @@ Expression* Parser::parseExpressionWithPrecedence(int minPrecedence) {
 Expression* Parser::parsePrimary() {
     switch (look->Tag) {
         case NOT: // 逻辑非
-        case MINUS: // 负号
+        case '-': // 负号 (ASCII 45)
+        case MINUS: // 负号 (枚举 301)
             {
                 Operator* op = matchOperator();
                 Expression* operand = parsePrimary();
@@ -414,7 +415,7 @@ Expression* Parser::parsePostfix(Expression* expr) {
             case '.':
                 {
                     // 成员访问
-                    matchToken('.');
+                    match('.');
                     string memberName = matchIdentifier();
                     
                     if (look->Tag == '(') {
@@ -629,29 +630,7 @@ Expression* Parser::parseCallExpression(Expression* calleeExpr) {
     }
 }
 
-// 解析访问操作 - 统一Access类型，支持所有访问形式
-Expression* Parser::parseAccess(VariableExpression* id) {
-    Expression* target = id;
-    
-    while (look->Tag == LBRACKET || look->Tag == DOT) {  // 数组访问或成员访问
-        if (look->Tag == LBRACKET) {
-            // 数组访问：arr[index] 或 jsonArr[index]
-            match(LBRACKET);
-            Expression* key = parseExpression();
-			match(RBRACKET);
-            target = new AccessExpression(target, key);
-        } else if (look->Tag == DOT) {
-            // 静态成员访问：obj.member
-            match(DOT);
-            string memberName = matchIdentifier();
-            // 创建字符串常量作为成员名
-            ConstantExpression* memberNameExpr = new ConstantExpression(new String(memberName));
-            target = new AccessExpression(target, memberNameExpr);
-        }
-    }
-    
-    return target;
-}
+
 
 
 
@@ -674,7 +653,7 @@ FunctionPrototype* Parser::parsePrototype() {
 FunctionDefinition* Parser::parseFunction() {
     FunctionPrototype* proto = parsePrototype();
     BlockStatement* body = parseBlock();
-    return new FunctionDefinition(proto, body);
+    return new UserFunction(proto, body);
 }
 
 // 解析结构体定义

@@ -1,5 +1,7 @@
 #include "parser/function.h"
 #include "parser/ast_visitor.h"
+#include "interpreter/interpreter.h"
+#include "interpreter/control_flow.h"
 
 // Identifier类的accept方法实现
 void Identifier::accept(ASTVisitor* visitor) {
@@ -29,6 +31,12 @@ void BuiltinFunction::accept(ASTVisitor* visitor) {
 // UserFunction类的accept方法实现
 void UserFunction::accept(ASTVisitor* visitor) {
     visitor->visit(this);
+}
+
+// UserFunction类的executeWithInterpreter方法实现
+Value* UserFunction::executeWithInterpreter(vector<Value*>& args, class Interpreter* interpreter) {
+    // 这个方法不会被调用，用户函数直接在解释器中处理
+    return nullptr;
 }
 
 // StructDefinition类的accept方法实现

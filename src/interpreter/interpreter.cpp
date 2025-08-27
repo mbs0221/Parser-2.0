@@ -187,17 +187,18 @@ Value* Interpreter::visit(UnaryExpression* unary) {
                 return nullptr;
             }
         }
-        case MINUS: {
-            // 一元负号操作
-            if (Integer* intVal = dynamic_cast<Integer*>(operand)) {
-                return new Integer(-intVal->getValue());
-            } else if (Double* doubleVal = dynamic_cast<Double*>(operand)) {
-                return new Double(-doubleVal->getValue());
-            } else {
-                reportError("Invalid operand for unary minus operator");
-                return nullptr;
+        case '-':   // ASCII 值 45
+            {
+                // 一元负号操作
+                if (Integer* intVal = dynamic_cast<Integer*>(operand)) {
+                    return new Integer(-intVal->getValue());
+                } else if (Double* doubleVal = dynamic_cast<Double*>(operand)) {
+                    return new Double(-doubleVal->getValue());
+                } else {
+                    reportError("Invalid operand for unary minus operator");
+                    return nullptr;
+                }
             }
-        }
         default:
             reportError("Unknown unary operator Tag " + to_string(unary->operator_->Tag));
             return nullptr;
@@ -315,8 +316,7 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
     }
     
     // 比较运算：检查特殊类型组合
-    if (opTag == EQ_EQ || opTag == NE_EQ || opTag == LT || opTag == GT || opTag == LE || opTag == GE ||
-        opTag == '<' || opTag == '>' || opTag == '=' || opTag == '!') {
+    if (opTag == EQ_EQ || opTag == NE_EQ || opTag == '<' || opTag == '>' || opTag == 'LT_EQ' || opTag == 'GT_EQ' || opTag == 'EQ_EQ' || opTag == 'NE_EQ') {
         // 字符串比较
         if (dynamic_cast<String*>(left) && dynamic_cast<String*>(right)) {
             return "string";
@@ -343,21 +343,21 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
 
 Value* Interpreter::calculate(Integer* left, Integer* right, int op) {
     switch (op) {
-        case PLUS: return new Integer(*left + *right);
-        case MINUS: return new Integer(*left - *right);
-        case MULTIPLY: return new Integer(*left * *right);
-        case DIVIDE: return new Integer(*left / *right);
-        case MODULO: return new Integer(*left % *right);
+        case '+': return new Integer(*left + *right);
+        case '-': return new Integer(*left - *right);
+        case '*': return new Integer(*left * *right);
+        case '/': return new Integer(*left / *right);
+        case '%': return new Integer(*left % *right);
         default: return new Integer(0);
     }
 }
 
 Value* Interpreter::calculate(Double* left, Double* right, int op) {
     switch (op) {
-        case PLUS: return new Double(*left + *right);
-        case MINUS: return new Double(*left - *right);
-        case MULTIPLY: return new Double(*left * *right);
-        case DIVIDE: return new Double(*left / *right);
+        case '+': return new Double(*left + *right);
+        case '-': return new Double(*left - *right);
+        case '*': return new Double(*left * *right);
+        case '/': return new Double(*left / *right);
         default: return new Double(0.0);
     }
 }
@@ -372,14 +372,14 @@ Value* Interpreter::calculate(Bool* left, Bool* right, int op) {
 
 Value* Interpreter::calculate(Char* left, Char* right, int op) {
     switch (op) {
-        case PLUS: return new Char(*left + *right);
+        case '+': return new Char(*left + *right);
         default: return new Char(*left);
     }
 }
 
 Value* Interpreter::calculate(String* left, String* right, int op) {
     switch (op) {
-        case PLUS: return new String(*left + *right);
+        case '+': return new String(*left + *right);
         default: return new String("");
     }
 }
@@ -454,15 +454,34 @@ Value* Interpreter::visit(CallExpression* call) {
     // 使用函数名调用
     string funcName = call->functionName;
     
-    // 查找函数（内置函数或用户函数）
+    // 查找标识符（可能是函数、类或结构体）
     Identifier* identifier = scopeManager.lookupIdentifier(funcName);
     if (!identifier) {
-        throw RuntimeException("Function not found: " + funcName);
+        throw RuntimeException("Identifier not found: " + funcName);
     }
     
-    // 尝试转换为内置函数
-    BuiltinFunction* builtinFunc = dynamic_cast<BuiltinFunction*>(identifier);
-    if (builtinFunc) {
+    // 检查是否为类或结构体定义（实例化）
+    ClassDefinition* classDef = dynamic_cast<ClassDefinition*>(identifier);
+    if (classDef) {
+        LOG_DEBUG("Instantiating class '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
+        return instantiateClass(classDef, evaluatedArgs);
+    }
+    
+    StructDefinition* structDef = dynamic_cast<StructDefinition*>(identifier);
+    if (structDef) {
+        LOG_DEBUG("Instantiating struct '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
+        return instantiateStruct(structDef, evaluatedArgs);
+    }
+    
+    // 尝试转换为函数定义
+    FunctionDefinition* funcDef = dynamic_cast<FunctionDefinition*>(identifier);
+    if (!funcDef) {
+        throw RuntimeException("Identifier '" + funcName + "' is not a function, class, or struct");
+    }
+    
+    // 统一处理函数调用
+    if (funcDef->isBuiltin()) {
+        // 内置函数调用
         LOG_DEBUG("Calling builtin function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
         
         // 将参数转换为Variable*，支持引用参数
@@ -490,8 +509,8 @@ Value* Interpreter::visit(CallExpression* call) {
             }
         }
         
-        // 直接调用内置函数
-        Value* result = builtinFunc->execute(args);
+        // 统一调用函数
+        Value* result = funcDef->execute(args);
         
         // 清理临时变量（只清理非引用的变量）
         for (size_t i = 0; i < args.size(); ++i) {
@@ -502,17 +521,14 @@ Value* Interpreter::visit(CallExpression* call) {
         }
         
         return result;
-    }
-    
-    // 尝试转换为用户函数
-    UserFunction* userFunc = dynamic_cast<UserFunction*>(identifier);
-    if (userFunc) {
+    } else {
+        // 用户函数调用
         LOG_DEBUG("Calling user function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
         
         // 进入新的作用域并执行函数体
         return withScope([&]() -> Value* {
             // 绑定参数到局部变量
-            const vector<pair<string, Type*>>& params = userFunc->prototype->parameters;
+            const vector<pair<string, Type*>>& params = funcDef->prototype->parameters;
             for (size_t i = 0; i < params.size() && i < evaluatedArgs.size(); ++i) {
                 scopeManager.defineVariable(params[i].first, evaluatedArgs[i]);
                 LOG_DEBUG("Bound parameter '" + params[i].first + "'");
@@ -521,7 +537,7 @@ Value* Interpreter::visit(CallExpression* call) {
             // 执行函数体
             Value* result = nullptr;
             try {
-                execute(userFunc->body);
+                execute(funcDef->body);
             } catch (const ReturnException& e) {
                 result = static_cast<Value*>(e.getValue());
             }
@@ -529,9 +545,6 @@ Value* Interpreter::visit(CallExpression* call) {
             return result;
         });
     }
-    
-    // 如果既不是内置函数也不是用户函数
-    throw RuntimeException("Identifier '" + funcName + "' is not a function");
 }
 
 Value* Interpreter::visit(MethodCallExpression* methodCall) {
@@ -942,14 +955,20 @@ void Interpreter::visit(ContinueStatement* continueStmt) {
 
 void Interpreter::visit(StructDefinition* structDef) {
     if (!structDef) return;
-    // 暂时简单实现，后续可以完善
-    reportError("Struct definition not implemented yet");
+    
+    // 将结构体定义注册到作用域中
+    scopeManager.defineStruct(structDef->name, structDef);
+    
+    LOG_DEBUG("Registered struct '" + structDef->name + "' with " + to_string(structDef->members.size()) + " members");
 }
 
 void Interpreter::visit(ClassDefinition* classDef) {
     if (!classDef) return;
-    // 暂时简单实现，后续可以完善
-    reportError("Class definition not implemented yet");
+    
+    // 将类定义注册到作用域中
+    scopeManager.defineClass(classDef->name, classDef);
+    
+    LOG_DEBUG("Registered class '" + classDef->name + "' with " + to_string(classDef->members.size()) + " members and " + to_string(classDef->methods.size()) + " methods");
 }
 
 void Interpreter::visit(ThrowStatement* throwStmt) {
@@ -968,9 +987,36 @@ void Interpreter::visit(TryStatement* tryStmt) {
 
 // 注册内置函数到作用域管理器
 void Interpreter::registerBuiltinFunctionsToScope() {
+    // 基础函数
     scopeManager.defineIdentifier("print", new BuiltinFunction("print", builtin_print));
     scopeManager.defineIdentifier("count", new BuiltinFunction("count", builtin_count));
     scopeManager.defineIdentifier("cin", new BuiltinFunction("cin", builtin_cin));
+    
+    // 数学函数
+    scopeManager.defineIdentifier("abs", new BuiltinFunction("abs", builtin_abs));
+    scopeManager.defineIdentifier("max", new BuiltinFunction("max", builtin_max));
+    scopeManager.defineIdentifier("min", new BuiltinFunction("min", builtin_min));
+    scopeManager.defineIdentifier("pow", new BuiltinFunction("pow", builtin_pow));
+    
+    // 字符串函数
+    scopeManager.defineIdentifier("length", new BuiltinFunction("length", builtin_length));
+    scopeManager.defineIdentifier("substring", new BuiltinFunction("substring", builtin_substring));
+    scopeManager.defineIdentifier("upper", new BuiltinFunction("upper", builtin_upper));
+    scopeManager.defineIdentifier("lower", new BuiltinFunction("lower", builtin_lower));
+    
+    // 数组函数
+    scopeManager.defineIdentifier("push", new BuiltinFunction("push", builtin_push));
+    scopeManager.defineIdentifier("pop", new BuiltinFunction("pop", builtin_pop));
+    scopeManager.defineIdentifier("sort", new BuiltinFunction("sort", builtin_sort));
+    
+    // 类型转换函数
+    scopeManager.defineIdentifier("to_string", new BuiltinFunction("to_string", builtin_to_string));
+    scopeManager.defineIdentifier("to_int", new BuiltinFunction("to_int", builtin_to_int));
+    scopeManager.defineIdentifier("to_double", new BuiltinFunction("to_double", builtin_to_double));
+    
+    // 系统函数
+    scopeManager.defineIdentifier("random", new BuiltinFunction("random", builtin_random));
+    scopeManager.defineIdentifier("exit", new BuiltinFunction("exit", builtin_exit));
 }
 
 // 内置函数通过visit方法自动执行
@@ -996,4 +1042,87 @@ void Interpreter::visit(ClassMethod* method) {
     if (!method) return;
     // ClassMethod主要用于类型检查，不需要执行
     LOG_DEBUG("Visiting class method: " + method->name);
+}
+
+// ==================== 类/结构体实例化方法 ====================
+
+// 类实例化
+Value* Interpreter::instantiateClass(ClassDefinition* classDef, vector<Value*>& args) {
+    if (!classDef) return nullptr;
+    
+    // 创建字典来存储实例的成员
+    Dict* instance = new Dict();
+    
+    // 根据参数顺序初始化成员
+    const vector<StructMember>& members = classDef->members;
+    for (size_t i = 0; i < members.size() && i < args.size(); ++i) {
+        const StructMember& member = members[i];
+        instance->setEntry(member.name, args[i]);
+    }
+    
+    // 为未初始化的成员设置默认值
+    for (size_t i = args.size(); i < members.size(); ++i) {
+        const StructMember& member = members[i];
+        if (member.defaultValue) {
+            // 如果有默认值表达式，求值它
+            Value* defaultVal = visit(member.defaultValue);
+            instance->setEntry(member.name, defaultVal);
+        } else {
+            // 否则使用类型的默认值
+            Value* defaultVal = createDefaultValue(member.type);
+            instance->setEntry(member.name, defaultVal);
+        }
+    }
+    
+    return instance;
+}
+
+// 结构体实例化
+Value* Interpreter::instantiateStruct(StructDefinition* structDef, vector<Value*>& args) {
+    if (!structDef) return nullptr;
+    
+    // 创建字典来存储实例的成员
+    Dict* instance = new Dict();
+    
+    // 根据参数顺序初始化成员
+    const vector<StructMember>& members = structDef->members;
+    for (size_t i = 0; i < members.size() && i < args.size(); ++i) {
+        const StructMember& member = members[i];
+        instance->setEntry(member.name, args[i]);
+    }
+    
+    // 为未初始化的成员设置默认值
+    for (size_t i = args.size(); i < members.size(); ++i) {
+        const StructMember& member = members[i];
+        if (member.defaultValue) {
+            // 如果有默认值表达式，求值它
+            Value* defaultVal = visit(member.defaultValue);
+            instance->setEntry(member.name, defaultVal);
+        } else {
+            // 否则使用类型的默认值
+            Value* defaultVal = createDefaultValue(member.type);
+            instance->setEntry(member.name, defaultVal);
+        }
+    }
+    
+    return instance;
+}
+
+// 创建默认值
+Value* Interpreter::createDefaultValue(Type* type) {
+    if (!type) return new Integer(0);
+    
+    if (type == Type::Int) {
+        return new Integer(0);
+    } else if (type == Type::Double) {
+        return new Double(0.0);
+    } else if (type == Type::Char) {
+        return new Char('\0');
+    } else if (type == Type::Bool) {
+        return new Bool(false);
+    } else if (type == Type::String) {
+        return new String("");
+    } else {
+        return new Integer(0); // 默认返回整数0
+    }
 }

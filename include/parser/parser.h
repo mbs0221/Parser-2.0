@@ -52,7 +52,7 @@ protected:
     Expression* parseConstant();
     Expression* parseVariable();
     Expression* parseCallExpression(Expression* calleeExpr);
-    Expression* parseAccess(VariableExpression* id);
+
     Expression* parseStructInstantiation(VariableExpression* structName);
     Expression* parseMemberAccess();
     Expression* parseMethodCall();

@@ -333,7 +333,7 @@ Token *Lexer::match_other(){
 		inf.read(&peek, 1);
 		return Operator::Colon;  // 使用静态常量
 	} else if (peek == '.') {
-		inf.read(&peek, 1);
+		// inf.read(&peek, 1);
 		return Operator::Dot;  // 使用静态常量
 	} else {
 		// 其他字符返回Token类型
