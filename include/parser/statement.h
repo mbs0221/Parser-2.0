@@ -2,7 +2,6 @@
 #define STATEMENT_H
 
 #include "expression.h"
-#include "function.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -40,8 +39,14 @@ struct VariableDeclaration : public Statement {
     string variableType;
     Expression* initialValue;
     
+    VariableDeclaration() : variableName(""), variableType(""), initialValue(nullptr) {}
     VariableDeclaration(const string& name, const string& type, Expression* value = nullptr)
         : variableName(name), variableType(type), initialValue(value) {}
+    
+    void addVariable(const string& name, Expression* value) {
+        variableName = name;
+        initialValue = value;
+    }
     
     void accept(ASTVisitor* visitor) override;
 };
@@ -190,7 +195,12 @@ struct SwitchStatement : public Statement {
 struct BlockStatement : public Statement {
     vector<Statement*> statements;
     
+    BlockStatement() : statements() {}
     BlockStatement(const vector<Statement*>& stmts) : statements(stmts) {}
+    
+    void addStatement(Statement* stmt) {
+        statements.push_back(stmt);
+    }
     
     void accept(ASTVisitor* visitor) override;
 };
@@ -200,7 +210,12 @@ struct BlockStatement : public Statement {
 struct Program : public AST {
     vector<Statement*> statements;
     
+    Program() : statements() {}
     Program(const vector<Statement*>& stmts) : statements(stmts) {}
+    
+    void addStatement(Statement* stmt) {
+        statements.push_back(stmt);
+    }
     
     void accept(ASTVisitor* visitor) override;
 };

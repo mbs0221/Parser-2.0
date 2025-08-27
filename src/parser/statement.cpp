@@ -78,21 +78,7 @@ void BlockStatement::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
 
-void Variable::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
 
-void FunctionDefinition::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
-void StructDefinition::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
-void ClassDefinition::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
 
 // ==================== 程序根节点 ====================
 void Program::accept(ASTVisitor* visitor) {

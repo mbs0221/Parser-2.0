@@ -27,7 +27,7 @@ using namespace std;
 //词法分析器标记
 enum Tag{
 	// 基本类型
-	BASIC = 256, ID, NUM, REAL, CHAR, STR, BOOL, END_OF_FILE,
+	BASIC = 256, ID, NUM, REAL, DOUBLE, CHAR, STR, BOOL, END_OF_FILE,
 	
 	// 关键字
 	IF, THEN, ELSE, DO, WHILE, FOR, CASE, DEFAULT,
@@ -35,14 +35,15 @@ enum Tag{
 	BEGIN, END, FUNCTION, LAMBDA,
 	STRUCT, CLASS, PUBLIC, PRIVATE, PROTECTED, IMPORT,
 	
+	// 运算符范围：300-399
 	// 算术运算符
-	PLUS, MINUS, MULTIPLY, DIVIDE, MODULO,
+	PLUS = 300, MINUS, MULTIPLY, DIVIDE, MODULO,
 	
 	// 赋值运算符
 	ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN,
 	
 	// 比较运算符
-	LT, GT, LE, GE_EQ, EQ_EQ, NE_EQ,
+	LT, GT, LE, GE, EQ_EQ, NE_EQ,
 	
 	// 逻辑运算符
 	AND_AND, OR_OR, NOT,
@@ -55,6 +56,13 @@ enum Tag{
 	
 	// 特殊值
 	NULL_VALUE
+};
+
+// 访问修饰符枚举类型
+enum VisibilityType {
+    VIS_PUBLIC,
+    VIS_PRIVATE,
+    VIS_PROTECTED
 };
 
 //词法单元
@@ -117,6 +125,44 @@ struct Operator :Token {
 	
 	// 转换为字符串
 	string toString() const { return symbol; }
+};
+
+// 访问修饰符
+struct Visibility : public Token {
+    VisibilityType visibilityType;  // 访问修饰符枚举类型
+    
+    static Visibility *Public, *Private, *Protected;
+    
+    Visibility() : Token(0), visibilityType(VIS_PUBLIC) {}
+    Visibility(int tag, VisibilityType type) : Token(tag), visibilityType(type) {}
+    
+    // 根据Tag创建Visibility对象
+    static Visibility* createFromTag(int tag) {
+        switch(tag) {
+            case Tag::PUBLIC: return Public;
+            case Tag::PRIVATE: return Private;
+            case Tag::PROTECTED: return Protected;
+            default: return nullptr;
+        }
+    }
+    
+    // 获取访问修饰符类型
+    VisibilityType getVisibilityType() const { return visibilityType; }
+    
+    // 转换为字符串
+    string toString() const { 
+        switch(visibilityType) {
+            case VIS_PUBLIC: return "public";
+            case VIS_PRIVATE: return "private";
+            case VIS_PROTECTED: return "protected";
+            default: return "unknown";
+        }
+    }
+    
+    // 判断是否为特定类型
+    bool isPublic() const { return visibilityType == VIS_PUBLIC; }
+    bool isPrivate() const { return visibilityType == VIS_PRIVATE; }
+    bool isProtected() const { return visibilityType == VIS_PROTECTED; }
 };
 
 // ==================== 值类型基类 ====================

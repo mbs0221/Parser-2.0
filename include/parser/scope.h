@@ -1,9 +1,9 @@
 #ifndef SCOPE_H
 #define SCOPE_H
 
-#include "inter.h"
-#include "value.h"
-#include "function.h"
+#include "parser/inter.h"
+#include "lexer/value.h"
+#include "parser/function.h"
 #include <string>
 #include <map>
 #include <list>

@@ -14,8 +14,8 @@ Lexer::Lexer(){
 	words["case"] = new Word(CASE, "case");
 	words["begin"] = new Word(BEGIN, "begin");
 	words["end"] = new Word(END, "end");
-	words["true"] = new Bool(true);
-	words["false"] = new Bool(false);
+	words["true"] = Bool::True;
+	words["false"] = Bool::False;
 	words["null"] = new Word(NULL_VALUE, "null");
 	words["let"] = new Word(LET, "let");
 	words["break"] = new Word(BREAK, "break");
@@ -30,9 +30,9 @@ Lexer::Lexer(){
 	words["function"] = new Word(FUNCTION, "function");
 	words["struct"] = new Word(STRUCT, "struct");
 	words["class"] = new Word(CLASS, "class");
-	words["public"] = new Word(PUBLIC, "public");
-	words["private"] = new Word(PRIVATE, "private");
-	words["protected"] = new Word(PROTECTED, "protected");
+	words["public"] = Visibility::Public;
+	words["private"] = Visibility::Private;
+	words["protected"] = Visibility::Protected;
 	words["import"] = new Word(IMPORT, "import");
 }
 

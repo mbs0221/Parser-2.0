@@ -54,6 +54,13 @@ class CaseStatement;
 class DefaultStatement;
 class FunctionPrototype;
 
+// function.h中定义的类
+class Identifier;
+class Variable;
+class BuiltinFunction;
+class UserFunction;
+class ClassMethod;
+
 // 通用AST访问者接口 - 表达式返回Value类型，语句保持void返回类型
 class ASTVisitor {
 public:
@@ -100,6 +107,13 @@ public:
     virtual void visit(CaseStatement* stmt) = 0;
     virtual void visit(DefaultStatement* stmt) = 0;
     virtual void visit(FunctionPrototype* stmt) = 0;
+    
+    // function.h中定义的类的访问方法
+    virtual void visit(Identifier* id) = 0;
+    virtual void visit(Variable* var) = 0;
+    virtual void visit(BuiltinFunction* func) = 0;
+    virtual void visit(UserFunction* func) = 0;
+    virtual void visit(ClassMethod* method) = 0;
     
     // 程序访问方法
     virtual void visit(Program* program) = 0;

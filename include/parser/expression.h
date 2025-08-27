@@ -3,7 +3,6 @@
 
 #include "parser/inter.h"
 #include "lexer/value.h"
-#include "parser/function.h"
 
 using namespace std;
 

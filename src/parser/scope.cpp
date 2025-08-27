@@ -6,6 +6,27 @@
 
 using namespace std;
 
+// 辅助函数：从字符串创建Type*对象
+Type* createTypeFromString(const string& typeName) {
+    if (typeName == "int" || typeName == "integer") {
+        return Type::Int;
+    } else if (typeName == "double" || typeName == "float") {
+        return Type::Double;
+    } else if (typeName == "char") {
+        return Type::Char;
+    } else if (typeName == "bool" || typeName == "boolean") {
+        return Type::Bool;
+    } else if (typeName == "string") {
+        return Type::String;
+    } else if (typeName == "auto") {
+        // 对于auto类型，暂时返回Int作为默认值
+        return Type::Int;
+    } else {
+        // 未知类型，返回Int作为默认值
+        return Type::Int;
+    }
+}
+
 // ==================== Scope实现 ====================
 
 void Scope::cleanup() {
@@ -101,12 +122,14 @@ bool ScopeManager::isIdentifier(const string& name) const {
 }
 
 void ScopeManager::defineVariable(const string& name, const string& type, Value* value) {
-    Variable* varDef = new Variable(name, type, value);
+    Type* typeObj = createTypeFromString(type);
+    Variable* varDef = new Variable(name, typeObj, value);
     defineIdentifier(name, varDef);
 }
 
 void ScopeManager::defineVariable(const string& name, Value* value) {
-    Variable* varDef = new Variable(name, "auto", value);
+    Type* typeObj = createTypeFromString("auto");
+    Variable* varDef = new Variable(name, typeObj, value);
     defineIdentifier(name, varDef);
 }
 

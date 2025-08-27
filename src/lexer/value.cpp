@@ -19,7 +19,7 @@ Operator *Operator::Mod = new Operator(MODULO, "%", 5, true);
 Operator *Operator::LT = new Operator(Tag::LT, "<", 3, true);
 Operator *Operator::GT = new Operator(Tag::GT, ">", 3, true);
 Operator *Operator::LE = new Operator(Tag::LE, "<=", 3, true);
-Operator *Operator::GE = new Operator(Tag::GE_EQ, ">=", 3, true);
+Operator *Operator::GE = new Operator(Tag::GE, ">=", 3, true);
 Operator *Operator::EQ = new Operator(Tag::EQ_EQ, "==", 3, true);
 Operator *Operator::NE = new Operator(Tag::NE_EQ, "!=", 3, true);
 
@@ -44,6 +44,11 @@ Operator *Operator::Arrow = new Operator(ARROW, "->", 7, true);
 Operator *Operator::Question = new Operator(QUESTION, "?", 1, false);
 Operator *Operator::Colon = new Operator(COLON, ":", 1, false);
 Operator *Operator::NullValue = new Operator(NULL_VALUE, "null", 0, true);
+
+// 访问修饰符
+Visibility *Visibility::Public = new Visibility(PUBLIC, VIS_PUBLIC);
+Visibility *Visibility::Private = new Visibility(PRIVATE, VIS_PRIVATE);
+Visibility *Visibility::Protected = new Visibility(PROTECTED, VIS_PROTECTED);
 
 Bool *Bool::True = new Bool(true);
 Bool *Bool::False = new Bool(false);

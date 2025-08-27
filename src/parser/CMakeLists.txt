@@ -7,6 +7,7 @@ set(PARSER_SOURCES
     ${CMAKE_SOURCE_DIR}/src/parser/statement.cpp
     ${CMAKE_SOURCE_DIR}/src/parser/scope.cpp
     ${CMAKE_SOURCE_DIR}/src/parser/inter.cpp
+    ${CMAKE_SOURCE_DIR}/src/parser/function.cpp
 )
 
 # 设置头文件
