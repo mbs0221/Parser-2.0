@@ -434,7 +434,9 @@ Expression* Parser::parsePostfix(Expression* expr) {
                         expr = new MethodCallExpression(expr, memberName, arguments);
                     } else {
                         // 成员访问
-                        expr = new MemberAccessExpression(expr, memberName);
+                        // 创建字符串常量作为成员名
+                        ConstantExpression* memberNameExpr = new ConstantExpression(new String(memberName));
+                        expr = new AccessExpression(expr, memberNameExpr);
                     }
                 }
                 break;
@@ -532,7 +534,7 @@ Expression* Parser::parseArray() {
         }
         
         // 解析后续元素
-        while (look->Tag == ',') {
+        while (look->Tag == COMMA) {
             match(COMMA);
             element = parseExpression();
             if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(element)) {
@@ -610,17 +612,20 @@ Expression* Parser::parseCallExpression(Expression* calleeExpr) {
     // 根据被调用表达式的类型决定如何处理
     if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(calleeExpr)) {
         // 变量表达式调用 - 可能是函数调用或类实例化
-        string className = varExpr->name;
-        if (!className.empty() && isupper(className[0])) {
-            // 类实例化现在使用CallExpression
-            return new CallExpression(varExpr->name, arguments);
-        } else {
-            // 函数调用
-            return new CallExpression(varExpr->name, arguments);
-        }
-    } else if (MemberAccessExpression* memberExpr = dynamic_cast<MemberAccessExpression*>(calleeExpr)) {
+        return new CallExpression(varExpr->name, arguments);
+    } else if (AccessExpression* memberExpr = dynamic_cast<AccessExpression*>(calleeExpr)) {
         // 成员访问表达式调用 - 方法调用
-        return new MethodCallExpression(memberExpr->object, memberExpr->memberName, arguments);
+        // 从AccessExpression中提取对象和成员名
+        Expression* object = memberExpr->target;
+        // 成员名现在是字符串常量，需要提取其值
+        if (ConstantExpression* memberNameExpr = dynamic_cast<ConstantExpression*>(memberExpr->key)) {
+            if (String* strVal = dynamic_cast<String*>(memberNameExpr->value)) {
+                string memberName = strVal->getValue();
+                return new MethodCallExpression(object, memberName, arguments);
+            }
+        }
+        // 如果无法提取成员名，返回错误
+        return nullptr;
     } else {
         // 其他类型的表达式调用 - 使用通用调用表达式
         return new CallExpression("", arguments);
@@ -642,7 +647,9 @@ Expression* Parser::parseAccess(VariableExpression* id) {
             // 静态成员访问：obj.member
             match(DOT);
             string memberName = matchIdentifier();
-            target = new MemberAccessExpression(target, memberName);
+            // 创建字符串常量作为成员名
+            ConstantExpression* memberNameExpr = new ConstantExpression(new String(memberName));
+            target = new AccessExpression(target, memberNameExpr);
         }
     }
     
@@ -652,7 +659,7 @@ Expression* Parser::parseAccess(VariableExpression* id) {
 
 
 // 解析函数声明 - 返回Prototype语句
-FunctionPrototype* Parser::parsePrototype() {
+FunctionPrototype* Parser::x() {
     match(FUNCTION);
     
     // 解析函数名
@@ -854,7 +861,9 @@ Expression* Parser::parseMemberAccess() {
         
         string memberName = matchIdentifier();
         
-        object = new MemberAccessExpression(object, memberName);
+        // 创建字符串常量作为成员名
+        ConstantExpression* memberNameExpr = new ConstantExpression(new String(memberName));
+        object = new AccessExpression(object, memberNameExpr);
     }
     
     return object;

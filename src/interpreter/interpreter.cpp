@@ -46,10 +46,30 @@ void Interpreter::execute(Program* program) {
 }
 
 // 求值表达式 - 使用访问者模式
-void Interpreter::visit(Expression* expr) {
-    if (!expr) return;
+Value* Interpreter::visit(Expression* expr) {
+    if (!expr) return nullptr;
     
-    expr->accept(this);
+    // 使用动态分发调用对应的visit方法
+    if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(expr)) {
+        return visit(constExpr);
+    } else if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(expr)) {
+        return visit(varExpr);
+    } else if (UnaryExpression* unaryExpr = dynamic_cast<UnaryExpression*>(expr)) {
+        return visit(unaryExpr);
+    } else if (BinaryExpression* binaryExpr = dynamic_cast<BinaryExpression*>(expr)) {
+        return visit(binaryExpr);
+    } else if (CastExpression* castExpr = dynamic_cast<CastExpression*>(expr)) {
+        return visit(castExpr);
+    } else if (AccessExpression* accessExpr = dynamic_cast<AccessExpression*>(expr)) {
+        return visit(accessExpr);
+    } else if (CallExpression* callExpr = dynamic_cast<CallExpression*>(expr)) {
+        return visit(callExpr);
+    } else if (MethodCallExpression* methodExpr = dynamic_cast<MethodCallExpression*>(expr)) {
+        return visit(methodExpr);
+    }
+    
+    reportError("Unknown expression type");
+    return nullptr;
 }
 
 // 声明求值 - 语句类型，不需要返回值
@@ -380,32 +400,65 @@ Value* Interpreter::calculate(String* left, String* right, int op) {
 
 // ArrayNode和DictNode的visit方法已移除，使用value.h中的Array和Dict
 
-// 访问表达式求值
+// 访问表达式求值 - 统一处理数组/字典访问和成员访问
 Value* Interpreter::visit(AccessExpression* access) {
     if (!access || !access->target || !access->key) return nullptr;
     
-    // 求值目标和键
+    // 求值目标
     Value* target = visit(access->target);
+    if (!target) return nullptr;
+    
+    // 求值键
     Value* key = visit(access->key);
+    if (!key) return nullptr;
     
-    if (!target || !key) return nullptr;
-    
-    // TODO: 实现访问操作，暂时返回nullptr
-    // 需要根据target和key的类型来实现具体的访问逻辑
-    return nullptr;
+    // 检查键是否是字符串常量（成员访问）
+    if (String* strKey = dynamic_cast<String*>(key)) {
+        string memberName = strKey->getValue();
+        
+        // 检查对象是否是结构体实例（Dict）
+        if (Dict* dict = dynamic_cast<Dict*>(target)) {
+            Value* member = dict->getEntry(memberName);
+            if (member) {
+                return member;
+            } else {
+                reportError("Member '" + memberName + "' not found in struct instance");
+                return nullptr;
+            }
+        } else {
+            reportError("Cannot access member '" + memberName + "' on non-struct object");
+            return nullptr;
+        }
+    } else {
+        // 数组/字典访问：使用表达式作为键
+        // 检查目标是否是数组或字典
+        if (Array* array = dynamic_cast<Array*>(target)) {
+            if (Integer* index = dynamic_cast<Integer*>(key)) {
+                int idx = index->getValue();
+                if (idx >= 0 && idx < array->getSize()) {
+                    return array->getElement(idx);
+                } else {
+                    reportError("Array index out of bounds: " + to_string(idx));
+                    return nullptr;
+                }
+            } else {
+                reportError("Array index must be an integer");
+                return nullptr;
+            }
+        } else if (Dict* dict = dynamic_cast<Dict*>(target)) {
+            return dict->access(key);
+        } else {
+            reportError("Cannot access non-array/non-dict object with key");
+            return nullptr;
+        }
+    }
 }
 
 // 函数调用表达式求值
 Value* Interpreter::visit(CallExpression* call) {
     if (!call || !call->callee) return nullptr;
     
-    // 检查是否是内置函数
-    if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(call->callee)) {
-        string funcName = varExpr->name;
-        if (isBuiltinFunction(funcName)) {
-            return executeBuiltinFunction(funcName, call->arguments);
-        }
-    }
+    // 内置函数通过visit方法自动执行
     
     // 求值所有参数
     vector<Expression*> evaluatedArgs;
@@ -421,13 +474,10 @@ Value* Interpreter::visit(CallExpression* call) {
     if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(call->callee)) {
         string funcName = varExpr->name;
         
-        // 首先检查是否是内置函数
-        if (isBuiltinFunction(funcName)) {
-            return executeBuiltinFunction(funcName, evaluatedArgs);
-        }
+        // 内置函数通过visit方法自动执行
         
         // 然后查找用户定义的函数
-        UserFunction* funcDef = lookupFunction(funcName);
+        UserFunction* funcDef = dynamic_cast<UserFunction*>(scopeManager.lookupIdentifier(funcName));
         if (!funcDef) {
             throw RuntimeException("Function not found: " + funcName);
         }
@@ -435,14 +485,14 @@ Value* Interpreter::visit(CallExpression* call) {
         LOG_DEBUG("Calling function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
         
         // 进入新的作用域
-        enterScope();
+        scopeManager.enterScope();
         
         // 绑定参数到局部变量
         const vector<string>& params = funcDef->prototype->parameters;
         for (size_t i = 0; i < params.size() && i < evaluatedArgs.size(); ++i) {
             Expression* paramValue = evaluatedArgs[i];
             if (paramValue) {
-                defineVariable(params[i], paramValue);
+                scopeManager.defineVariable(params[i], paramValue);
                 LOG_DEBUG("Bound parameter '" + params[i] + "'");
             }
         }
@@ -463,7 +513,7 @@ Value* Interpreter::visit(CallExpression* call) {
         }
         
         // 退出作用域
-        exitScope();
+        scopeManager.exitScope();
         
         pushResult(result);
         return;
@@ -496,10 +546,10 @@ void Interpreter::visit(FunctionDefinition* funcDef) {
     
     // 先注册函数原型，创建一个前向声明用于递归调用
     FunctionDefinition* forwardDecl = new FunctionDefinition(funcDef->prototype, nullptr);
-    defineFunction(funcName, forwardDecl);
+    scopeManager.defineFunction(funcName, forwardDecl);
     
     // 立即替换为完整的函数定义
-    defineFunction(funcName, funcDef);
+    scopeManager.defineFunction(funcName, funcDef);
     
     LOG_DEBUG("Registered function '" + funcName + "'");        
     
@@ -776,30 +826,7 @@ void Interpreter::printCallStack() {
 
 // 类实例化求值 - 已移除，使用CallExpression替代
 
-// 成员访问求值
-Value* Interpreter::visit(MemberAccessExpression* memberAccess) {
-    if (!memberAccess) return nullptr;
-    
-    // 求值对象
-    Value* object = visit(memberAccess->object);
-    if (!object) return nullptr;
-    
-    string memberName = memberAccess->memberName;
-    
-    // 检查对象是否是结构体实例（Dict）
-    if (Dict* dict = dynamic_cast<Dict*>(object)) {
-        Value* member = dict->getEntry(memberName);
-        if (member) {
-            return member;
-        } else {
-            reportError("Member '" + memberName + "' not found in struct instance");
-            return nullptr;
-        }
-    } else {
-        reportError("Cannot access member '" + memberName + "' on non-struct object");
-        return nullptr;
-    }
-}
+// MemberAccessExpression已合并到AccessExpression中
 
 // 添加缺失的visit方法实现
 Value* Interpreter::visit(ConstantExpression* constExpr) {
@@ -906,18 +933,6 @@ void Interpreter::visit(SwitchStatement* switchStmt) {
     reportError("Switch statement not implemented yet");
 }
 
-void Interpreter::visit(CaseStatement* caseStmt) {
-    if (!caseStmt) return;
-    // 暂时简单实现，后续可以完善
-    reportError("Case statement not implemented yet");
-}
-
-void Interpreter::visit(DefaultStatement* defaultStmt) {
-    if (!defaultStmt) return;
-    // 暂时简单实现，后续可以完善
-    reportError("Default statement not implemented yet");
-}
-
 void Interpreter::visit(FunctionPrototype* funcProto) {
     if (!funcProto) return;
     // 函数原型不需要执行，只是声明
@@ -960,18 +975,6 @@ void Interpreter::visit(TryStatement* tryStmt) {
     reportError("Try statement not implemented yet");
 }
 
-void Interpreter::visit(CatchStatement* catchStmt) {
-    if (!catchStmt) return;
-    // 暂时简单实现，后续可以完善
-    reportError("Catch statement not implemented yet");
-}
-
-void Interpreter::visit(FinallyStatement* finallyStmt) {
-    if (!finallyStmt) return;
-    // 暂时简单实现，后续可以完善
-    reportError("Finally statement not implemented yet");
-}
-
 // BuiltinFunction的visit方法实现
 void Interpreter::visit(BuiltinFunction* builtinFunc) {
     if (!builtinFunc) return;
@@ -991,59 +994,4 @@ void Interpreter::registerBuiltinFunctionsToScope() {
     scopeManager.defineIdentifier("cin", new BuiltinFunction("cin", builtin_cin));
 }
 
-// 检查是否为内置函数
-bool Interpreter::isBuiltinFunction(const string& funcName) {
-    Identifier* identifier = scopeManager.lookupIdentifier(funcName);
-    if (identifier && identifier->getIdentifierType() == "FunctionDefinition") {
-        BuiltinFunction* builtinFunc = dynamic_cast<BuiltinFunction*>(identifier);
-        return builtinFunc && builtinFunc->isBuiltin();
-    }
-    return false;
-}
-
-// 执行内置函数
-Value* Interpreter::executeBuiltinFunction(const string& funcName, vector<Expression*>& args) {
-    Identifier* identifier = scopeManager.lookupIdentifier(funcName);
-    if (identifier && identifier->getIdentifierType() == "FunctionDefinition") {
-        BuiltinFunction* builtinFunc = dynamic_cast<BuiltinFunction*>(identifier);
-        if (builtinFunc && builtinFunc->isBuiltin()) {
-            // 将Expression*参数转换为Variable*参数
-            vector<Variable*> variableArgs;
-            for (Expression* arg : args) {
-                // 直接求值表达式并转换为Value*
-                Value* argValue = nullptr;
-                
-                if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(arg)) {
-                    argValue = constExpr->value;
-                } else if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(arg)) {
-                    // 查找变量值
-                    Variable* var = scopeManager.lookupVariable(varExpr->name);
-                    if (var) {
-                        argValue = var->getValue();
-                    } else {
-                        argValue = new Integer(0); // 默认值
-                    }
-                } else {
-                    // 对于其他类型的表达式，暂时使用默认值
-                    argValue = new Integer(0);
-                }
-                
-                // 创建临时变量
-                Variable* var = new Variable("temp", Type::Int, argValue);
-                variableArgs.push_back(var);
-            }
-            
-            // 调用内置函数
-            Value* result = builtinFunc->func(variableArgs);
-            
-            // 清理临时变量
-            for (Variable* var : variableArgs) {
-                delete var;
-            }
-            
-            return result;
-        }
-    }
-    reportError("Builtin function not found: " + funcName);
-    return nullptr;
-}
+// 内置函数通过visit方法自动执行

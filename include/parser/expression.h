@@ -1,14 +1,18 @@
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
 
-#include "parser/inter.h"
+#include "parser/statement.h"
 #include "lexer/value.h"
 
 using namespace std;
 
-// 前向声明
-struct ConstantExpression;
-// StringLiteral已移动到value.h中作为String类型
+// ==================== 表达式基类 ====================
+// 表达式基类 - 继承自Statement，这样表达式可以作为语句使用
+struct Expression : public Statement {
+    // 访问者模式：接受AST访问者
+    virtual void accept(ASTVisitor* visitor) override = 0;
+    virtual int getTypePriority() const = 0;
+};
 
 // ==================== 常量表达式 ====================
 // 常量表达式节点 - 直接使用Value类型（Value现在是Token的子类）
@@ -131,16 +135,14 @@ struct CastExpression : public Expression {
     }
 };
 
-// ==================== 容器表达式 ====================
-// 注意：StringLiteral、ArrayNode、DictNode已移动到value.h中作为CompositeValue类型
-
 // ==================== 访问和调用表达式 ====================
-// 访问表达式节点
+// 访问表达式节点 - 统一处理数组/字典访问和成员访问
 struct AccessExpression : public Expression {
-    Expression* target;
-    Expression* key;
+    Expression* target;  // 目标对象/数组/字典/结构体
+    Expression* key;     // 访问键（表达式形式，如数组索引或字符串常量）
     
-    AccessExpression(Expression* t, Expression* k) : target(t), key(k) {}
+    AccessExpression(Expression* t, Expression* k) 
+        : target(t), key(k) {}
     
     string getLocation() const override {
         return "access expression";
@@ -193,26 +195,7 @@ struct BuiltinFunctionExpression : public Expression {
 };
 
 // ==================== 结构体和类相关表达式 ====================
-// 注意：StructInstantiationExpression和ClassInstantiationExpression已移除，使用CallExpression替代
-
-// 成员访问表达式
-struct MemberAccessExpression : public Expression {
-    Expression* object;
-    string memberName;
-    
-    MemberAccessExpression(Expression* obj, const string& member) 
-        : object(obj), memberName(member) {}
-    
-    string getLocation() const override {
-        return "member access: " + memberName;
-    }
-    
-    void accept(ASTVisitor* visitor) override;
-    
-    int getTypePriority() const override {
-        return object ? object->getTypePriority() : 0;
-    }
-};
+// MemberAccessExpression已合并到AccessExpression中
 
 // 方法调用表达式
 struct MethodCallExpression : public Expression {

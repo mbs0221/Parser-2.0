@@ -62,8 +62,6 @@ void BlockStatement::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
 
-
-
 // ==================== 程序根节点 ====================
 void Program::accept(ASTVisitor* visitor) {
     visitor->visit(this);

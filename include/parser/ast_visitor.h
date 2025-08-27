@@ -15,17 +15,10 @@ class ConstantExpression;
 class VariableExpression;
 class UnaryExpression;
 class BinaryExpression;
-class AssignmentExpression;
-// StringLiteral、ArrayNode、DictNode已移动到value.h中作为CompositeValue类型
 class AccessExpression;
 class CallExpression;
 class MethodCallExpression;
-
-// 类型转换表达式前向声明
 class CastExpression;
-
-// StructInstantiationExpression和ClassInstantiationExpression已移除，使用CallExpression替代
-class MemberAccessExpression;
 
 // 语句类型
 class ImportStatement;
@@ -61,20 +54,19 @@ class ASTVisitor {
 public:
     virtual ~ASTVisitor() = default;
     
+    // 语句访问方法 - 返回Value类型
+    virtual Value* visit(Statement* stmt) = 0;
+    
     // 表达式访问方法 - 返回Value类型
+    virtual Value* visit(Expression* expr) = 0;
     virtual Value* visit(ConstantExpression* expr) = 0;
     virtual Value* visit(VariableExpression* expr) = 0;
     virtual Value* visit(UnaryExpression* expr) = 0;
     virtual Value* visit(BinaryExpression* expr) = 0;
     virtual Value* visit(CastExpression* expr) = 0;
-    // StringLiteral、ArrayNode、DictNode的visit方法已移除，使用value.h中的String、Array、Dict
     virtual Value* visit(AccessExpression* expr) = 0;
     virtual Value* visit(CallExpression* expr) = 0;
     virtual Value* visit(MethodCallExpression* expr) = 0;
-
-
-    // StructInstantiationExpression和ClassInstantiationExpression的visit方法已移除，使用CallExpression
-    virtual Value* visit(MemberAccessExpression* expr) = 0;
     
     // 语句访问方法 - 标准访问者模式，void返回类型
     virtual void visit(ImportStatement* stmt) = 0;
@@ -93,9 +85,7 @@ public:
     virtual void visit(ReturnStatement* stmt) = 0;
     virtual void visit(ThrowStatement* stmt) = 0;
     virtual void visit(TryStatement* stmt) = 0;
-    // CatchStatement和FinallyStatement的visit方法已移除，合并到TryStatement中
     virtual void visit(SwitchStatement* stmt) = 0;
-    // CaseStatement和DefaultStatement的visit方法已移除，合并到SwitchStatement中
     virtual void visit(FunctionPrototype* stmt) = 0;
     
     // function.h中定义的类的访问方法
@@ -107,8 +97,6 @@ public:
     
     // 程序访问方法
     virtual void visit(Program* program) = 0;
-
-    virtual void visit(AST* node) = 0;
 };
 
 #endif // AST_VISITOR_H

@@ -28,14 +28,4 @@ struct AST {
     virtual void accept(ASTVisitor* visitor) = 0;
 };
 
-// ==================== 表达式基类 ====================
-// 表达式基类
-struct Expression : public AST {
-    // 访问者模式：接受AST访问者
-    virtual void accept(ASTVisitor* visitor) override = 0;
-    virtual int getTypePriority() const = 0;
-};
-
-// 叶子节点基类已删除，现在只有VariableExpression和ConstantExpression作为叶子节点
-
 #endif // INTER_H

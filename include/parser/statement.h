@@ -1,15 +1,18 @@
 #ifndef STATEMENT_H
 #define STATEMENT_H
 
-#include "expression.h"
+#include "parser/inter.h"
 #include <string>
 #include <vector>
 #include <map>
 
 using namespace std;
 
+// 前向声明
+class Expression;
+
 // ==================== 语句基类 ====================
-// 语句基类
+// 语句基类 - 继承自AST
 struct Statement : public AST {
     virtual void accept(ASTVisitor* visitor) override = 0;
 };

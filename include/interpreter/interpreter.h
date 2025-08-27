@@ -35,23 +35,23 @@ public:
     ~Interpreter();
     
     // AST求值方法
-    void visit(AST* node);
-    void visit(Expression* expr);
     void execute(Statement* stmt);
     void execute(Program* program);
+
+    // 语句求值方法 - 返回Value类型
+    Value* visit(Statement* stmt);
+    
+    // 表达式求值方法 - 返回Value类型
+    Value* visit(Expression* expr);
 
     // ASTVisitor接口实现 - 表达式访问方法
     Value* visit(ConstantExpression* expr) override;
     Value* visit(VariableExpression* expr) override;
     Value* visit(UnaryExpression* expr) override;
     Value* visit(BinaryExpression* expr) override;
-    // 赋值表达式现在使用BinaryExpression处理
     Value* visit(CastExpression* expr) override;
-    // ArrayNode、DictNode、StringLiteral的visit方法已移除，使用value.h中的Array、Dict、String
     Value* visit(AccessExpression* expr) override;
     Value* visit(CallExpression* expr) override;
-    // StructInstantiationExpression和ClassInstantiationExpression的visit方法已移除，使用CallExpression
-    Value* visit(MemberAccessExpression* expr) override;
     Value* visit(MethodCallExpression* expr) override;
 
     // ASTVisitor接口实现 - 语句访问方法
@@ -87,8 +87,6 @@ public:
     void visit(Program* program) override;
     
     // 内置函数管理
-    bool isBuiltinFunction(const string& funcName);
-    Value* executeBuiltinFunction(const string& funcName, vector<Expression*>& args);
     void registerBuiltinFunctionsToScope();
 
     // 类型转换辅助方法
