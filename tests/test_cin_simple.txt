@@ -1,0 +1,3 @@
+let x = 10;
+cin(x);
+print(x);

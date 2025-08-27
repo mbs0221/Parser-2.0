@@ -465,20 +465,40 @@ Value* Interpreter::visit(CallExpression* call) {
     if (builtinFunc) {
         LOG_DEBUG("Calling builtin function '" + funcName + "' with " + to_string(evaluatedArgs.size()) + " arguments");
         
-        // 将Value*转换为Variable*（内置函数期望的参数类型）
+        // 将参数转换为Variable*，支持引用参数
         vector<Variable*> args;
-        for (Value* val : evaluatedArgs) {
-            // 为内置函数参数创建临时变量，使用val的类型
-            Type* argType = val ? val->valueType : nullptr;
-            args.push_back(new Variable("", argType, val));
+        for (size_t i = 0; i < call->arguments.size(); ++i) {
+            Expression* argExpr = call->arguments[i];
+            Value* val = evaluatedArgs[i];
+            
+            // 检查是否为变量引用（用于 cin(number) 的情况）
+            if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(argExpr)) {
+                // 查找原始变量
+                Identifier* originalVar = scopeManager.lookupIdentifier(varExpr->name);
+                if (Variable* originalVariable = dynamic_cast<Variable*>(originalVar)) {
+                    // 使用原始变量的引用
+                    args.push_back(originalVariable);
+                } else {
+                    // 如果找不到原始变量，创建临时变量
+                    Type* argType = val ? val->valueType : nullptr;
+                    args.push_back(new Variable("", argType, val));
+                }
+            } else {
+                // 非变量引用，创建临时变量
+                Type* argType = val ? val->valueType : nullptr;
+                args.push_back(new Variable("", argType, val));
+            }
         }
         
         // 直接调用内置函数
         Value* result = builtinFunc->execute(args);
         
-        // 清理临时变量
-        for (Variable* var : args) {
-            delete var;
+        // 清理临时变量（只清理非引用的变量）
+        for (size_t i = 0; i < args.size(); ++i) {
+            Expression* argExpr = call->arguments[i];
+            if (!dynamic_cast<VariableExpression*>(argExpr)) {
+                delete args[i];
+            }
         }
         
         return result;

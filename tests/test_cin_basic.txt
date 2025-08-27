@@ -1,0 +1,10 @@
+let x = 1;
+print("x = ");
+print(x);
+print("\n");
+
+cin(x);
+
+print("x = ");
+print(x);
+print("\n");

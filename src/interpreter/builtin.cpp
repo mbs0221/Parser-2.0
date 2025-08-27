@@ -35,7 +35,26 @@ Value* builtin_count(vector<Variable*>& args) {
 };
 
 Value* builtin_cin(vector<Variable*>& args) {
-    string input;
-    cin >> input;
-    return new String(input);
+    String* lastInputValue = nullptr;
+    
+    // 处理所有参数，为每个参数读取一个值
+    for (Variable* arg : args) {
+        if (arg) {
+            string input;
+            cin >> input;
+            String* inputValue = new String(input);
+            arg->setValue(inputValue);
+            lastInputValue = inputValue;
+        }
+    }
+    
+    // 如果没有参数，读取一个值并返回
+    if (args.empty()) {
+        string input;
+        cin >> input;
+        lastInputValue = new String(input);
+    }
+    
+    // 返回最后一个输入值（用于 let input = cin() 的情况）
+    return lastInputValue;
 }

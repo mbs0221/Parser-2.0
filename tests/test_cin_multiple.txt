@@ -1,0 +1,41 @@
+# 测试 cin 函数处理多个参数
+let a = 10;
+let b = 20;
+let c = 30;
+
+print("Before cin: a=");
+print(a);
+print(", b=");
+print(b);
+print(", c=");
+print(c);
+print("\n");
+
+print("Enter three numbers: ");
+cin(a, b, c);
+
+print("After cin: a=");
+print(a);
+print(", b=");
+print(b);
+print(", c=");
+print(c);
+print("\n");
+
+# 测试 cin 函数处理两个参数
+let x = 100;
+let y = 200;
+
+print("Before cin: x=");
+print(x);
+print(", y=");
+print(y);
+print("\n");
+print("Enter two numbers: ");
+cin(x, y);
+
+print("After cin: x=");
+print(x);
+print(", y=");
+print(y);
+print("\n");

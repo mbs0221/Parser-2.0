@@ -1,0 +1,10 @@
+let a = 1;
+let b = 2;
+let c = 3;
+cin(a, b, c);
+print("a=");
+print(a);
+print(", b=");
+print(b);
+print(", c=");
+print(c);

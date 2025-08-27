@@ -4,3 +4,6 @@ let flag = true;
 print(message);
 print(number);
 print(flag);
+print(count(message));
+cin(number);
+print(number);
