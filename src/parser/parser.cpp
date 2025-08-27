@@ -6,7 +6,7 @@ using namespace std;
 
 // Parser构造函数和析构函数
 Parser::Parser() {
-    look = nullptr;
+    // 初始化解析器
 }
 
 Parser::~Parser() {
@@ -16,23 +16,19 @@ Parser::~Parser() {
 // parse方法实现 - 返回AST
 Program* Parser::parse(const string& file) {
     if (lex.open(file)) {
-			look = lex.scan();
+        lex.move();
         return parseProgram();
     } else {
         printf("can't open %s.\n", file.c_str());
         return nullptr;
-		}
-}
-
-void Parser::move() {
-	look = lex.scan();
+	}
 }
 
 // 解析程序 - 程序根节点
 Program* Parser::parseProgram() {
     Program* program = new Program();
     
-    while (look->Tag != '#' && look->Tag != -1 && look->Tag != END_OF_FILE) {
+    while (lex.token()->Tag != '#' && lex.token()->Tag != -1 && lex.token()->Tag != END_OF_FILE) {
         Statement* stmt = parseStatement();
         if (stmt) {
             program->addStatement(stmt);
@@ -44,7 +40,7 @@ Program* Parser::parseProgram() {
 
 // 解析语句
 Statement* Parser::parseStatement() {
-    switch (look->Tag) {
+    switch (lex.token()->Tag) {
         case IMPORT:
             return parseImportStatement();
         case LET:
@@ -86,35 +82,34 @@ Statement* Parser::parseStatement() {
 
 // 解析导入语句 (import "module.txt";)
 ImportStatement* Parser::parseImportStatement() {
-    match(IMPORT);
+    lex.match(IMPORT);
     
     // 解析字符串字面量作为模块名
-    if (look->Tag != STR) {
+    if (lex.token()->Tag != STR) {
         printf("SYNTAX ERROR line[%03d]: expected string literal after import\n", lex.line);
         exit(1);
     }
     
-    String *moduleName = matchValue<String>();
-    
-    match(';');
-    
+    String *moduleName = dynamic_cast<String*>(lex.matchValue());
+    lex.match(';');
+
     return new ImportStatement(moduleName);
 }
 
 // 解析变量声明语句 (let x = 10, y = 20, z;)
 VariableDeclaration* Parser::parseVariableDeclaration() {
-    match(LET);
+    lex.match(LET);
     VariableDeclaration* decl = new VariableDeclaration();
     
     while (true) {
         // 解析标识符
-        string name = matchIdentifier();
+        string name = lex.matchIdentifier();
         
         Expression* value = nullptr;
         
         // 检查是否有初始化表达式
-        if (look->Tag == ASSIGN) {
-            match(ASSIGN);
+        if (lex.token()->Tag == ASSIGN) {
+            lex.match(ASSIGN);
             value = parseExpression();
         }
         
@@ -122,15 +117,15 @@ VariableDeclaration* Parser::parseVariableDeclaration() {
         decl->addVariable(name, value);
         
         // 检查是否还有更多变量（用逗号分隔）
-        if (look->Tag == ',') {
-            match(',');
+        if (lex.token()->Tag == ',') {
+            lex.match(',');
         } else {
             break;
         }
     }
 
     // 匹配分号
-    match(';');
+    lex.match(';');
     
     return decl;
 }
@@ -138,21 +133,21 @@ VariableDeclaration* Parser::parseVariableDeclaration() {
 // 解析表达式语句 (x + y;)
 ExpressionStatement* Parser::parseExpressionStatement() {
     Expression* expr = parseExpression();
-    match(';');
+    lex.match(';');
     return new ExpressionStatement(expr);
 }
 
 // 解析条件语句 (if (x > 0) { ... } else { ... })
 IfStatement* Parser::parseIfStatement() {
-    match(IF);
-    match('(');
+    lex.match(IF);
+    lex.match('(');
     Expression* condition = parseExpression();
-    match(')');
+    lex.match(')');
     
     Statement* thenStmt = parseStatement();
     Statement* elseStmt = nullptr;
-    if (look->Tag == ELSE) {
-        match(ELSE);
+    if (lex.token()->Tag == ELSE) {
+        lex.match(ELSE);
         elseStmt = parseStatement();
     }
     
@@ -161,12 +156,12 @@ IfStatement* Parser::parseIfStatement() {
 
 // 解析循环语句 (while (x > 0) { ... })
 WhileStatement* Parser::parseWhileStatement() {
-    match(WHILE);
-    match('(');
+    lex.match(WHILE);
+    lex.match('(');
     
     Expression* condition = parseExpression();
     
-    match(')');
+    lex.match(')');
     
     Statement* body = parseStatement();
     
@@ -175,31 +170,31 @@ WhileStatement* Parser::parseWhileStatement() {
 
 // 解析For循环语句 (for (let i = 0; i < 10; i++) { ... })
 ForStatement* Parser::parseForStatement() {
-    match(FOR);
-    match('(');
+    lex.match(FOR);
+    lex.match('(');
     
     Statement* init = nullptr;
-    if (look->Tag != ';') {
+    if (lex.token()->Tag != ';') {
         // 将初始化表达式包装成表达式语句
         Expression* initExpr = parseExpression();
         init = new ExpressionStatement(initExpr);
     }
     
-    match(';');
+    lex.match(';');
     
     Expression* condition = nullptr;
-    if (look->Tag != ';') {
+    if (lex.token()->Tag != ';') {
         condition = parseExpression();
     }
     
-    match(';');
+    lex.match(';');
     
     Expression* increment = nullptr;
-    if (look->Tag != ')') {
+    if (lex.token()->Tag != ')') {
         increment = parseExpression();
     }
     
-    match(')');
+    lex.match(')');
     
     Statement* body = parseStatement();
     
@@ -208,60 +203,60 @@ ForStatement* Parser::parseForStatement() {
 
 // 解析break语句
 BreakStatement* Parser::parseBreakStatement() {
-    match(BREAK);
-	match(';');
+    lex.match(BREAK);
+	lex.match(';');
     return new BreakStatement();
 }
 
 // 解析continue语句
 ContinueStatement* Parser::parseContinueStatement() {
-    match(CONTINUE);
-    match(';');
+    lex.match(CONTINUE);
+    lex.match(';');
     return new ContinueStatement();
 }
 
 // 解析return语句
 ReturnStatement* Parser::parseReturnStatement() {
     printf("DEBUG: parseReturnStatement() - starting\n");
-    match(RETURN);
+    lex.match(RETURN);
     Expression* returnValue = nullptr;
-    if (look->Tag != ';') {
+    if (lex.token()->Tag != ';') {
         printf("DEBUG: parseReturnStatement() - parsing return value\n");
         returnValue = parseExpression();
     }
     printf("DEBUG: parseReturnStatement() - expecting ';' token\n");
-    match(';');
+    lex.match(';');
     printf("DEBUG: parseReturnStatement() - ';' matched\n");
     return new ReturnStatement(returnValue);
 }
 
 // 解析throw语句
 ThrowStatement* Parser::parseThrowStatement() {
-    match(THROW);
+    lex.match(THROW);
     Expression* exception = parseExpression();
-    match(';'); 
+    lex.match(';'); 
     return new ThrowStatement(exception);
 }
 
 // 解析try语句 - 合并了catch和finally
 TryStatement* Parser::parseTryStatement() {
-    match(TRY);
+    lex.match(TRY);
     Statement* tryBlock = parseStatement();
     vector<TryStatement::CatchBlock> catchBlocks;
     Statement* finallyBlock = nullptr;
     
-    while (look->Tag == CATCH) {
-        match(CATCH);
-        match(LPAREN);
+    while (lex.token()->Tag == CATCH) {
+        lex.match(CATCH);
+        lex.match('(');
         string exceptionType = "Exception"; // 默认异常类型
-        string exceptionName = matchIdentifier();
-        match(RPAREN);
+        string exceptionName = lex.matchIdentifier();
+        lex.match(')');
         Statement* catchBody = parseStatement();
         catchBlocks.push_back(TryStatement::CatchBlock(exceptionType, exceptionName, catchBody));
     }
     
-    if (look->Tag == FINALLY) {
-        match(FINALLY);
+    if (lex.token()->Tag == FINALLY) {
+        lex.match(FINALLY);
         finallyBlock = parseStatement();
     }
     
@@ -270,47 +265,47 @@ TryStatement* Parser::parseTryStatement() {
 
 // 解析switch语句 - 合并了case和default
 SwitchStatement* Parser::parseSwitchStatement() {
-    match(SWITCH);
+    lex.match(SWITCH);
     Expression* condition = parseExpression();
-    match('{');
+    lex.match('{');
     vector<SwitchStatement::SwitchCase> cases;
     
     // 解析case语句
-    while (look->Tag == CASE) {
-        match(CASE);
+    while (lex.token()->Tag == CASE) {
+        lex.match(CASE);
         Expression* caseValue = parseExpression();
-        match(':');
+        lex.match(':');
         Statement* caseBody = parseStatement();
         vector<Statement*> caseStatements = {caseBody};
         cases.push_back(SwitchStatement::SwitchCase(caseValue, caseStatements));
     }
     
     // 解析default语句
-    if (look->Tag == DEFAULT) {
-        match(DEFAULT);
+    if (lex.token()->Tag == DEFAULT) {
+        lex.match(DEFAULT);
         Statement* defaultBody = parseStatement();
         vector<Statement*> defaultStatements = {defaultBody};
         cases.push_back(SwitchStatement::SwitchCase(nullptr, defaultStatements));
     }
     
-    match('}');
+    lex.match('}');
     return new SwitchStatement(condition, cases);
 }
 
 // 解析语句块 ({ ... })
 BlockStatement* Parser::parseBlock() {
-    match('{');
+    lex.match('{');
     
     BlockStatement* block = new BlockStatement();
     
-    while (look->Tag != '}') {
+    while (lex.token()->Tag != '}') {
         Statement* stmt = parseStatement();
         if (stmt) {
             block->addStatement(stmt);
         }
     }
     
-    match('}');
+    lex.match('}');
     
     return block;
 }
@@ -332,12 +327,12 @@ Expression* Parser::parseExpressionWithPrecedence(int minPrecedence) {
     // 处理二元操作符
     while (true) {
         // 检查当前token是否为二元操作符
-        if (!isBinaryOperator(look->Tag)) {
+        if (!isBinaryOperator(lex.token()->Tag)) {
             break;
         }
         
         // 获取操作符
-        Operator* op = matchOperator();
+        Operator* op = lex.matchOperator();
         int precedence = op->getPrecedence();
         bool isLeftAssoc = op->isLeftAssoc();
         
@@ -373,12 +368,12 @@ Expression* Parser::parseExpressionWithPrecedence(int minPrecedence) {
 
 // 解析基本表达式（因子）
 Expression* Parser::parsePrimary() {
-    switch (look->Tag) {
+    switch (lex.token()->Tag) {
         case NOT: // 逻辑非
         case '-': // 负号 (ASCII 45)
         case MINUS: // 负号 (枚举 301)
             {
-                Operator* op = matchOperator();
+                Operator* op = lex.matchOperator();
                 Expression* operand = parsePrimary();
                 return new UnaryExpression(operand, op);
             }
@@ -392,9 +387,9 @@ Expression* Parser::parsePrimary() {
             return parseConstant();
         case '(': // 括号表达式
             {
-                matchToken('(');
+                lex.matchToken('(');
                 Expression* expr = parseExpressionWithPrecedence(0);
-                matchToken(')');
+                lex.matchToken(')');
                 return expr;
             }
         case '[': // 数组
@@ -403,7 +398,7 @@ Expression* Parser::parsePrimary() {
             return parseDict();
         default:
             printf("SYNTAX ERROR line[%03d]: unexpected token in expression\n", lex.line);
-            match(look->Tag);
+            lex.match(lex.token()->Tag);
             return nullptr;
     }
 }
@@ -411,28 +406,28 @@ Expression* Parser::parsePrimary() {
 // 解析后缀操作符
 Expression* Parser::parsePostfix(Expression* expr) {
     while (true) {
-        switch (look->Tag) {
+        switch (lex.token()->Tag) {
             case '.':
                 {
                     // 成员访问
-                    match('.');
-                    string memberName = matchIdentifier();
+                    lex.match('.');
+                    string memberName = lex.matchIdentifier();
                     
-                    if (look->Tag == '(') {
+                    if (lex.token()->Tag == '(') {
                         // 方法调用：将对象作为第一个参数
-                        matchToken('(');
+                        lex.matchToken('(');
                         vector<Expression*> arguments;
                         arguments.push_back(expr); // 将对象作为第一个参数
                         
-                        if (look->Tag != ')') {
+                        if (lex.token()->Tag != ')') {
                             arguments.push_back(parseExpressionWithPrecedence(0));
-                            while (look->Tag == ',') {
-                                matchToken(',');
+                            while (lex.token()->Tag == ',') {
+                                lex.matchToken(',');
                                 arguments.push_back(parseExpressionWithPrecedence(0));
                             }
                         }
                         
-                        matchToken(')');
+                        lex.matchToken(')');
                         expr = new CallExpression(memberName, arguments);
                     } else {
                         // 成员访问
@@ -444,9 +439,9 @@ Expression* Parser::parsePostfix(Expression* expr) {
             case '[':
                 // 数组访问
                 {
-                    matchToken('[');
+                    lex.matchToken('[');
                     Expression* index = parseExpressionWithPrecedence(0);
-                    matchToken(']');
+                    lex.matchToken(']');
                     expr = new AccessExpression(expr, index);
                 }
                 break;
@@ -482,7 +477,7 @@ bool Parser::isBinaryOperator(int tag) {
 
 // 解析标识符
 Expression* Parser::parseVariable() {
-    string name = matchIdentifier();
+    string name = lex.matchIdentifier();
     VariableExpression* idExpr = new VariableExpression(name);
     
     // 只返回变量表达式，函数调用、数组访问等由parsePostfix处理
@@ -493,31 +488,31 @@ Expression* Parser::parseVariable() {
 Expression* Parser::parseConstant() {
     // 根据当前token类型直接调用相应的matchValue函数
     // matchValue内部会处理类型检查和错误
-    switch (look->Tag) {
+    switch (lex.token()->Tag) {
         case NUM:
-            return new ConstantExpression(matchValue<Integer>());
+            return new ConstantExpression(dynamic_cast<Integer*>(lex.matchValue()));
         case REAL:
-            return new ConstantExpression(matchValue<Double>());
+            return new ConstantExpression(dynamic_cast<Double*>(lex.matchValue()));
         case STR:
-            return new ConstantExpression(matchValue<String>());
+            return new ConstantExpression(dynamic_cast<String*>(lex.matchValue()));
         case CHAR:
-            return new ConstantExpression(matchValue<Char>());
+            return new ConstantExpression(dynamic_cast<Char*>(lex.matchValue()));
         case BOOL:
-            return new ConstantExpression(matchValue<Bool>());
+            return new ConstantExpression(dynamic_cast<Bool*>(lex.matchValue()));
         default:
             printf("SYNTAX ERROR line[%03d]: unexpected token in constant\n", lex.line);
-            match(look->Tag);
+            lex.match(lex.token()->Tag);
             return nullptr;
     }
 }
 
 // 解析数组字面量
 Expression* Parser::parseArray() {
-    match('[');  // 匹配开始方括号
+    lex.match('[');  // 匹配开始方括号
     
     Array* array = new Array();
     
-    if (look->Tag != ']') {
+    if (lex.token()->Tag != ']') {
         // 解析第一个元素
         Expression* element = parseExpression();
         // 将Expression转换为Value
@@ -529,8 +524,8 @@ Expression* Parser::parseArray() {
         }
         
         // 解析后续元素
-        while (look->Tag == ',') {
-            match(',');
+        while (lex.token()->Tag == ',') {
+            lex.match(',');
             element = parseExpression();
             if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(element)) {
                 array->addElement(constExpr->value);
@@ -540,7 +535,7 @@ Expression* Parser::parseArray() {
         }
     }
     
-    match(']');  // 匹配结束方括号
+    lex.match(']');  // 匹配结束方括号
     
     // 将Array包装在ConstantExpression中
     return new ConstantExpression(array);
@@ -548,14 +543,14 @@ Expression* Parser::parseArray() {
 
 // 解析字典字面量
 Expression* Parser::parseDict() {
-    match('{');  // 匹配开始大括号
+    lex.match('{');  // 匹配开始大括号
     
     Dict* dict = new Dict();
     
-    if (look->Tag != '}') {
+    if (lex.token()->Tag != '}') {
         // 解析第一个键值对
-        String* key = matchValue<String>();
-        match(':');
+        String* key = dynamic_cast<String*>(lex.matchValue());
+        lex.match(':');
         Expression* valueExpr = parseExpression();
         // 将Expression转换为Value
         if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(valueExpr)) {
@@ -566,10 +561,10 @@ Expression* Parser::parseDict() {
         }
         
         // 解析后续键值对
-        while (look->Tag == ',') {  
-            match(',');
-            key = matchValue<String>();
-            match(':');
+        while (lex.token()->Tag == ',') {  
+            lex.match(',');
+            key = dynamic_cast<String*>(lex.matchValue());
+            lex.match(':');
             valueExpr = parseExpression();
             if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(valueExpr)) {
                 dict->setEntry(key->getValue(), constExpr->value);
@@ -579,31 +574,29 @@ Expression* Parser::parseDict() {
         }
     }
     
-    match('}');  // 匹配结束大括号
+    lex.match('}');  // 匹配结束大括号
     
     // 将Dict包装在ConstantExpression中
     return new ConstantExpression(dict);
 }
 
-
-
 // 解析通用函数调用表达式
 Expression* Parser::parseCallExpression(Expression* calleeExpr) {
     // 需要跳过'('token，进入函数参数列表
-    match('(');
+    lex.match('(');
     
     vector<Expression*> arguments;
     
-    if (look->Tag != ')') {
+    if (lex.token()->Tag != ')') {
         arguments.push_back(parseExpression());
         
-        while (look->Tag == ',') {
-            match(',');
+        while (lex.token()->Tag == ',') {
+            lex.match(',');
             arguments.push_back(parseExpression());
         }
     }
     
-    match(')');
+    lex.match(')');
     
     // 根据被调用表达式的类型决定如何处理
     if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(calleeExpr)) {
@@ -630,15 +623,15 @@ Expression* Parser::parseCallExpression(Expression* calleeExpr) {
 
 // 解析函数声明 - 返回Prototype语句
 FunctionPrototype* Parser::parsePrototype() {
-    match(FUNCTION);
+    lex.match(FUNCTION);
     
     // 解析函数名
-    string funcName = matchIdentifier();
+    string funcName = lex.matchIdentifier();
     
     // 解析参数列表
-    match('(');
+    lex.match('(');
     vector<pair<string, Type*>> parameters = parseParameterList();
-    match(')');
+    lex.match(')');
     
     return new FunctionPrototype(funcName, parameters, nullptr);
 }
@@ -652,38 +645,38 @@ FunctionDefinition* Parser::parseFunction() {
 
 // 解析结构体定义
 StructDefinition* Parser::parseStruct() {
-    match(STRUCT);
-    string structName = matchIdentifier();
-	match('{');
+    lex.match(STRUCT);
+    string structName = lex.matchIdentifier();
+	lex.match('{');
     
     vector<StructMember> members;
     
-    while (look->Tag != '}') {
+    while (lex.token()->Tag != '}') {
         // 结构体成员默认为public
         members.push_back(parseClassMember("public"));
     }
     
-	match('}');
+	lex.match('}');
     
     return new StructDefinition(structName, members);
 }
 
 // 解析类定义
 ClassDefinition* Parser::parseClass() {
-    match(CLASS);
+    lex.match(CLASS);
     
     // 解析类名
-    string className = matchIdentifier();
+    string className = lex.matchIdentifier();
     
     string baseClass = "";
-    if (look->Tag == ':') {
-		match(':');
-        baseClass = matchIdentifier();
+    if (lex.token()->Tag == ':') {
+		lex.match(':');
+        baseClass = lex.matchIdentifier();
     } else {
         baseClass = "Object";
     }
     
-    match('{');
+    lex.match('{');
     
     vector<StructMember> members;
     vector<ClassMethod*> methods;
@@ -691,16 +684,16 @@ ClassDefinition* Parser::parseClass() {
     // 当前访问修饰符，默认为public
     string currentVisibility = "public";
     
-    while (look->Tag != '}') {
-        if (look->Tag == PUBLIC || look->Tag == PRIVATE || look->Tag == PROTECTED) {
+    while (lex.token()->Tag != '}') {
+        if (lex.token()->Tag == PUBLIC || lex.token()->Tag == PRIVATE || lex.token()->Tag == PROTECTED) {
             // 更新当前访问修饰符
-            Visibility* visibilityToken = static_cast<Visibility*>(look);
+            Visibility* visibilityToken = static_cast<Visibility*>(lex.token());
             currentVisibility = visibilityToken->toString();
-            move(); // 消费访问修饰符
+            lex.move(); // 消费访问修饰符
             
             // 继续解析后续的成员，使用新的访问修饰符
             continue;
-        } else if (look->Tag == FUNCTION) {
+        } else if (lex.token()->Tag == FUNCTION) {
             // 解析方法，使用当前访问修饰符
             ClassMethod* method = parseClassMethod(currentVisibility);
             methods.push_back(method);
@@ -710,7 +703,7 @@ ClassDefinition* Parser::parseClass() {
         }
     }
     
-    match('}');
+    lex.match('}');
     
     return new ClassDefinition(className, baseClass, members, methods);
 }
@@ -718,33 +711,31 @@ ClassDefinition* Parser::parseClass() {
 // 解析类成员变量
 StructMember Parser::parseClassMember(const string& visibility) {
     // 解析类型和名称
-    Type* memberType = matchType();
-    
-    string memberName = matchIdentifier();
-    
+    Type* memberType = lex.matchType();
+    string memberName = lex.matchIdentifier();
     Expression* defaultValue = nullptr;
     
-    if (look->Tag == '=') {
-        match('=');
+    if (lex.token()->Tag == '=') {
+        lex.match('=');
         defaultValue = parseExpression();
     }
     
-    match(';');
+    lex.match(';');
     
     return StructMember(memberName, memberType, visibility, defaultValue);
 }
 
 // 解析类方法
 ClassMethod* Parser::parseClassMethod(const string& visibility) {
-    match(FUNCTION);
+    lex.match(FUNCTION);
     
     // 解析方法名
-    string methodName = matchIdentifier();
+    string methodName = lex.matchIdentifier();
     
     // 解析参数列表
-    match('('); 
+    lex.match('('); 
     vector<pair<string, Type*>> parameters = parseParameterList();
-    match(')');
+    lex.match(')');
     
     // 创建函数原型
     FunctionPrototype* prototype = new FunctionPrototype(methodName, parameters, nullptr);
@@ -760,9 +751,9 @@ ClassMethod* Parser::parseClassMethod(const string& visibility) {
 vector<pair<string, Type*>> Parser::parseParameterList() {
     vector<pair<string, Type*>> parameters;
     
-    if (look->Tag != ')') {
-        Token* paramToken = look;
-        match(ID);
+    if (lex.token()->Tag != ')') {
+        Token* paramToken = lex.token();
+        lex.match(ID);
         
         string paramName = "";
         if (paramToken && paramToken->Tag == Tag::ID) {
@@ -771,10 +762,10 @@ vector<pair<string, Type*>> Parser::parseParameterList() {
         }
         parameters.push_back(make_pair(paramName, nullptr)); // 暂时使用nullptr，后续可以解析类型
         
-        while (look->Tag == ',') {
-            match(',');
-            paramToken = look;
-            match(ID);
+        while (lex.token()->Tag == ',') {
+            lex.match(',');
+            paramToken = lex.token();
+            lex.match(ID);
             
             paramName = "";
             if (paramToken && paramToken->Tag == Tag::ID) {
@@ -788,115 +779,6 @@ vector<pair<string, Type*>> Parser::parseParameterList() {
     return parameters;
 }
 
-// 解析结构体实例化
 
-
-// ==================== 私有Helper方法实现 ====================
-
-// 匹配操作符
-Operator* Parser::matchOperator() {
-    // 检查是否为运算符（ASCII 字符或 enum 类型）
-    if (isOperator(look->Tag)) {
-        Operator* op = static_cast<Operator*>(look);
-        move();
-        return op;
-    }
-    printf("SYNTAX ERROR line[%03d]: expected operator, got %d\n", lex.line, look->Tag);
-    exit(1);
-    return nullptr;
-}
-
-// 判断是否为运算符
-bool Parser::isOperator(int tag) {
-    // ASCII 字符运算符
-    if (tag >= 32 && tag <= 126) {
-        switch (tag) {
-            case '+': case '-': case '*': case '/': case '%':
-            case '<': case '>': case '=': case '!':
-            case '&': case '|': case '^': case '~':
-            case '?': case ':': case '.':
-                return true;
-        }
-    }
-    
-    // enum 类型运算符
-    if (tag >= 300 && tag <= 399) {
-        return true;
-    }
-    
-    return false;
-}
-
-// 语法分析器 - 匹配Tag预定义一个语法元素
-bool Parser::match(int Tag) {
-    if (look->Tag == Tag) {
-        move();
-        return true;
-    }
-    move();
-    if (look->Tag > 255)
-        printf("SYNTAX ERROR line[%03d]: expected %d, got %d\n", lex.line, Tag, look->Tag);
-    else
-        printf("SYNTAX ERROR line[%03d]: expected '%c', got '%c'\n", lex.line, (char)Tag, (char)look->Tag);
-    exit(1);  // 强制退出
-    return false;
-}
-
-
-
-// 匹配单词（标识符或关键字）
-string Parser::matchIdentifier() {
-    if (look->Tag == ID) {
-        Word* word = static_cast<Word*>(look);
-        move();
-        return word ? word->word : "";
-    }
-    printf("SYNTAX ERROR line[%03d]: expected identifier, got %d\n", lex.line, look->Tag);
-    exit(1);
-}
-
-// 匹配类型
-Type* Parser::matchType() {
-    if (look->Tag == ID) {
-        // 用户定义类型，暂时返回Type::Int作为默认值
-        // 这里可以根据需要扩展为查找用户定义的类型
-        move();
-        return Type::Int;
-    } else if (look->Tag == STR) {
-        move();
-        return Type::String;
-    } else if (look->Tag == NUM) {
-        move();
-        return Type::Int;
-    } else if (look->Tag == DOUBLE) {
-        move();
-        return Type::Double;
-    } else if (look->Tag == CHAR) {
-        move();
-        return Type::Char;
-    } else if (look->Tag == BOOL) {
-        move();
-        return Type::Bool;
-    }
-    printf("SYNTAX ERROR line[%03d]: expected type, got %d\n", lex.line, look->Tag);
-    exit(1);
-    return nullptr;
-}
-
-
-
-// 匹配指定类型的token
-void Parser::matchToken(int tag) {
-    if (look->Tag == tag) {
-        move();
-        return;
-    }
-    if (look->Tag > 255) {
-        printf("SYNTAX ERROR line[%03d]: expected %d, got %d\n", lex.line, tag, look->Tag);
-    } else {
-        printf("SYNTAX ERROR line[%03d]: expected '%c', got '%c'\n", lex.line, (char)tag, (char)look->Tag);
-    }
-    exit(1);
-}
 
 

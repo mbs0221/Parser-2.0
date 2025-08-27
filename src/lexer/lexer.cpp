@@ -3,6 +3,7 @@
 
 // 词法分析器实现
 Lexer::Lexer(){
+	look = nullptr; // 初始化当前token
 	words["int"] = Type::Int;// new Word(INT, "int");
 	words["double"] = Type::Double;// new Word(INT, "int");
 	words["if"] = new Word(IF, "if");
@@ -419,4 +420,136 @@ Value *Lexer::match_string(){
 	
 	// 返回字符串字面量token
 	return new String(str);
+}
+
+// ==================== 从Parser移动过来的匹配方法 ====================
+
+// 移动到下一个token
+void Lexer::move() {
+    look = scan();
+}
+
+// 语法分析器 - 匹配Tag预定义一个语法元素
+bool Lexer::match(int Tag) {
+    if (look->Tag == Tag) {
+        move();
+        return true;
+    }
+    move();
+    if (look->Tag > 255)
+        printf("SYNTAX ERROR line[%03d]: expected %d, got %d\n", line, Tag, look->Tag);
+    else
+        printf("SYNTAX ERROR line[%03d]: expected '%c', got '%c'\n", line, (char)Tag, (char)look->Tag);
+    exit(1);  // 强制退出
+    return false;
+}
+
+// 匹配单词（标识符或关键字）
+string Lexer::matchIdentifier() {
+    if (look->Tag == ID) {
+        Word* word = static_cast<Word*>(look);
+        move();
+        return word ? word->word : "";
+    }
+    printf("SYNTAX ERROR line[%03d]: expected identifier, got %d\n", line, look->Tag);
+    exit(1);
+}
+
+// 匹配类型
+Type* Lexer::matchType() {
+    if (look->Tag == ID) {
+        // 用户定义类型，暂时返回Type::Int作为默认值
+        // 这里可以根据需要扩展为查找用户定义的类型
+        move();
+        return Type::Int;
+    } else if (look->Tag == STR) {
+        move();
+        return Type::String;
+    } else if (look->Tag == NUM) {
+        move();
+        return Type::Int;
+    } else if (look->Tag == DOUBLE) {
+        move();
+        return Type::Double;
+    } else if (look->Tag == CHAR) {
+        move();
+        return Type::Char;
+    } else if (look->Tag == BOOL) {
+        move();
+        return Type::Bool;
+    }
+    printf("SYNTAX ERROR line[%03d]: expected type, got %d\n", line, look->Tag);
+    exit(1);
+    return nullptr;
+}
+
+// 匹配指定类型的token
+void Lexer::matchToken(int tag) {
+    if (look->Tag == tag) {
+        move();
+        return;
+    }
+    if (look->Tag > 255) {
+        printf("SYNTAX ERROR line[%03d]: expected %d, got %d\n", line, tag, look->Tag);
+    } else {
+        printf("SYNTAX ERROR line[%03d]: expected '%c', got '%c'\n", line, (char)tag, (char)look->Tag);
+    }
+    exit(1);
+}
+
+// 匹配操作符
+Operator* Lexer::matchOperator() {
+    if (look->Tag == '+' || look->Tag == '-' || look->Tag == '*' || look->Tag == '/' ||
+        look->Tag == '%' || look->Tag == '=' || look->Tag == '<' || look->Tag == '>' ||
+        look->Tag == '!' || look->Tag == '&' || look->Tag == '|' || look->Tag == '^') {
+        Operator* op = static_cast<Operator*>(look);
+        move();
+        return op;
+    }
+    printf("SYNTAX ERROR line[%03d]: expected operator, got %d\n", line, look->Tag);
+    exit(1);
+    return nullptr;
+}
+
+// 匹配单词
+Word* Lexer::matchWord() {
+    if (look->Tag == ID) {
+        Word* word = static_cast<Word*>(look);
+        move();
+        return word;
+    }
+    printf("SYNTAX ERROR line[%03d]: expected word, got %d\n", line, look->Tag);
+    exit(1);
+    return nullptr;
+}
+
+// 通用值匹配方法
+Value* Lexer::matchValue() {
+    Value* value = nullptr;
+    switch (look->Tag) {
+        case NUM:
+            value = static_cast<Value*>(look);
+            move();
+            break;
+        case REAL:
+            value = static_cast<Value*>(look);
+            move();
+            break;
+        case STR:
+            value = static_cast<Value*>(look);
+            move();
+            break;
+        case CHAR:
+            value = static_cast<Value*>(look);
+            move();
+            break;
+        case BOOL:
+            value = static_cast<Value*>(look);
+            move();
+            break;
+        default:
+            printf("SYNTAX ERROR line[%03d]: expected value, got %d\n", line, look->Tag);
+            exit(1);
+    }
+    return value;
 }
