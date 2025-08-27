@@ -550,8 +550,51 @@ Value* Interpreter::visit(CallExpression* call) {
 Value* Interpreter::visit(MethodCallExpression* methodCall) {
     if (!methodCall) return nullptr;
     
-    // 暂时简单实现，后续可以完善
-    throw RuntimeException("Method call not implemented yet");
+    // 获取对象
+    Value* object = visit(methodCall->object);
+    if (!object) {
+        reportError("Cannot call method on null object");
+        return nullptr;
+    }
+    
+    // 获取方法名
+    string methodName = methodCall->methodName;
+    
+    // 获取参数
+    vector<Value*> args;
+    for (Expression* argExpr : methodCall->arguments) {
+        Value* arg = visit(argExpr);
+        if (arg) {
+            args.push_back(arg);
+        }
+    }
+    
+    // 检查对象类型并调用相应的方法
+    if (Dict* dict = dynamic_cast<Dict*>(object)) {
+        // 对于字典对象，查找方法
+        Value* method = dict->getEntry(methodName);
+        if (method) {
+            // 如果找到方法，调用它
+            if (FunctionDefinition* func = dynamic_cast<FunctionDefinition*>(method)) {
+                // 将对象作为第一个参数传递（类似this指针）
+                vector<Value*> methodArgs;
+                methodArgs.push_back(object);
+                methodArgs.insert(methodArgs.end(), args.begin(), args.end());
+                
+                return func->executeWithInterpreter(methodArgs, this);
+            } else {
+                // 如果不是方法，返回该值
+                return method;
+            }
+        } else {
+            reportError("Method '" + methodName + "' not found in object");
+            return nullptr;
+        }
+    } else {
+        // 对于其他类型的对象，可以添加内置方法支持
+        reportError("Method calls not supported for this object type");
+        return nullptr;
+    }
 }
 
 void Interpreter::visit(ReturnStatement* returnStmt) {
@@ -1104,6 +1147,8 @@ Value* Interpreter::instantiateStruct(StructDefinition* structDef, vector<Value*
             instance->setEntry(member.name, defaultVal);
         }
     }
+    
+
     
     return instance;
 }

@@ -419,9 +419,17 @@ Expression* Parser::parsePostfix(Expression* expr) {
                     string memberName = matchIdentifier();
                     
                     if (look->Tag == '(') {
-                        // 方法调用
+                        // 方法调用：先访问方法，然后调用
+                        // 创建访问表达式获取方法
+                        ConstantExpression* memberNameExpr = new ConstantExpression(new String(memberName));
+                        Expression* methodAccess = new AccessExpression(expr, memberNameExpr);
+                        
+                        // 然后作为函数调用，将对象作为第一个参数
                         matchToken('(');
                         vector<Expression*> arguments;
+                        
+                        // 将对象作为第一个参数（类似this指针）
+                        arguments.push_back(expr);
                         
                         if (look->Tag != ')') {
                             arguments.push_back(parseExpressionWithPrecedence(0));
@@ -433,7 +441,7 @@ Expression* Parser::parsePostfix(Expression* expr) {
                         }
                         
                         matchToken(')');
-                        expr = new MethodCallExpression(expr, memberName, arguments);
+                        expr = new CallExpression(memberName, arguments);
                     } else {
                         // 成员访问
                         // 创建字符串常量作为成员名
