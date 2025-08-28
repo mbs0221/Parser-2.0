@@ -15,6 +15,7 @@ class ConstantExpression;
 class VariableExpression;
 class UnaryExpression;
 class BinaryExpression;
+class AssignExpression;
 class AccessExpression;
 class CallExpression;
 class MethodCallExpression;
@@ -63,6 +64,7 @@ public:
     virtual Value* visit(VariableExpression* expr) = 0;
     virtual Value* visit(UnaryExpression* expr) = 0;
     virtual Value* visit(BinaryExpression* expr) = 0;
+    virtual Value* visit(AssignExpression* expr) = 0;
     virtual Value* visit(CastExpression* expr) = 0;
     virtual Value* visit(AccessExpression* expr) = 0;
     virtual Value* visit(CallExpression* expr) = 0;

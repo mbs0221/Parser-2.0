@@ -223,3 +223,131 @@ Value* Dict::convertTo(Type* type) {
         throw runtime_error("Cannot convert Dict to type: " + type->word);
     }
 }
+
+// ==================== 静态calculate方法实现 ====================
+
+// Bool类型的静态calculate方法
+Value* Bool::calculate(Bool* left, Bool* right, int op) {
+    switch (op) {
+        case AND_AND: return new Bool(left->getValue() && right->getValue());
+        case OR_OR: return new Bool(left->getValue() || right->getValue());
+        case EQ_EQ: return new Bool(left->getValue() == right->getValue());
+        case NE_EQ: return new Bool(left->getValue() != right->getValue());
+        default: throw runtime_error("Unsupported binary operation for Bool");
+    }
+}
+
+Value* Bool::calculate(Bool* operand, int op) {
+    switch (op) {
+        case '!': return new Bool(!operand->getValue());
+        default: return new Bool(operand->getValue());
+    }
+}
+
+// Integer类型的静态calculate方法
+Value* Integer::calculate(Integer* left, Integer* right, int op) {
+    try {
+        switch (op) {
+            case '+': return new Integer(left->getValue() + right->getValue());
+            case '-': return new Integer(left->getValue() - right->getValue());
+            case '*': return new Integer(left->getValue() * right->getValue());
+            case '/': return new Integer(left->getValue() / right->getValue());
+            case '%': return new Integer(left->getValue() % right->getValue());
+            case '&': return new Integer(left->getValue() & right->getValue());
+            case '|': return new Integer(left->getValue() | right->getValue());
+            case '^': return new Integer(left->getValue() ^ right->getValue());
+            case '<': return new Bool(left->getValue() < right->getValue());
+            case '>': return new Bool(left->getValue() > right->getValue());
+            case LE: return new Bool(left->getValue() <= right->getValue());
+            case GE: return new Bool(left->getValue() >= right->getValue());
+            case EQ_EQ: return new Bool(left->getValue() == right->getValue());
+            case NE_EQ: return new Bool(left->getValue() != right->getValue());
+            case AND_AND: return new Bool(left->getValue() && right->getValue());
+            case OR_OR: return new Bool(left->getValue() || right->getValue());
+            case BIT_AND: return new Integer(left->getValue() & right->getValue());
+            case BIT_OR: return new Integer(left->getValue() | right->getValue());
+            case BIT_XOR: return new Integer(left->getValue() ^ right->getValue());
+            case LEFT_SHIFT: return new Integer(left->getValue() << right->getValue());
+            case RIGHT_SHIFT: return new Integer(left->getValue() >> right->getValue());
+            default: return new Integer(0);
+        }
+    } catch (const std::exception& e) {
+        throw runtime_error("Arithmetic error: " + string(e.what()));
+    }
+}
+
+Value* Integer::calculate(Integer* operand, int op) {
+    try {
+        switch (op) {
+            case '+': return new Integer(operand->getValue());
+            case '-': return new Integer(-operand->getValue());
+            case '~': return new Integer(~operand->getValue());
+            case '!': return new Bool(!operand->getValue());
+            default: return new Integer(operand->getValue());
+        }
+    } catch (const std::exception& e) {
+        throw runtime_error("Unary arithmetic error: " + string(e.what()));
+    }
+}
+
+// Double类型的静态calculate方法
+Value* Double::calculate(Double* left, Double* right, int op) {
+    try {
+        switch (op) {
+            case '+': return new Double(left->getValue() + right->getValue());
+            case '-': return new Double(left->getValue() - right->getValue());
+            case '*': return new Double(left->getValue() * right->getValue());
+            case '/': return new Double(left->getValue() / right->getValue());
+            case '<': return new Bool(left->getValue() < right->getValue());
+            case '>': return new Bool(left->getValue() > right->getValue());
+            case LE: return new Bool(left->getValue() <= right->getValue());
+            case GE: return new Bool(left->getValue() >= right->getValue());
+            case EQ_EQ: return new Bool(left->getValue() == right->getValue());
+            case NE_EQ: return new Bool(left->getValue() != right->getValue());
+            case AND_AND: return new Bool(left->getValue() && right->getValue());
+            case OR_OR: return new Bool(left->getValue() || right->getValue());
+            default: return new Double(0.0);
+        }
+    } catch (const std::exception& e) {
+        throw runtime_error("Arithmetic error: " + string(e.what()));
+    }
+}
+
+Value* Double::calculate(Double* operand, int op) {
+    try {
+        switch (op) {
+            case '+': return new Double(operand->getValue());
+            case '-': return new Double(-operand->getValue());
+            case '!': return new Bool(!operand->getValue());
+            default: return new Double(operand->getValue());
+        }
+    } catch (const std::exception& e) {
+        throw runtime_error("Unary arithmetic error: " + string(e.what()));
+    }
+}
+
+// Char类型的静态calculate方法
+Value* Char::calculate(Char* left, Char* right, int op) {
+    switch (op) {
+        case '+': return new Char(left->getValue() + right->getValue());
+        default: return new Char(left->getValue());
+    }
+}
+
+Value* Char::calculate(Char* operand, int op) {
+    switch (op) {
+        case '+': return new Char(operand->getValue());
+        case '-': return new Char(-operand->getValue());
+        case '~': return new Char(~operand->getValue());
+        case '!': return new Bool(!operand->getValue());
+        default: return new Char(operand->getValue());
+    }
+}
+
+// String类型的静态calculate方法
+Value* String::calculate(String* left, String* right, int op) {
+    switch (op) {
+        case '+': return new String(left->getValue() + right->getValue());
+        default: return new String("");
+    }
+}

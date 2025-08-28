@@ -21,6 +21,11 @@ void BinaryExpression::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
 
+// ==================== AssignExpression实现 ====================
+void AssignExpression::accept(ASTVisitor* visitor) {
+    visitor->visit(this);
+}
+
 // ==================== CastExpression实现 ====================
 void CastExpression::accept(ASTVisitor* visitor) {
     visitor->visit(this);

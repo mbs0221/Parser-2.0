@@ -88,6 +88,8 @@ Value* Interpreter::visit(Expression* expr) {
         return visit(varExpr);
     } else if (UnaryExpression* unaryExpr = dynamic_cast<UnaryExpression*>(expr)) {
         return visit(unaryExpr);
+    } else if (AssignExpression* assignExpr = dynamic_cast<AssignExpression*>(expr)) {
+        return visit(assignExpr);
     } else if (BinaryExpression* binaryExpr = dynamic_cast<BinaryExpression*>(expr)) {
         return visit(binaryExpr);
     } else if (CastExpression* castExpr = dynamic_cast<CastExpression*>(expr)) {
@@ -210,33 +212,20 @@ Value* Interpreter::visit(UnaryExpression* unary) {
             return nullptr;
     }
     
-    // 使用CastExpression进行类型转换
-    CastExpression* castExpr = new CastExpression(new ConstantExpression(operand), targetType);
-    Value* convertedOperand = visit(castExpr);
-    delete castExpr;
-    
-    if (!convertedOperand) {
-        reportError("Failed to convert operand to " + targetType + " for unary operator");
-        return nullptr;
-    }
-    
-    // 使用单目运算calculate函数执行操作
+    // 使用泛型calculate方法进行计算，内部会自动进行类型转换
     Value* result = nullptr;
-    if (Integer* intVal = dynamic_cast<Integer*>(convertedOperand)) {
-        result = calculate(intVal, unary->operator_->Tag);
-    } else if (Double* doubleVal = dynamic_cast<Double*>(convertedOperand)) {
-        result = calculate(doubleVal, unary->operator_->Tag);
-    } else if (Bool* boolVal = dynamic_cast<Bool*>(convertedOperand)) {
-        result = calculate(boolVal, unary->operator_->Tag);
-    } else if (Char* charVal = dynamic_cast<Char*>(convertedOperand)) {
-        result = calculate(charVal, unary->operator_->Tag);
+    if (targetType == "int") {
+        result = calculate<Integer>(unary->operand, unary->operator_->Tag);
+    } else if (targetType == "double") {
+        result = calculate<Double>(unary->operand, unary->operator_->Tag);
+    } else if (targetType == "bool") {
+        result = calculate<Bool>(unary->operand, unary->operator_->Tag);
+    } else if (targetType == "char") {
+        result = calculate<Char>(unary->operand, unary->operator_->Tag);
     } else {
         reportError("Unsupported operand type for unary operator");
-        delete convertedOperand;
         return nullptr;
     }
-    
-    delete convertedOperand;
     return result;
 }
 
@@ -267,20 +256,6 @@ Value* Interpreter::visit(BinaryExpression* binary) {
     }
     int opTag = op->Tag;
     LOG_DEBUG("executeBinaryOperation called with operator: " + op->getSymbol());
-    
-    // 3. 处理赋值操作
-    if (opTag == ASSIGN) {
-        // 检查左操作数是否为变量引用
-        if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(binary->left)) {
-            // 更新变量值
-            scopeManager.updateVariable(varExpr->name, right);
-            LOG_DEBUG("Assigned value " + right->toString() + " to variable '" + varExpr->name + "'");
-            return right;  // 赋值表达式返回右操作数的值
-        } else {
-            reportError("Left side of assignment must be a variable");
-            return nullptr;
-        }
-    }
  
     // 4. 确定兼容类型
     string targetType = determineTargetType(left, right, op);
@@ -289,64 +264,79 @@ Value* Interpreter::visit(BinaryExpression* binary) {
         return nullptr;
     }
     
-    // 4. 使用CastExpression进行类型转换
-    Value* convertedLeft = nullptr;
-    Value* convertedRight = nullptr;
-    
-    // 创建CastExpression进行类型转换
-    CastExpression* leftCast = new CastExpression(new ConstantExpression(left), targetType);
-    CastExpression* rightCast = new CastExpression(new ConstantExpression(right), targetType);
-    
-    // 执行类型转换
-    convertedLeft = visit(leftCast);
-    convertedRight = visit(rightCast);
-    
-    // 清理临时对象
-    delete leftCast;
-    delete rightCast;
-    
-    if (!convertedLeft || !convertedRight) {
-        reportError("Failed to convert operands to target type: " + targetType);
-        return nullptr;
-    }
-    
-    // 5. 直接计算
+    CastExpression* leftCast = new CastExpression(binary->left, targetType);
+    CastExpression* rightCast = new CastExpression(binary->right, targetType);    
+
     Value* result = nullptr;
     if (targetType == "int") {
-        Integer* leftInt = dynamic_cast<Integer*>(convertedLeft);
-        Integer* rightInt = dynamic_cast<Integer*>(convertedRight);
-        if (leftInt && rightInt) {
-            result = calculate(leftInt, rightInt, opTag);
-        }
+        result = calculate<Integer>(leftCast, rightCast, opTag);
     } else if (targetType == "double") {
-        Double* leftDouble = dynamic_cast<Double*>(convertedLeft);
-        Double* rightDouble = dynamic_cast<Double*>(convertedRight);
-        if (leftDouble && rightDouble) {
-            result = calculate(leftDouble, rightDouble, opTag);
-        }
+        result = calculate<Double>(leftCast, rightCast, opTag);
     } else if (targetType == "bool") {
-        Bool* leftBool = dynamic_cast<Bool*>(convertedLeft);
-        Bool* rightBool = dynamic_cast<Bool*>(convertedRight);
-        if (leftBool && rightBool) {
-            result = calculate(leftBool, rightBool, opTag);
-        }
+        result = calculate<Bool>(leftCast, rightCast, opTag);
     } else if (targetType == "string") {
-        String* leftStr = dynamic_cast<String*>(convertedLeft);
-        String* rightStr = dynamic_cast<String*>(convertedRight);
-        if (leftStr && rightStr) {
-            result = calculate(leftStr, rightStr, opTag);
-        }
+        result = calculate<String>(leftCast, rightCast, opTag);
+    } else if (targetType == "char") {
+        result = calculate<Char>(leftCast, rightCast, opTag);
     }
-    
-    // 6. 清理转换后的对象
-    delete convertedLeft;
-    delete convertedRight;
+
+    delete leftCast;
+    delete rightCast;
     
     if (!result) {
         reportError("Type mismatch in binary expression: " + left->toString() + " " + std::string(1, opTag) + " " + right->toString());
     }
     
     return result;
+}
+
+// 赋值表达式求值 - 专门处理赋值操作
+Value* Interpreter::visit(AssignExpression* assign) {
+    if (!assign || !assign->left || !assign->right) {
+        reportError("Invalid assignment expression");
+        return nullptr;
+    }
+    
+    // 检查左操作数是否为变量引用
+    if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(assign->left)) {
+        // 计算右边的值
+        Value* rightValue = visit(assign->right);
+        if (!rightValue) {
+            reportError("Failed to evaluate right side of assignment");
+            return nullptr;
+        }
+        
+        // 获取变量的当前类型
+        Variable* variable = scopeManager.lookupVariable(varExpr->name);
+        string targetType;
+        
+        if (variable && variable->getValue()) {
+            // 如果变量已定义，使用左边变量的类型
+            targetType = variable->getValue()->getTypeName();
+        } else {
+            // 如果变量未定义，使用右边值的类型
+            targetType = rightValue->getTypeName();
+        }
+        
+        // 将右边的值cast到目标类型
+        CastExpression* rightCast = new CastExpression(assign->right, targetType);
+        Value* castedValue = visit(rightCast);
+        delete rightCast;
+        
+        if (!castedValue) {
+            reportError("Failed to cast value to type " + targetType + " for assignment");
+            delete rightValue;
+            return nullptr;
+        }
+        
+        // 更新变量值
+        scopeManager.updateVariable(varExpr->name, castedValue);
+        LOG_DEBUG("Assigned value " + castedValue->toString() + " to variable '" + varExpr->name + "'");
+        return castedValue;  // 赋值表达式返回转换后的值
+    } else {
+        reportError("Left side of assignment must be a variable");
+        return nullptr;
+    }
 }
 
 // 辅助方法：确定运算的目标类型
@@ -381,7 +371,12 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
     } else if (dynamic_cast<Integer*>(left) || dynamic_cast<Integer*>(right)) {
         return "int";
     } else if (dynamic_cast<Char*>(left) || dynamic_cast<Char*>(right)) {
-        return "int";  // 字符转换为整数进行运算
+        // 对于字符运算，根据操作符类型决定返回类型
+        if (opTag == '+') {
+            return "char";  // 字符拼接返回字符
+        } else {
+            return "int";   // 其他运算转换为整数
+        }
     } else if (dynamic_cast<Bool*>(left) || dynamic_cast<Bool*>(right)) {
         return "int";  // 布尔转换为整数进行运算
     }
@@ -389,130 +384,9 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
     return "unknown";
 }
 
-Value* Interpreter::calculate(Integer* left, Integer* right, int op) {
-    try {
-        switch (op) {
-            case '+': return new Integer(*left + *right);
-            case '-': return new Integer(*left - *right);
-            case '*': return new Integer(*left * *right);
-            case '/': return new Integer(*left / *right);
-            case '%': return new Integer(*left % *right);
-            case '&': return new Integer(*left & *right);
-            case '|': return new Integer(*left | *right);
-            case '^': return new Integer(*left ^ *right);
-            case '<': return new Bool(*left < *right);
-            case '>': return new Bool(*left > *right);
-            case LE: return new Bool(*left <= *right);
-            case GE: return new Bool(*left >= *right);
-            case EQ_EQ: return new Bool(*left == *right);
-            case NE_EQ: return new Bool(*left != *right);
-            case AND_AND: return new Bool(*left && *right);
-            case OR_OR: return new Bool(*left || *right);
-            case BIT_AND: return new Integer(*left & *right);
-            case BIT_OR: return new Integer(*left | *right);
-            case BIT_XOR: return new Integer(*left ^ *right);
-            case LEFT_SHIFT: return new Integer(*left << *right);
-            case RIGHT_SHIFT: return new Integer(*left >> *right);
-            default: return new Integer(0);
-        }
-    } catch (const std::exception& e) {
-        reportError("Arithmetic error: " + string(e.what()));
-        return new Integer(0);
-    }
-}
 
-Value* Interpreter::calculate(Double* left, Double* right, int op) {
-    try {
-        switch (op) {
-            case '+': return new Double(*left + *right);
-            case '-': return new Double(*left - *right);
-            case '*': return new Double(*left * *right);
-            case '/': return new Double(*left / *right);
-            case '<': return new Bool(*left < *right);
-            case '>': return new Bool(*left > *right);
-            case LE: return new Bool(*left <= *right);
-            case GE: return new Bool(*left >= *right);
-            case EQ_EQ: return new Bool(*left == *right);
-            case NE_EQ: return new Bool(*left != *right);
-            case AND_AND: return new Bool(*left && *right);
-            case OR_OR: return new Bool(*left || *right);
-            default: return new Double(0.0);
-        }
-    } catch (const std::exception& e) {
-        reportError("Arithmetic error: " + string(e.what()));
-        return new Double(0.0);
-    }
-}
 
-Value* Interpreter::calculate(Bool* left, Bool* right, int op) {
-    switch (op) {
-        case AND_AND: return new Bool(*left && *right);
-        case OR_OR: return new Bool(*left || *right);
-        default: return new Bool(false);
-    }
-}
 
-Value* Interpreter::calculate(Char* left, Char* right, int op) {
-    switch (op) {
-        case '+': return new Char(*left + *right);
-        default: return new Char(*left);
-    }
-}
-
-Value* Interpreter::calculate(String* left, String* right, int op) {
-    switch (op) {
-        case '+': return new String(*left + *right);
-        default: return new String("");
-    }
-}
-
-// ==================== 单目运算calculate函数重载 ====================
-
-Value* Interpreter::calculate(Integer* operand, int op) {
-    try {
-        switch (op) {
-            case '+': return new Integer(operand->getValue());  // 正号
-            case '-': return new Integer(-operand->getValue());  // 负号
-            case '~': return new Integer(~operand->getValue());  // 位取反
-            case '!': return new Bool(!operand->getValue());     // 逻辑非
-            default: return new Integer(operand->getValue());
-        }
-    } catch (const std::exception& e) {
-        reportError("Unary arithmetic error: " + string(e.what()));
-        return new Integer(0);
-    }
-}
-
-Value* Interpreter::calculate(Double* operand, int op) {
-    try {
-        switch (op) {
-            case '+': return new Double(operand->getValue());  // 正号
-            case '-': return new Double(-operand->getValue());  // 负号
-            case '!': return new Bool(!operand->getValue());    // 逻辑非
-            default: return new Double(operand->getValue());
-        }
-    } catch (const std::exception& e) {
-        reportError("Unary arithmetic error: " + string(e.what()));
-        return new Double(0.0);
-    }
-}
-
-Value* Interpreter::calculate(Bool* operand, int op) {
-    switch (op) {
-        case '!': return new Bool(!operand->getValue());  // 逻辑非
-        default: return new Bool(operand->getValue());
-    }
-}
-
-Value* Interpreter::calculate(Char* operand, int op) {
-    switch (op) {
-        case '+': return new Char(operand->getValue());  // 正号
-        case '-': return new Char(-operand->getValue());  // 负号
-        case '~': return new Char(~operand->getValue());  // 位取反
-        case '!': return new Bool(!operand->getValue());  // 逻辑非
-        default: return new Char(operand->getValue());
-    }
-}
 
 // 访问表达式求值 - 统一处理数组/字典访问和成员访问
 Value* Interpreter::visit(AccessExpression* access) {
@@ -1211,3 +1085,5 @@ Value* Interpreter::createDefaultValue(Type* type) {
         return new Integer(0); // 默认返回整数0
     }
 }
+
+

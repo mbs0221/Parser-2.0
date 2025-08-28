@@ -343,7 +343,7 @@ Expression* Parser::parseExpressionWithPrecedence(int minPrecedence) {
             if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(left)) {
                 // 对于赋值操作符，使用右结合性，所以递归调用时使用相同优先级
                 Expression* right = parseExpressionWithPrecedence(precedence);
-                left = new BinaryExpression(left, right, op);
+                left = new AssignExpression(left, right);
             } else {
                 printf("Error: Left side of assignment must be a variable\n");
                 break;
@@ -367,6 +367,7 @@ Expression* Parser::parsePrimary() {
     switch (lex.token()->Tag) {
         case '!': // 逻辑非 (ASCII 33)
         case '-': // 负号 (ASCII 45)
+        case '+': // 正号 (ASCII 43)
         case '~': // 位运算取反 (ASCII 126)
             {
                 Operator* op = lex.matchOperator();

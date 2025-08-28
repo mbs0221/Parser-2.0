@@ -248,6 +248,8 @@ struct Value : public Token, public Convertable {
     virtual Value* access(Value* key) {
         throw runtime_error("Type does not support access operation");
     }
+    
+
 };
 
 // ==================== 基本值类型 ====================
@@ -312,6 +314,12 @@ struct Bool : public Value {
     
     // 类型转换实现 - 将在文件末尾定义
     Value* convertTo(Type* type) override;
+    
+    // 双目运算 - 静态方法
+    static Value* calculate(Bool* left, Bool* right, int op);
+    
+    // 单目运算 - 静态方法
+    static Value* calculate(Bool* operand, int op);
 };
 
 struct Integer : public Value {
@@ -465,6 +473,12 @@ struct Integer : public Value {
     
     // 类型转换实现 - 将在文件末尾定义
     Value* convertTo(Type* type) override;
+    
+    // 双目运算 - 静态方法
+    static Value* calculate(Integer* left, Integer* right, int op);
+    
+    // 单目运算 - 静态方法
+    static Value* calculate(Integer* operand, int op);
 };
 
 // 字符值类型
@@ -512,6 +526,12 @@ struct Char : public Value {
     
     // 类型转换实现 - 将在文件末尾定义
     Value* convertTo(Type* type) override;
+    
+    // 双目运算 - 静态方法
+    static Value* calculate(Char* left, Char* right, int op);
+    
+    // 单目运算 - 静态方法
+    static Value* calculate(Char* operand, int op);
 };
 
 // 浮点数类型 - 作为值类型
@@ -610,6 +630,12 @@ struct Double : public Value {
     
     // 类型转换实现 - 将在value.cpp中定义
     Value* convertTo(Type* type) override;
+    
+    // 双目运算 - 静态方法
+    static Value* calculate(Double* left, Double* right, int op);
+    
+    // 单目运算 - 静态方法
+    static Value* calculate(Double* operand, int op);
 };
 
 // 复合值基类 - 支持访问操作
@@ -817,6 +843,9 @@ struct String : public Array {
     
     // 类型转换实现 - 将在value.cpp中定义
     Value* convertTo(Type* type) override;
+    
+    // 双目运算 - 静态方法
+    static Value* calculate(String* left, String* right, int op);
 };
 
 // 全局运算符重载 - 支持String与其他类型的混合运算

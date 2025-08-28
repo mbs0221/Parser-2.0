@@ -98,8 +98,20 @@ struct BinaryExpression : public Expression {
     }
 };
 
-// 赋值表达式现在使用BinaryExpression，左操作数是变量名，右操作数是值
-// 赋值运算符的优先级最低，右结合
+// 赋值表达式节点 - 继承自BinaryExpression
+struct AssignExpression : public BinaryExpression {
+    AssignExpression(Expression* l, Expression* r) : BinaryExpression(l, r, new Operator('=', "=", 2, false)) {}
+    
+    string getLocation() const override {
+        return "assignment expression";
+    }
+    
+    void accept(ASTVisitor* visitor) override;
+    
+    int getTypePriority() const override {
+        return 1;  // 赋值操作优先级最低
+    }
+};
 
 // 类型转换表达式 - 支持Value类型转换
 struct CastExpression : public Expression {
