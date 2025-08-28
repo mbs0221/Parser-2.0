@@ -1,7 +1,7 @@
-#include "Parser/lexer.h"
-#include "Parser/value.h"
-#include "Parser/expression.h"
-#include "Parser/interpreter.h"
+#include "lexer/lexer.h"
+#include "lexer/value.h"
+#include "parser/expression.h"
+#include "interpreter/interpreter.h"
 #include <iostream>
 
 using namespace std;
@@ -19,10 +19,10 @@ int main() {
     Operator* minusOp = new Operator('-', "-", 4, true);
     Operator* multiplyOp = new Operator('*', "*", 5, true);
     Operator* divideOp = new Operator('/', "/", 5, true);
-    Operator* eqOp = new Operator(EQ, "==", 2, true);
+    Operator* eqOp = new Operator(EQ_EQ, "==", 2, true);
     Operator* lessOp = new Operator('<', "<", 3, true);
-    Operator* andOp = new Operator(AND, "&&", 1, true);
-    Operator* orOp = new Operator(OR, "||", 1, true);
+    Operator* andOp = new Operator(AND_AND, "&&", 1, true);
+    Operator* orOp = new Operator(OR_OR, "||", 1, true);
     
     cout << "Plus operator: " << plusOp->getSymbol() << ", precedence: " << plusOp->getPrecedence() << endl;
     cout << "Equal operator: " << eqOp->getSymbol() << ", precedence: " << eqOp->getPrecedence() << endl;
@@ -31,11 +31,11 @@ int main() {
     // 测试2：测试determineTargetType函数
     cout << "\n=== 测试determineTargetType函数 ===" << endl;
     
-    IntegerValue* intVal = new IntegerValue(42);
-    DoubleValue* doubleVal = new DoubleValue(3.14);
-    BoolValue* boolVal = new BoolValue(true);
-    StringValue* strVal = new StringValue("hello");
-    CharValue* charVal = new CharValue('A');
+    Integer* intVal = new Integer(42);
+    Double* doubleVal = new Double(3.14);
+    Bool* boolVal = new Bool(true);
+    String* strVal = new String("hello");
+    Char* charVal = new Char('A');
     
     // 算术运算
     cout << "int + double -> " << interpreter.determineTargetType(intVal, doubleVal, plusOp) << endl;

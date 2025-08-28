@@ -1,5 +1,6 @@
-#include "Parser/inter.h"
-#include "Parser/interpreter.h"
+#include "lexer/value.h"
+#include "parser/expression.h"
+#include "interpreter/interpreter.h"
 #include <iostream>
 
 using namespace std;
@@ -12,8 +13,8 @@ int main() {
     
     // 测试1：字符串拼接
     cout << "\n1. 字符串拼接测试:" << endl;
-    StringLiteral* str1 = new StringLiteral("Hello, ");
-    StringLiteral* str2 = new StringLiteral("World!");
+    String* str1 = new String("Hello, ");
+    String* str2 = new String("World!");
     
     Expression* result = interpreter.stringConcatenation(str1, str2);
     if (result) {

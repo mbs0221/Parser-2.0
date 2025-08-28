@@ -59,12 +59,12 @@ Token *Lexer::scan(){//LL(1)
 		if (peek == ' ' || peek == '\t')continue;
 		else if (peek == '\r')continue; // 忽略回车符
 		else if (peek == '\n'){ column = 0; line++; continue; }
-		else if (peek == '/'){
+		else if (peek == '/' || peek == '#'){
 			Token *t;
 			if (t = skip_comment()){
 				return t;
 			}
-			// 如果不是注释，跳出循环让后续处理处理为除法运算符
+			// 如果不是注释，跳出循环让后续处理处理为运算符
 			break;
 		}
 		else break;
@@ -233,7 +233,7 @@ Token *Lexer::match_other(){
 		} else {
 			// =
 			inf.seekg(-1, ios_base::cur);
-			return new Operator(ASSIGN, "=", 2, false);  // 赋值运算符，优先级2，右结合
+			return Operator::Assign;  // 赋值运算符，优先级2，右结合
 		}
 	} else if (peek == '!') {
 		inf.read(&peek, 1);
@@ -352,14 +352,14 @@ Token *Lexer::skip_comment(){
 	if (peek == '/'){
 		inf.read(&peek, 1);
 		if (peek == '/'){
-			// 单行注释
+			// 单行注释 //
 			while (peek != '\n' && !inf.eof()){
 				inf.read(&peek, 1);
 			}
 			return nullptr;
 		}
 		else if (peek == '*'){
-			// 多行注释
+			// 多行注释 /* */
 			inf.read(&peek, 1);
 			while (!inf.eof()){
 				if (peek == '*'){
@@ -378,6 +378,20 @@ Token *Lexer::skip_comment(){
 			inf.seekg(-1, ios_base::cur);
 			return nullptr;  // 返回nullptr，让scan()方法继续处理
 		}
+	}
+	else if (peek == '#'){
+		// 单行注释 #
+		inf.read(&peek, 1);
+		while (peek != '\n' && !inf.eof()){
+			inf.read(&peek, 1);
+		}
+		// 如果遇到换行符，需要更新行号和列号，并继续读取下一个字符
+		if (peek == '\n') {
+			column = 0;
+			line++;
+			inf.read(&peek, 1); // 读取换行符后的下一个字符
+		}
+		return nullptr;
 	}
 	return nullptr;
 }

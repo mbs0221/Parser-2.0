@@ -108,8 +108,8 @@ VariableDeclaration* Parser::parseVariableDeclaration() {
         Expression* value = nullptr;
         
         // 检查是否有初始化表达式
-        if (lex.token()->Tag == ASSIGN) {
-            lex.match(ASSIGN);
+        if (lex.token()->Tag == '=') {
+            lex.match('=');
             value = parseExpression();
         }
         
@@ -217,16 +217,12 @@ ContinueStatement* Parser::parseContinueStatement() {
 
 // 解析return语句
 ReturnStatement* Parser::parseReturnStatement() {
-    printf("DEBUG: parseReturnStatement() - starting\n");
     lex.match(RETURN);
     Expression* returnValue = nullptr;
     if (lex.token()->Tag != ';') {
-        printf("DEBUG: parseReturnStatement() - parsing return value\n");
         returnValue = parseExpression();
     }
-    printf("DEBUG: parseReturnStatement() - expecting ';' token\n");
     lex.match(';');
-    printf("DEBUG: parseReturnStatement() - ';' matched\n");
     return new ReturnStatement(returnValue);
 }
 
@@ -342,7 +338,7 @@ Expression* Parser::parseExpressionWithPrecedence(int minPrecedence) {
         }
         
         // 处理赋值操作符的特殊情况
-        if (op->Tag == ASSIGN) {
+        if (op->Tag == '=') {
             // 检查左操作数是否为变量引用
             if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(left)) {
                 // 对于赋值操作符，使用右结合性，所以递归调用时使用相同优先级
@@ -471,7 +467,7 @@ bool Parser::isBinaryOperator(int tag) {
     // 检查多字符操作符（枚举类型）
     return tag == PLUS || tag == MINUS || tag == MULTIPLY || tag == DIVIDE || tag == MODULO ||
            tag == LT || tag == GT || tag == LE || tag == GE || tag == EQ_EQ || tag == NE_EQ || 
-           tag == AND_AND || tag == OR_OR || tag == ASSIGN || tag == BIT_AND || tag == BIT_OR || 
+           tag == AND_AND || tag == OR_OR || tag == BIT_AND || tag == BIT_OR || 
            tag == BIT_XOR || tag == LEFT_SHIFT || tag == RIGHT_SHIFT;
 }
 

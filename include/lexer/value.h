@@ -123,7 +123,7 @@ struct Operator :Token {
 	int precedence; // 优先级
 	bool isLeftAssociative; // 左结合性
 
-    static Operator *Add, *Sub, *Mul, *Div, *Mod, *LT, *GT, *LE, *GE, *EQ, *NE, *AND, *OR, *Not, *BitAnd, *BitOr, *BitXor, *BitNot, *LeftShift, *RightShift, *Increment, *Decrement, *Dot, *Arrow, *Question, *Colon;
+    static Operator *Add, *Sub, *Mul, *Div, *Mod, *LT, *GT, *LE, *GE, *EQ, *NE, *AND, *OR, *Not, *BitAnd, *BitOr, *BitXor, *BitNot, *LeftShift, *RightShift, *Increment, *Decrement, *Dot, *Arrow, *Question, *Colon, *Assign;
 	
 	Operator() : Token(0), symbol(""), precedence(0), isLeftAssociative(true) {}
 	Operator(int tag, const string& sym, int prec = 0, bool leftAssoc = true) 

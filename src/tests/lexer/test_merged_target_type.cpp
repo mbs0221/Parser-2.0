@@ -1,6 +1,6 @@
-#include "Parser/value.h"
-#include "Parser/expression.h"
-#include "Parser/interpreter.h"
+#include "lexer/value.h"
+#include "parser/expression.h"
+#include "interpreter/interpreter.h"
 #include <iostream>
 
 using namespace std;
@@ -14,11 +14,11 @@ int main() {
     // 测试算术运算的目标类型确定
     cout << "\n=== 测试算术运算目标类型 ===" << endl;
     
-    IntegerValue* intVal = new IntegerValue(42);
-    DoubleValue* doubleVal = new DoubleValue(3.14);
-    BoolValue* boolVal = new BoolValue(true);
-    CharValue* charVal = new CharValue('A');
-    StringValue* strVal = new StringValue("hello");
+    Integer* intVal = new Integer(42);
+    Double* doubleVal = new Double(3.14);
+    Bool* boolVal = new Bool(true);
+    Char* charVal = new Char('A');
+    String* strVal = new String("hello");
     
     // 测试不同类型的组合
     cout << "int + double -> " << interpreter.determineTargetType(intVal, doubleVal, false) << endl;
