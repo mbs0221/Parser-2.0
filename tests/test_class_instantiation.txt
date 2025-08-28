@@ -24,7 +24,7 @@ struct Person {
     int age;
 }
 
-let person1 = Person {name: "John", age: 25};
+let person1 = Person("John", 25);
 
 print("Person: ");
 print(person1.name);

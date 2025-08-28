@@ -1,0 +1,18 @@
+let day = 3;
+
+function testSwitch() {
+    switch (day) {
+        case 3:
+            print("Wednesday");
+            break;
+        case 1:
+            print("Monday");
+            break;
+        default:
+            print("Other");
+            break;
+    }
+    print("After switch");
+}
+
+testSwitch();

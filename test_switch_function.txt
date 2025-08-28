@@ -1,0 +1,34 @@
+let day = 3;
+print(day == 1);
+print(day == 2);
+print(day == 3);
+print(day == 4);
+print(day == 5);
+print(day == 6);
+print(day == 7);
+print(day);
+
+function testSwitch() {
+    switch (day) {
+        case 1:
+            print("Monday", day == 1);
+            break;
+        case 2:
+            print("Tuesday");
+            break;
+        case 3:
+            print("Wednesday");
+            break;
+        case 4:
+            print("Thursday");
+            break;
+        case 5:
+            print("Friday");
+            break;
+        default:
+            print("Weekend");
+            break;
+    }
+}
+
+testSwitch();

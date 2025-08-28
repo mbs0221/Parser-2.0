@@ -379,8 +379,56 @@ void Interpreter::visit(SwitchStatement* switchStmt) {
 
 void Interpreter::visit(TryStatement* tryStmt) {
     if (!tryStmt) return;
-    // 暂时简单实现，后续可以完善
-    reportError("Try statement not implemented yet");
+    
+    LOG_DEBUG("Executing try statement");
+    
+    try {
+        // 执行try块
+        if (tryStmt->tryBlock) {
+            execute(tryStmt->tryBlock);
+        }
+    } catch (...) {
+        LOG_DEBUG("Exception caught");
+        
+        // 查找匹配的catch块
+        bool caught = false;
+        for (const auto& catchBlock : tryStmt->catchBlocks) {
+            // 简化处理：如果有catch块，就执行它
+            if (!catchBlock.exceptionName.empty()) {
+                // 创建一个简单的异常值对象
+                String* exceptionValue = new String("Exception occurred");
+                scopeManager.defineVariable(catchBlock.exceptionName, exceptionValue);
+            }
+            
+            // 执行catch块
+            if (catchBlock.catchBlock) {
+                execute(catchBlock.catchBlock);
+            }
+            
+            caught = true;
+            break;  
+        }
+        
+        // 如果没有找到匹配的catch块，重新抛出异常
+        if (!caught) {
+            LOG_DEBUG("No matching catch block found, re-throwing exception");
+            throw;
+        }
+    }
+    
+    // 执行finally块（无论是否发生异常）
+    if (tryStmt->finallyBlock) {
+        LOG_DEBUG("Executing finally block");
+        try {
+            execute(tryStmt->finallyBlock);
+        } catch (...) {
+            // finally块中的异常不应该被try-catch捕获
+            LOG_DEBUG("Exception in finally block, re-throwing");
+            throw;
+        }
+    }
+    
+    LOG_DEBUG("Try statement execution completed");
 }
 
 // break语句执行

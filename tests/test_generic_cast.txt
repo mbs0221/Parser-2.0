@@ -1,0 +1,39 @@
+# 测试泛型转换功能
+let x = 42;
+let y = 3.14;
+let z = true;
+let c = "A";
+let s = "hello";
+
+# 测试各种类型转换
+let x_to_double = (double)x;
+let y_to_int = (int)y;
+let z_to_int = (int)z;
+let c_to_int = (int)c;
+let s_to_int = (int)s;
+
+print("Original values:
+");
+print("x = "); print(x); print("
+");
+print("y = "); print(y); print("
+");
+print("z = "); print(z); print("
+");
+print("c = "); print(c); print("
+");
+print("s = "); print(s); print("
+");
+
+print("After casting:
+");
+print("x_to_double = "); print(x_to_double); print("
+");
+print("y_to_int = "); print(y_to_int); print("
+");
+print("z_to_int = "); print(z_to_int); print("
+");
+print("c_to_int = "); print(c_to_int); print("
+");
+print("s_to_int = "); print(s_to_int); print("
+");

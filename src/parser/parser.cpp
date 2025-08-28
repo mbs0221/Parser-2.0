@@ -77,6 +77,10 @@ Statement* Parser::parseStatement() {
             return parseContinueStatement();
         case RETURN:
             return parseReturnStatement();
+        case THROW:
+            // throw语句暂未实现
+            printf("SYNTAX ERROR line[%03d]: throw statement not implemented\n", lex.line);
+            exit(1);
         case TRY:
             return parseTryStatement();
         case SWITCH:
