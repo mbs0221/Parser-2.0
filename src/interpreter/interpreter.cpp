@@ -198,91 +198,46 @@ Value* Interpreter::visit(UnaryExpression* unary) {
         return nullptr;
     }
 
-    // 根据操作符类型进行处理
+    // 根据操作符类型确定目标类型
+    string targetType;
     switch (unary->operator_->Tag) {
-        case '!': {
-            // 逻辑非操作：统一转换为布尔类型
-            string targetType = "bool";
-            
-            // 使用CastExpression进行类型转换
-            CastExpression* castExpr = new CastExpression(new ConstantExpression(operand), targetType);
-            Value* convertedOperand = visit(castExpr);
-            delete castExpr;
-            
-            if (!convertedOperand) {
-                reportError("Failed to convert operand to bool for logical NOT operator");
-                return nullptr;
-            }
-            
-            // 执行逻辑非操作
-            if (Bool* boolVal = dynamic_cast<Bool*>(convertedOperand)) {
-                Value* result = new Bool(!boolVal->getValue());
-                delete convertedOperand;
-                return result;
-            } else {
-                reportError("Invalid operand for logical NOT operator");
-                delete convertedOperand;
-                return nullptr;
-            }
-        }
-        case '-': {
-            // 一元负号操作：统一转换为数值类型
-            string targetType = "double";  // 优先转换为double以保持精度
-            
-            // 使用CastExpression进行类型转换
-            CastExpression* castExpr = new CastExpression(new ConstantExpression(operand), targetType);
-            Value* convertedOperand = visit(castExpr);
-            delete castExpr;
-            
-            if (!convertedOperand) {
-                reportError("Failed to convert operand to numeric type for unary minus operator");
-                return nullptr;
-            }
-            
-            // 执行一元负号操作
-            if (Double* doubleVal = dynamic_cast<Double*>(convertedOperand)) {
-                Value* result = new Double(-doubleVal->getValue());
-                delete convertedOperand;
-                return result;
-            } else if (Integer* intVal = dynamic_cast<Integer*>(convertedOperand)) {
-                Value* result = new Integer(-intVal->getValue());
-                delete convertedOperand;
-                return result;
-            } else {
-                reportError("Invalid operand for unary minus operator");
-                delete convertedOperand;
-                return nullptr;
-            }
-        }
-        case '~': {
-            // 位运算取反操作：统一转换为整数类型
-            string targetType = "int";
-            
-            // 使用CastExpression进行类型转换
-            CastExpression* castExpr = new CastExpression(new ConstantExpression(operand), targetType);
-            Value* convertedOperand = visit(castExpr);
-            delete castExpr;
-            
-            if (!convertedOperand) {
-                reportError("Failed to convert operand to int for bitwise NOT operator");
-                return nullptr;
-            }
-            
-            // 执行位运算取反操作
-            if (Integer* intVal = dynamic_cast<Integer*>(convertedOperand)) {
-                Value* result = new Integer(~intVal->getValue());
-                delete convertedOperand;
-                return result;
-            } else {
-                reportError("Invalid operand for bitwise NOT operator");
-                delete convertedOperand;
-                return nullptr;
-            }
-        }
+        case '!': targetType = "bool"; break;   // 逻辑非
+        case '-': targetType = "double"; break; // 一元负号
+        case '+': targetType = "double"; break; // 一元正号
+        case '~': targetType = "int"; break;    // 位取反
         default:
             reportError("Unknown unary operator Tag " + to_string(unary->operator_->Tag));
             return nullptr;
     }
+    
+    // 使用CastExpression进行类型转换
+    CastExpression* castExpr = new CastExpression(new ConstantExpression(operand), targetType);
+    Value* convertedOperand = visit(castExpr);
+    delete castExpr;
+    
+    if (!convertedOperand) {
+        reportError("Failed to convert operand to " + targetType + " for unary operator");
+        return nullptr;
+    }
+    
+    // 使用单目运算calculate函数执行操作
+    Value* result = nullptr;
+    if (Integer* intVal = dynamic_cast<Integer*>(convertedOperand)) {
+        result = calculate(intVal, unary->operator_->Tag);
+    } else if (Double* doubleVal = dynamic_cast<Double*>(convertedOperand)) {
+        result = calculate(doubleVal, unary->operator_->Tag);
+    } else if (Bool* boolVal = dynamic_cast<Bool*>(convertedOperand)) {
+        result = calculate(boolVal, unary->operator_->Tag);
+    } else if (Char* charVal = dynamic_cast<Char*>(convertedOperand)) {
+        result = calculate(charVal, unary->operator_->Tag);
+    } else {
+        reportError("Unsupported operand type for unary operator");
+        delete convertedOperand;
+        return nullptr;
+    }
+    
+    delete convertedOperand;
+    return result;
 }
 
 // 二元运算表达式求值 - 返回Value类型
@@ -508,6 +463,54 @@ Value* Interpreter::calculate(String* left, String* right, int op) {
     switch (op) {
         case '+': return new String(*left + *right);
         default: return new String("");
+    }
+}
+
+// ==================== 单目运算calculate函数重载 ====================
+
+Value* Interpreter::calculate(Integer* operand, int op) {
+    try {
+        switch (op) {
+            case '+': return new Integer(operand->getValue());  // 正号
+            case '-': return new Integer(-operand->getValue());  // 负号
+            case '~': return new Integer(~operand->getValue());  // 位取反
+            case '!': return new Bool(!operand->getValue());     // 逻辑非
+            default: return new Integer(operand->getValue());
+        }
+    } catch (const std::exception& e) {
+        reportError("Unary arithmetic error: " + string(e.what()));
+        return new Integer(0);
+    }
+}
+
+Value* Interpreter::calculate(Double* operand, int op) {
+    try {
+        switch (op) {
+            case '+': return new Double(operand->getValue());  // 正号
+            case '-': return new Double(-operand->getValue());  // 负号
+            case '!': return new Bool(!operand->getValue());    // 逻辑非
+            default: return new Double(operand->getValue());
+        }
+    } catch (const std::exception& e) {
+        reportError("Unary arithmetic error: " + string(e.what()));
+        return new Double(0.0);
+    }
+}
+
+Value* Interpreter::calculate(Bool* operand, int op) {
+    switch (op) {
+        case '!': return new Bool(!operand->getValue());  // 逻辑非
+        default: return new Bool(operand->getValue());
+    }
+}
+
+Value* Interpreter::calculate(Char* operand, int op) {
+    switch (op) {
+        case '+': return new Char(operand->getValue());  // 正号
+        case '-': return new Char(-operand->getValue());  // 负号
+        case '~': return new Char(~operand->getValue());  // 位取反
+        case '!': return new Bool(!operand->getValue());  // 逻辑非
+        default: return new Char(operand->getValue());
     }
 }
 

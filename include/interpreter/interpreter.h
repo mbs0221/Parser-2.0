@@ -96,11 +96,18 @@ public:
     string getTypeName(Value* value);
     
     // 计算方法 - 使用函数重载，返回Value类型
+    // 双目运算
     Value* calculate(Integer* left, Integer* right, int op);
     Value* calculate(Double* left, Double* right, int op);
     Value* calculate(Bool* left, Bool* right, int op);
     Value* calculate(Char* left, Char* right, int op);
     Value* calculate(String* left, String* right, int op);
+    
+    // 单目运算
+    Value* calculate(Integer* operand, int op);
+    Value* calculate(Double* operand, int op);
+    Value* calculate(Bool* operand, int op);
+    Value* calculate(Char* operand, int op);
     
     // 作用域管理辅助函数 - 处理有返回值的函数
     template<typename Func>
