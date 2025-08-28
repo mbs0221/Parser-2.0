@@ -8,7 +8,7 @@ using namespace std;
 
 // Bool类型的特化版本
 template<>
-Bool* Interpreter::calculate<Bool>(Value* left, Value* right, int op) {
+Value* Interpreter::calculate<Bool>(Value* left, Value* right, int op) {
     Bool* leftBool = static_cast<Bool*>(left);
     Bool* rightBool = static_cast<Bool*>(right);
     
@@ -29,11 +29,11 @@ Bool* Interpreter::calculate<Bool>(Value* left, Value* right, int op) {
 
 // Integer类型的特化版本
 template<>
-Integer* Interpreter::calculate<Integer>(Value* left, Value* right, int op) {
+Value* Interpreter::calculate<Integer>(Value* left, Value* right, int op) {
     Integer* leftInt = static_cast<Integer*>(left);
     Integer* rightInt = static_cast<Integer*>(right);
     
-    Integer* result = nullptr;
+    Value* result = nullptr;
     switch (op) {
         case '+': result = new Integer(leftInt->getValue() + rightInt->getValue()); break;
         case '-': result = new Integer(leftInt->getValue() - rightInt->getValue()); break;
@@ -59,6 +59,12 @@ Integer* Interpreter::calculate<Integer>(Value* left, Value* right, int op) {
         case '^': result = new Integer(leftInt->getValue() ^ rightInt->getValue()); break;
         case LEFT_SHIFT: result = new Integer(leftInt->getValue() << rightInt->getValue()); break;
         case RIGHT_SHIFT: result = new Integer(leftInt->getValue() >> rightInt->getValue()); break;
+        case EQ_EQ: result = new Bool(leftInt->getValue() == rightInt->getValue()); break;
+        case NE_EQ: result = new Bool(leftInt->getValue() != rightInt->getValue()); break;
+        case '<': result = new Bool(leftInt->getValue() < rightInt->getValue()); break;
+        case '>': result = new Bool(leftInt->getValue() > rightInt->getValue()); break;
+        case LE: result = new Bool(leftInt->getValue() <= rightInt->getValue()); break;
+        case GE: result = new Bool(leftInt->getValue() >= rightInt->getValue()); break;
         default: throw runtime_error("Unsupported binary operation for Integer");
     }
     
@@ -70,11 +76,11 @@ Integer* Interpreter::calculate<Integer>(Value* left, Value* right, int op) {
 
 // Double类型的特化版本
 template<>
-Double* Interpreter::calculate<Double>(Value* left, Value* right, int op) {
+Value* Interpreter::calculate<Double>(Value* left, Value* right, int op) {
     Double* leftDouble = static_cast<Double*>(left);
     Double* rightDouble = static_cast<Double*>(right);
     
-    Double* result = nullptr;
+    Value* result = nullptr;
     switch (op) {
         case '+': result = new Double(leftDouble->getValue() + rightDouble->getValue()); break;
         case '-': result = new Double(leftDouble->getValue() - rightDouble->getValue()); break;
@@ -88,6 +94,12 @@ Double* Interpreter::calculate<Double>(Value* left, Value* right, int op) {
             }
             result = new Double(leftDouble->getValue() / rightDouble->getValue()); 
             break;
+        case EQ_EQ: result = new Bool(leftDouble->getValue() == rightDouble->getValue()); break;
+        case NE_EQ: result = new Bool(leftDouble->getValue() != rightDouble->getValue()); break;
+        case '<': result = new Bool(leftDouble->getValue() < rightDouble->getValue()); break;
+        case '>': result = new Bool(leftDouble->getValue() > rightDouble->getValue()); break;
+        case LE: result = new Bool(leftDouble->getValue() <= rightDouble->getValue()); break;
+        case GE: result = new Bool(leftDouble->getValue() >= rightDouble->getValue()); break;
         default: throw runtime_error("Unsupported binary operation for Double");
     }
     
@@ -99,11 +111,11 @@ Double* Interpreter::calculate<Double>(Value* left, Value* right, int op) {
 
 // Char类型的特化版本
 template<>
-Char* Interpreter::calculate<Char>(Value* left, Value* right, int op) {
+Value* Interpreter::calculate<Char>(Value* left, Value* right, int op) {
     Char* leftChar = static_cast<Char*>(left);
     Char* rightChar = static_cast<Char*>(right);
     
-    Char* result = nullptr;
+    Value* result = nullptr;
     switch (op) {
         case '+': result = new Char(leftChar->getValue() + rightChar->getValue()); break;
         case '-': result = new Char(leftChar->getValue() - rightChar->getValue()); break;
@@ -117,6 +129,12 @@ Char* Interpreter::calculate<Char>(Value* left, Value* right, int op) {
             }
             result = new Char(leftChar->getValue() / rightChar->getValue()); 
             break;
+        case EQ_EQ: result = new Bool(leftChar->getValue() == rightChar->getValue()); break;
+        case NE_EQ: result = new Bool(leftChar->getValue() != rightChar->getValue()); break;
+        case '<': result = new Bool(leftChar->getValue() < rightChar->getValue()); break;
+        case '>': result = new Bool(leftChar->getValue() > rightChar->getValue()); break;
+        case LE: result = new Bool(leftChar->getValue() <= rightChar->getValue()); break;
+        case GE: result = new Bool(leftChar->getValue() >= rightChar->getValue()); break;
         default: throw runtime_error("Unsupported binary operation for Char");
     }
     
@@ -128,7 +146,7 @@ Char* Interpreter::calculate<Char>(Value* left, Value* right, int op) {
 
 // String类型的特化版本
 template<>
-String* Interpreter::calculate<String>(Value* left, Value* right, int op) {
+Value* Interpreter::calculate<String>(Value* left, Value* right, int op) {
     String* leftStr = static_cast<String*>(left);
     String* rightStr = static_cast<String*>(right);
     
@@ -150,7 +168,7 @@ String* Interpreter::calculate<String>(Value* left, Value* right, int op) {
 
 // Bool类型的单目运算特化版本
 template<>
-Bool* Interpreter::calculate<Bool>(Value* operand, int op) {
+Value* Interpreter::calculate<Bool>(Value* operand, int op) {
     Bool* boolOperand = static_cast<Bool*>(operand);
     
     Bool* result = nullptr;
@@ -166,7 +184,7 @@ Bool* Interpreter::calculate<Bool>(Value* operand, int op) {
 
 // Integer类型的单目运算特化版本
 template<>
-Integer* Interpreter::calculate<Integer>(Value* operand, int op) {
+Value* Interpreter::calculate<Integer>(Value* operand, int op) {
     Integer* intOperand = static_cast<Integer*>(operand);
     
     Integer* result = nullptr;
@@ -184,7 +202,7 @@ Integer* Interpreter::calculate<Integer>(Value* operand, int op) {
 
 // Double类型的单目运算特化版本
 template<>
-Double* Interpreter::calculate<Double>(Value* operand, int op) {
+Value* Interpreter::calculate<Double>(Value* operand, int op) {
     Double* doubleOperand = static_cast<Double*>(operand);
     
     Double* result = nullptr;
@@ -201,7 +219,7 @@ Double* Interpreter::calculate<Double>(Value* operand, int op) {
 
 // Char类型的单目运算特化版本
 template<>
-Char* Interpreter::calculate<Char>(Value* operand, int op) {
+Value* Interpreter::calculate<Char>(Value* operand, int op) {
     Char* charOperand = static_cast<Char*>(operand);
     
     Char* result = nullptr;
@@ -219,7 +237,7 @@ Char* Interpreter::calculate<Char>(Value* operand, int op) {
 
 // String类型的单目运算特化版本
 template<>
-String* Interpreter::calculate<String>(Value* operand, int op) {
+Value* Interpreter::calculate<String>(Value* operand, int op) {
     String* stringOperand = static_cast<String*>(operand);
     
     String* result = nullptr;
@@ -249,16 +267,16 @@ Value* Interpreter::calculate_binary_casted(Value* left, Value* right, int opTag
 
 // 二元操作的兼容性计算方法
 Value* Interpreter::calculate_binary_compatible(Value* left, Value* right, int opTag) {
-    // 逻辑和比较运算：统一转换为布尔类型
-    if (opTag == AND_AND || opTag == OR_OR || opTag == EQ_EQ || opTag == NE_EQ || opTag == '<' || opTag == '>' || opTag == LT || opTag == GT || opTag == LE || opTag == GE) {
-        return calculate_binary_casted<Bool>(left, right, opTag);
-    }
-    
     // 位运算：统一转换为整数类型
     if (opTag == '&' || opTag == '|' || opTag == '^' || 
         opTag == BIT_AND || opTag == BIT_OR || opTag == BIT_XOR || 
         opTag == LEFT_SHIFT || opTag == RIGHT_SHIFT) {
         return calculate_binary_casted<Integer>(left, right, opTag);
+    }
+
+    // 逻辑运算：统一转换为布尔类型
+    if (opTag == AND_AND || opTag == OR_OR) {
+        return calculate_binary_casted<Bool>(left, right, opTag);
     }
     
     // 字符串类型：如果任一操作数是字符串，则返回string

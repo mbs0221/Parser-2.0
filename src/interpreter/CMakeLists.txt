@@ -3,6 +3,8 @@
 # 设置源文件
 set(INTERPRETER_SOURCES
     ${CMAKE_SOURCE_DIR}/src/interpreter/interpreter.cpp
+    ${CMAKE_SOURCE_DIR}/src/interpreter/statement.cpp
+    ${CMAKE_SOURCE_DIR}/src/interpreter/expression.cpp
     ${CMAKE_SOURCE_DIR}/src/interpreter/calculate.cpp
     ${CMAKE_SOURCE_DIR}/src/interpreter/logger.cpp
     ${CMAKE_SOURCE_DIR}/src/interpreter/builtin.cpp

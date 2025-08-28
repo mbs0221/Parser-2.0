@@ -29,7 +29,7 @@ Program* Parser::parseProgram() {
     Program* program = new Program();
     
     while (lex.token()->Tag != -1 && lex.token()->Tag != END_OF_FILE) {
-        Statement* stmt = parseStatement();
+        Statement* stmt = parseDeclaration();
         if (stmt) {
             program->addStatement(stmt);
         }
@@ -38,11 +38,31 @@ Program* Parser::parseProgram() {
     return program;
 }
 
-// 解析语句
-Statement* Parser::parseStatement() {
+// 解析声明（全局）
+Statement* Parser::parseDeclaration() {
     switch (lex.token()->Tag) {
         case IMPORT:
             return parseImportStatement();
+        case LET:
+            return parseVariableDeclaration();
+        case FUNCTION:
+            return parseFunction();
+        case STRUCT:
+            return parseStruct();
+        case CLASS:
+            return parseClass();
+        case ID:
+            return parseExpressionStatement();
+        default:
+            printf("SYNTAX ERROR line[%03d]: unexpected token in global declaration\n", lex.line);
+            exit(1);  // 强制退出
+            return nullptr;
+    }
+}
+
+// 解析语句（函数内部）
+Statement* Parser::parseStatement() {
+    switch (lex.token()->Tag) {
         case LET:
             return parseVariableDeclaration();
         case IF:
@@ -57,18 +77,10 @@ Statement* Parser::parseStatement() {
             return parseContinueStatement();
         case RETURN:
             return parseReturnStatement();
-        case THROW:
-            return parseThrowStatement();
         case TRY:
             return parseTryStatement();
         case SWITCH:
             return parseSwitchStatement();
-        case FUNCTION:
-            return parseFunction();
-        case STRUCT:
-            return parseStruct();
-        case CLASS:
-            return parseClass();
         case ID:
             return parseExpressionStatement();
         case '{':
@@ -76,8 +88,8 @@ Statement* Parser::parseStatement() {
         default:
             printf("SYNTAX ERROR line[%03d]: unexpected token in statement\n", lex.line);
             exit(1);  // 强制退出
-		return nullptr;
-	}
+            return nullptr;
+    }
 }
 
 // 解析导入语句 (import "module.txt";)
@@ -226,13 +238,7 @@ ReturnStatement* Parser::parseReturnStatement() {
     return new ReturnStatement(returnValue);
 }
 
-// 解析throw语句
-ThrowStatement* Parser::parseThrowStatement() {
-    lex.match(THROW);
-    Expression* exception = parseExpression();
-    lex.match(';'); 
-    return new ThrowStatement(exception);
-}
+
 
 // 解析try语句 - 合并了catch和finally
 TryStatement* Parser::parseTryStatement() {
@@ -262,7 +268,9 @@ TryStatement* Parser::parseTryStatement() {
 // 解析switch语句 - 合并了case和default
 SwitchStatement* Parser::parseSwitchStatement() {
     lex.match(SWITCH);
+    lex.match('(');
     Expression* condition = parseExpression();
+    lex.match(')');
     lex.match('{');
     vector<SwitchStatement::SwitchCase> cases;
     
@@ -271,16 +279,33 @@ SwitchStatement* Parser::parseSwitchStatement() {
         lex.match(CASE);
         Expression* caseValue = parseExpression();
         lex.match(':');
-        Statement* caseBody = parseStatement();
-        vector<Statement*> caseStatements = {caseBody};
+        
+        // 解析case主体 - 可以是单个语句或多个语句
+        vector<Statement*> caseStatements;
+        while (lex.token()->Tag != CASE && lex.token()->Tag != DEFAULT && lex.token()->Tag != '}') {
+            Statement* stmt = parseStatement();
+            if (stmt) {
+                caseStatements.push_back(stmt);
+            }
+        }
+        
         cases.push_back(SwitchStatement::SwitchCase(caseValue, caseStatements));
     }
     
     // 解析default语句
     if (lex.token()->Tag == DEFAULT) {
         lex.match(DEFAULT);
-        Statement* defaultBody = parseStatement();
-        vector<Statement*> defaultStatements = {defaultBody};
+        lex.match(':');
+        
+        // 解析default主体 - 可以是单个语句或多个语句
+        vector<Statement*> defaultStatements;
+        while (lex.token()->Tag != '}') {
+            Statement* stmt = parseStatement();
+            if (stmt) {
+                defaultStatements.push_back(stmt);
+            }
+        }
+        
         cases.push_back(SwitchStatement::SwitchCase(nullptr, defaultStatements));
     }
     
@@ -367,9 +392,15 @@ Expression* Parser::parsePrimary() {
     switch (lex.token()->Tag) {
         case '!': // 逻辑非 (ASCII 33)
         case '-': // 负号 (ASCII 45)
-        case '+': // 正号 (ASCII 43)
         case '~': // 位运算取反 (ASCII 126)
             {
+                Operator* op = lex.matchOperator();
+                Expression* operand = parsePrimary();
+                return new UnaryExpression(operand, op);
+            }
+        case '+': // 正号 (ASCII 43) - 只在表达式开头时作为一元操作符
+            {
+                // 检查是否在表达式开头，如果是，则作为一元正号处理
                 Operator* op = lex.matchOperator();
                 Expression* operand = parsePrimary();
                 return new UnaryExpression(operand, op);
@@ -391,9 +422,7 @@ Expression* Parser::parsePrimary() {
             }
         case '[': // 数组
             return parseArray();
-        case '{': // 字典或结构体实例化
-            // 检查前面是否有标识符，如果有，可能是结构体实例化
-            // 这里暂时按字典处理，后续可以扩展为结构体实例化
+        case '{': // 字典字面量
             return parseDict();
         default:
             printf("SYNTAX ERROR line[%03d]: unexpected token in expression\n", lex.line);
@@ -449,6 +478,21 @@ Expression* Parser::parsePostfix(Expression* expr) {
                 // 函数调用
                 {
                     expr = parseCallExpression(expr);
+                }
+                break;
+                
+            case '{':
+                // 结构体实例化：ID {member: value, ...}
+                {
+                    // 检查前面的表达式是否是标识符
+                    if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(expr)) {
+                        // 解析结构体实例化
+                        expr = parseStructInstantiation(varExpr->name);
+                    } else {
+                        // 如果不是标识符，报错
+                        printf("SYNTAX ERROR line[%03d]: expected identifier before '{' for struct instantiation\n", lex.line);
+                        return nullptr;
+                    }
                 }
                 break;
                 
@@ -576,6 +620,53 @@ Expression* Parser::parseDict() {
     
     // 将Dict包装在ConstantExpression中
     return new ConstantExpression(dict);
+}
+
+// 解析结构体实例化
+Expression* Parser::parseStructInstantiation(const string& structName) {
+    lex.match('{');  // 匹配开始大括号
+    
+    vector<pair<string, Expression*>> members;
+    
+    if (lex.token()->Tag != '}') {
+        // 解析第一个成员 - key是标识符，不是字符串
+        string key = lex.matchIdentifier();
+        lex.match(':');
+        Expression* valueExpr = parseExpression();
+        members.push_back(make_pair(key, valueExpr));
+        
+        // 解析后续成员
+        while (lex.token()->Tag == ',') {  
+            lex.match(',');
+            key = lex.matchIdentifier();
+            lex.match(':');
+            valueExpr = parseExpression();
+            members.push_back(make_pair(key, valueExpr));
+        }
+    }
+    
+    lex.match('}');  // 匹配结束大括号
+    
+    // 创建结构体实例化表达式
+    // 这里我们使用CallExpression来表示结构体实例化
+    // 按照结构体定义的成员顺序传递参数
+    vector<Expression*> arguments;
+    
+    // 将成员按照结构体定义的顺序转换为参数列表
+    // 注意：这里我们暂时保持字典形式，但在instantiateStruct中会按照定义顺序处理
+    Dict* dict = new Dict();
+    for (const auto& member : members) {
+        if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(member.second)) {
+            dict->setEntry(member.first, constExpr->value);
+        } else {
+            // 对于非常量表达式，暂时使用nullptr
+            dict->setEntry(member.first, nullptr);
+        }
+    }
+    arguments.push_back(new ConstantExpression(dict));
+    
+    // 返回结构体实例化调用表达式
+    return new CallExpression(structName, arguments);
 }
 
 

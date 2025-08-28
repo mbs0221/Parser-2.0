@@ -21,7 +21,10 @@ protected:
     // 程序解析
     Program* parseProgram();
     
-    // 语句解析
+    // 声明解析（全局）
+    Statement* parseDeclaration();
+    
+    // 语句解析（函数内部）
     Statement* parseStatement();
     ImportStatement* parseImportStatement();
     VariableDeclaration* parseVariableDeclaration();
@@ -31,7 +34,6 @@ protected:
     BreakStatement* parseBreakStatement();
     ContinueStatement* parseContinueStatement();
     ReturnStatement* parseReturnStatement();
-    ThrowStatement* parseThrowStatement();
     TryStatement* parseTryStatement();
     SwitchStatement* parseSwitchStatement();
     BlockStatement* parseBlock();
@@ -54,6 +56,9 @@ protected:
     // 数组和字典解析
     Expression* parseArray();
     Expression* parseDict();
+    
+    // 结构体实例化解析
+    Expression* parseStructInstantiation(const string& structName);
     
     // 结构体和类解析
     StructDefinition* parseStruct();

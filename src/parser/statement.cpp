@@ -44,10 +44,6 @@ void ReturnStatement::accept(ASTVisitor* visitor) {
 }
 
 // ==================== 异常处理语句类型 ====================
-void ThrowStatement::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
 void TryStatement::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }

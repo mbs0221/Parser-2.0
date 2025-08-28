@@ -64,9 +64,7 @@ public:
     // StructInstantiationExpression和ClassInstantiationExpression的visit方法已移除，使用CallExpression
     void visit(MemberAccessExpression* expr) override;
     void visit(StructDefinition* stmt) override;
-    void visit(ThrowStatement* stmt) override;
-    void visit(TryStatement* stmt) override;
-    // CatchStatement和FinallyStatement的visit方法已移除，合并到TryStatement中
+
     void visit(SwitchStatement* stmt) override;
     // CaseStatement和DefaultStatement的visit方法已移除，合并到SwitchStatement中
     void visit(FunctionPrototype* stmt) override;

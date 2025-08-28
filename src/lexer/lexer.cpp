@@ -416,10 +416,6 @@ Value *Lexer::match_string(){
 	
 	// 读取字符串内容，直到遇到结束引号
 	while (peek != '"' && !inf.eof()) {
-		if (peek == '\n') {
-			printf("LEXICAL ERROR line[%03d]: unterminated string literal\n", line);
-			exit(1);  // 强制退出
-		}
 		if (peek == '\\') {
 			// 处理转义字符
 			inf.read(&peek, 1);

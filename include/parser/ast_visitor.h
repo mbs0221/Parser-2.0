@@ -39,11 +39,8 @@ class ClassDefinition;
 class BreakStatement;
 class ContinueStatement;
 class ReturnStatement;
-class ThrowStatement;
 class TryStatement;
-// CatchStatement和FinallyStatement已合并到TryStatement中
 class SwitchStatement;
-// CaseStatement和DefaultStatement已合并到SwitchStatement中
 class FunctionPrototype;
 
 // function.h中定义的类
@@ -92,8 +89,8 @@ public:
     virtual void visit(BreakStatement* stmt) = 0;
     virtual void visit(ContinueStatement* stmt) = 0;
     virtual void visit(ReturnStatement* stmt) = 0;
-    virtual void visit(ThrowStatement* stmt) = 0;
     virtual void visit(TryStatement* stmt) = 0;
+
     virtual void visit(SwitchStatement* stmt) = 0;
     virtual void visit(FunctionPrototype* stmt) = 0;
     
@@ -101,7 +98,6 @@ public:
     virtual void visit(Identifier* id) = 0;
     virtual void visit(Variable* var) = 0;
     virtual void visit(UserFunction* func) = 0;
-    virtual void visit(ClassMethod* method) = 0;
     
     // 程序访问方法
     virtual void visit(Program* program) = 0;

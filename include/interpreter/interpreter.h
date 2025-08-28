@@ -71,9 +71,8 @@ public:
     void visit(BreakStatement* stmt) override;
     void visit(ContinueStatement* stmt) override;
     void visit(ReturnStatement* stmt) override;
-    void visit(ThrowStatement* stmt) override;
     void visit(TryStatement* stmt) override;
-    // CatchStatement和FinallyStatement的visit方法已移除，合并到TryStatement中
+
     void visit(SwitchStatement* stmt) override;
     // CaseStatement和DefaultStatement的visit方法已移除，合并到SwitchStatement中
     void visit(FunctionPrototype* stmt) override;
@@ -81,7 +80,6 @@ public:
     // ASTVisitor接口实现 - function.h中定义的类的访问方法
     void visit(Identifier* id) override;
     void visit(Variable* var) override;
-    void visit(ClassMethod* method) override;
 
     // ASTVisitor接口实现 - 程序访问方法
     void visit(Program* program) override;
@@ -109,11 +107,11 @@ public:
     Value* calculate_assign_casted(Value* left, Value* right, int opTag);
     Value* calculate_assign_compatible(Value* left, Value* right, int opTag);
     
-    // 泛型计算方法 - 使用模板参数作为返回类型
+    // 泛型计算方法 - 返回Value*类型
     template<typename T>
-    T* calculate(Value* left, Value* right, int op);
+    Value* calculate(Value* left, Value* right, int op);
     template<typename T>
-    T* calculate(Value* value, int op);
+    Value* calculate(Value* value, int op);
     
     // 作用域管理辅助函数 - 处理有返回值的函数
     template<typename Func>

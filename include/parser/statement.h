@@ -122,16 +122,9 @@ struct ReturnStatement : public Statement {
     void accept(ASTVisitor* visitor) override;
 };
 
-// ==================== 异常处理语句 ====================
-// 抛出异常语句
-struct ThrowStatement : public Statement {
-    Expression* expression;
-    
-    ThrowStatement(Expression* expr) : expression(expr) {}
-    
-    void accept(ASTVisitor* visitor) override;
-};
 
+
+// ==================== 异常处理语句 ====================
 // Try-Catch-Finally语句 - 合并了CatchStatement和FinallyStatement
 struct TryStatement : public Statement {
     Statement* tryBlock;
