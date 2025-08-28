@@ -191,10 +191,11 @@ Value* String::convertTo(Type* type) {
         transform(lowerValue.begin(), lowerValue.end(), lowerValue.begin(), ::tolower);
         if (lowerValue == "true" || lowerValue == "1") {
             return new Bool(true);
-        } else if (lowerValue == "false" || lowerValue == "0") {
+        } else if (lowerValue == "false" || lowerValue == "0" || lowerValue == "") {
             return new Bool(false);
         } else {
-            throw runtime_error("Cannot convert string '" + value + "' to Bool");
+            // 非空字符串转换为true
+            return new Bool(true);
         }
     } else {
         throw runtime_error("Cannot convert String to type: " + type->word);

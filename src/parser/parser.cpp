@@ -365,9 +365,9 @@ Expression* Parser::parseExpressionWithPrecedence(int minPrecedence) {
 // 解析基本表达式（因子）
 Expression* Parser::parsePrimary() {
     switch (lex.token()->Tag) {
-        case NOT: // 逻辑非
+        case '!': // 逻辑非 (ASCII 33)
         case '-': // 负号 (ASCII 45)
-        case MINUS: // 负号 (枚举 301)
+        case '~': // 位运算取反 (ASCII 126)
             {
                 Operator* op = lex.matchOperator();
                 Expression* operand = parsePrimary();
@@ -459,14 +459,13 @@ Expression* Parser::parsePostfix(Expression* expr) {
 bool Parser::isBinaryOperator(int tag) {
     // 检查单字符操作符（ASCII码）
     if (tag == '+' || tag == '-' || tag == '*' || tag == '/' || tag == '%' ||
-        tag == '<' || tag == '>' || tag == '=' || tag == '!' || tag == '&' || 
-        tag == '|' || tag == '^' || tag == '~') {
+        tag == '<' || tag == '>' || tag == '=' || tag == '&' || 
+        tag == '|' || tag == '^') {
         return true;
     }
     
     // 检查多字符操作符（枚举类型）
-    return tag == PLUS || tag == MINUS || tag == MULTIPLY || tag == DIVIDE || tag == MODULO ||
-           tag == LT || tag == GT || tag == LE || tag == GE || tag == EQ_EQ || tag == NE_EQ || 
+    return tag == LE || tag == GE || tag == EQ_EQ || tag == NE_EQ || 
            tag == AND_AND || tag == OR_OR || tag == BIT_AND || tag == BIT_OR || 
            tag == BIT_XOR || tag == LEFT_SHIFT || tag == RIGHT_SHIFT;
 }

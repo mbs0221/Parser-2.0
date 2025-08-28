@@ -200,33 +200,85 @@ Value* Interpreter::visit(UnaryExpression* unary) {
 
     // 根据操作符类型进行处理
     switch (unary->operator_->Tag) {
-        case NOT: {
-            // 逻辑非操作
-            if (Integer* intVal = dynamic_cast<Integer*>(operand)) {
-                return new Bool(intVal->getValue() == 0);
-            } else if (Double* doubleVal = dynamic_cast<Double*>(operand)) {
-                return new Bool(doubleVal->getValue() == 0.0);
-            } else if (Bool* boolVal = dynamic_cast<Bool*>(operand)) {
-                return new Bool(!boolVal->getValue());
-            } else if (String* strVal = dynamic_cast<String*>(operand)) {
-                return new Bool(strVal->getValue().empty());
+        case '!': {
+            // 逻辑非操作：统一转换为布尔类型
+            string targetType = "bool";
+            
+            // 使用CastExpression进行类型转换
+            CastExpression* castExpr = new CastExpression(new ConstantExpression(operand), targetType);
+            Value* convertedOperand = visit(castExpr);
+            delete castExpr;
+            
+            if (!convertedOperand) {
+                reportError("Failed to convert operand to bool for logical NOT operator");
+                return nullptr;
+            }
+            
+            // 执行逻辑非操作
+            if (Bool* boolVal = dynamic_cast<Bool*>(convertedOperand)) {
+                Value* result = new Bool(!boolVal->getValue());
+                delete convertedOperand;
+                return result;
             } else {
                 reportError("Invalid operand for logical NOT operator");
+                delete convertedOperand;
                 return nullptr;
             }
         }
-        case '-':   // ASCII 值 45
-            {
-                // 一元负号操作
-                if (Integer* intVal = dynamic_cast<Integer*>(operand)) {
-                    return new Integer(-intVal->getValue());
-                } else if (Double* doubleVal = dynamic_cast<Double*>(operand)) {
-                    return new Double(-doubleVal->getValue());
-                } else {
-                    reportError("Invalid operand for unary minus operator");
-                    return nullptr;
-                }
+        case '-': {
+            // 一元负号操作：统一转换为数值类型
+            string targetType = "double";  // 优先转换为double以保持精度
+            
+            // 使用CastExpression进行类型转换
+            CastExpression* castExpr = new CastExpression(new ConstantExpression(operand), targetType);
+            Value* convertedOperand = visit(castExpr);
+            delete castExpr;
+            
+            if (!convertedOperand) {
+                reportError("Failed to convert operand to numeric type for unary minus operator");
+                return nullptr;
             }
+            
+            // 执行一元负号操作
+            if (Double* doubleVal = dynamic_cast<Double*>(convertedOperand)) {
+                Value* result = new Double(-doubleVal->getValue());
+                delete convertedOperand;
+                return result;
+            } else if (Integer* intVal = dynamic_cast<Integer*>(convertedOperand)) {
+                Value* result = new Integer(-intVal->getValue());
+                delete convertedOperand;
+                return result;
+            } else {
+                reportError("Invalid operand for unary minus operator");
+                delete convertedOperand;
+                return nullptr;
+            }
+        }
+        case '~': {
+            // 位运算取反操作：统一转换为整数类型
+            string targetType = "int";
+            
+            // 使用CastExpression进行类型转换
+            CastExpression* castExpr = new CastExpression(new ConstantExpression(operand), targetType);
+            Value* convertedOperand = visit(castExpr);
+            delete castExpr;
+            
+            if (!convertedOperand) {
+                reportError("Failed to convert operand to int for bitwise NOT operator");
+                return nullptr;
+            }
+            
+            // 执行位运算取反操作
+            if (Integer* intVal = dynamic_cast<Integer*>(convertedOperand)) {
+                Value* result = new Integer(~intVal->getValue());
+                delete convertedOperand;
+                return result;
+            } else {
+                reportError("Invalid operand for bitwise NOT operator");
+                delete convertedOperand;
+                return nullptr;
+            }
+        }
         default:
             reportError("Unknown unary operator Tag " + to_string(unary->operator_->Tag));
             return nullptr;
@@ -353,16 +405,9 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
         return "bool";
     }
     
-    // 比较运算：检查特殊类型组合
-    if (opTag == EQ_EQ || opTag == NE_EQ || opTag == '<' || opTag == '>' || opTag == 'LT_EQ' || opTag == 'GT_EQ' || opTag == 'EQ_EQ' || opTag == 'NE_EQ') {
-        // 字符串比较
-        if (dynamic_cast<String*>(left) && dynamic_cast<String*>(right)) {
-            return "string";
-        }
-        // 布尔比较
-        if (dynamic_cast<Bool*>(left) && dynamic_cast<Bool*>(right)) {
-            return "bool";
-        }
+    // 比较运算：统一返回布尔类型
+    if (opTag == EQ_EQ || opTag == NE_EQ || opTag == '<' || opTag == '>' || opTag == LT || opTag == GT || opTag == LE || opTag == GE) {
+        return "bool";
     }
     
     // 字符串类型：如果任一操作数是字符串且操作符是+，则返回string
@@ -397,6 +442,12 @@ Value* Interpreter::calculate(Integer* left, Integer* right, int op) {
             case '*': return new Integer(*left * *right);
             case '/': return new Integer(*left / *right);
             case '%': return new Integer(*left % *right);
+            case '<': return new Bool(*left < *right);
+            case '>': return new Bool(*left > *right);
+            case LE: return new Bool(*left <= *right);
+            case GE: return new Bool(*left >= *right);
+            case EQ_EQ: return new Bool(*left == *right);
+            case NE_EQ: return new Bool(*left != *right);
             default: return new Integer(0);
         }
     } catch (const std::exception& e) {
@@ -412,6 +463,12 @@ Value* Interpreter::calculate(Double* left, Double* right, int op) {
             case '-': return new Double(*left - *right);
             case '*': return new Double(*left * *right);
             case '/': return new Double(*left / *right);
+            case '<': return new Bool(*left < *right);
+            case '>': return new Bool(*left > *right);
+            case LE: return new Bool(*left <= *right);
+            case GE: return new Bool(*left >= *right);
+            case EQ_EQ: return new Bool(*left == *right);
+            case NE_EQ: return new Bool(*left != *right);
             default: return new Double(0.0);
         }
     } catch (const std::exception& e) {

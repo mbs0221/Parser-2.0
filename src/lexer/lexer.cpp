@@ -229,7 +229,6 @@ Token *Lexer::match_other(){
 		inf.read(&peek, 1);
 		if (peek == '=') {
 			// ==
-			inf.read(&peek, 1);
 			return Operator::EQ;  // 使用静态常量
 		} else {
 			// =
@@ -240,7 +239,6 @@ Token *Lexer::match_other(){
 		inf.read(&peek, 1);
 		if (peek == '=') {
 			// !=
-			inf.read(&peek, 1);
 			return Operator::NE;  // 使用静态常量
 		} else {
 			// !
@@ -251,7 +249,6 @@ Token *Lexer::match_other(){
 		inf.read(&peek, 1);
 		if (peek == '=') {
 			// <=
-			inf.read(&peek, 1);
 			return Operator::LE;  // 使用静态常量
 		} else {
 			// <
@@ -273,7 +270,6 @@ Token *Lexer::match_other(){
 		inf.read(&peek, 1);
 		if (peek == '&') {
 			// &&
-			inf.read(&peek, 1);
 			return Operator::AND;  // 使用静态常量
 		} else {
 			// &
@@ -284,7 +280,6 @@ Token *Lexer::match_other(){
 		inf.read(&peek, 1);
 		if (peek == '|') {
 			// ||
-			inf.read(&peek, 1);
 			return Operator::OR;  // 使用静态常量
 		} else {
 			// |
@@ -295,7 +290,6 @@ Token *Lexer::match_other(){
 		inf.read(&peek, 1);
 		if (peek == '+') {
 			// ++
-			inf.read(&peek, 1);
 			return Operator::Increment;  // 使用静态常量
 		} else {
 			// +
@@ -306,7 +300,6 @@ Token *Lexer::match_other(){
 		inf.read(&peek, 1);
 		if (peek == '-') {
 			// --
-			inf.read(&peek, 1);
 			return Operator::Decrement;  // 使用静态常量
 		} else {
 			// -
@@ -314,33 +307,20 @@ Token *Lexer::match_other(){
 			return Operator::Sub;  // 使用静态常量
 		}
 	} else if (peek == '*') {
-		inf.read(&peek, 1);
 		return Operator::Mul;  // 使用静态常量
 	} else if (peek == '/') {
-		inf.read(&peek, 1);
 		return Operator::Div;  // 使用静态常量
 	} else if (peek == '%') {
-		inf.read(&peek, 1);
 		return Operator::Mod;  // 使用静态常量
 	} else if (peek == '^') {
-		inf.read(&peek, 1);
 		return Operator::BitXor;  // 使用静态常量
 	} else if (peek == '~') {
-		inf.read(&peek, 1);
 		return Operator::BitNot;  // 使用静态常量
-	} else if (peek == '?') {
-		inf.read(&peek, 1);
-		return Operator::Question;  // 使用静态常量
-	} else if (peek == ':') {
-		inf.read(&peek, 1);
-		return Operator::Colon;  // 使用静态常量
 	} else if (peek == '.') {
-		// inf.read(&peek, 1);
 		return Operator::Dot;  // 使用静态常量
 	} else {
 		// 其他字符返回Token类型
 		if (peek > 31 && peek < 127){
-			// inf.read(&peek, 1);
 			return new Token(peek);
 		}
 		// 无法识别的字符
@@ -524,7 +504,7 @@ Operator* Lexer::matchOperator() {
         look->Tag == RIGHT_SHIFT || look->Tag == INCREMENT || look->Tag == DECREMENT ||
         look->Tag == ARROW) {
         Operator* op = static_cast<Operator*>(look);
-        move();
+		move();
         return op;
     }
     printf("SYNTAX ERROR line[%03d]: expected operator, got %d\n", line, look->Tag);
