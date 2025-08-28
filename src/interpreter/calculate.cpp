@@ -21,8 +21,9 @@ Bool* Interpreter::calculate<Bool>(Value* left, Value* right, int op) {
         default: throw runtime_error("Unsupported binary operation for Bool");
     }
     
-    delete left;
-    delete right;
+    // 不删除 left 和 right，因为它们可能还在其他地方被使用
+    // delete left;
+    // delete right;
     return result;
 }
 
@@ -61,8 +62,9 @@ Integer* Interpreter::calculate<Integer>(Value* left, Value* right, int op) {
         default: throw runtime_error("Unsupported binary operation for Integer");
     }
     
-    delete left;
-    delete right;
+    // 不删除 left 和 right，因为它们可能还在其他地方被使用
+    // delete left;
+    // delete right;
     return result;
 }
 
@@ -79,8 +81,9 @@ Double* Interpreter::calculate<Double>(Value* left, Value* right, int op) {
         case '*': result = new Double(leftDouble->getValue() * rightDouble->getValue()); break;
         case '/': 
             if (rightDouble->getValue() == 0.0) {
-                delete left;
-                delete right;
+                // 不删除 left 和 right，因为它们可能还在其他地方被使用
+                // delete left;
+                // delete right;
                 throw runtime_error("Division by zero");
             }
             result = new Double(leftDouble->getValue() / rightDouble->getValue()); 
@@ -88,8 +91,9 @@ Double* Interpreter::calculate<Double>(Value* left, Value* right, int op) {
         default: throw runtime_error("Unsupported binary operation for Double");
     }
     
-    delete left;
-    delete right;
+    // 不删除 left 和 right，因为它们可能还在其他地方被使用
+    // delete left;
+    // delete right;
     return result;
 }
 
@@ -106,8 +110,9 @@ Char* Interpreter::calculate<Char>(Value* left, Value* right, int op) {
         case '*': result = new Char(leftChar->getValue() * rightChar->getValue()); break;
         case '/': 
             if (rightChar->getValue() == 0) {
-                delete left;
-                delete right;
+                // 不删除 left 和 right，因为它们可能还在其他地方被使用
+                // delete left;
+                // delete right;
                 throw runtime_error("Division by zero");
             }
             result = new Char(leftChar->getValue() / rightChar->getValue()); 
@@ -115,8 +120,9 @@ Char* Interpreter::calculate<Char>(Value* left, Value* right, int op) {
         default: throw runtime_error("Unsupported binary operation for Char");
     }
     
-    delete left;
-    delete right;
+    // 不删除 left 和 right，因为它们可能还在其他地方被使用
+    // delete left;
+    // delete right;
     return result;
 }
 
@@ -136,8 +142,9 @@ String* Interpreter::calculate<String>(Value* left, Value* right, int op) {
         default: throw runtime_error("Unsupported binary operation for String");
     }
     
-    delete left;
-    delete right;
+    // 不删除 left 和 right，因为它们可能还在其他地方被使用
+    // delete left;
+    // delete right;
     return result;
 }
 
@@ -152,7 +159,8 @@ Bool* Interpreter::calculate<Bool>(Value* operand, int op) {
         default: throw runtime_error("Unsupported unary operation for Bool");
     }
     
-    delete operand;
+    // 不删除 operand，因为它可能还在其他地方被使用
+    // delete operand;
     return result;
 }
 
@@ -169,7 +177,8 @@ Integer* Interpreter::calculate<Integer>(Value* operand, int op) {
         default: throw runtime_error("Unsupported unary operation for Integer");
     }
     
-    delete operand;
+    // 不删除 operand，因为它可能还在其他地方被使用
+    // delete operand;
     return result;
 }
 
@@ -185,7 +194,8 @@ Double* Interpreter::calculate<Double>(Value* operand, int op) {
         default: throw runtime_error("Unsupported unary operation for Double");
     }
     
-    delete operand;
+    // 不删除 operand，因为它可能还在其他地方被使用
+    // delete operand;
     return result;
 }
 
@@ -202,7 +212,8 @@ Char* Interpreter::calculate<Char>(Value* operand, int op) {
         default: throw runtime_error("Unsupported unary operation for Char");
     }
     
-    delete operand;
+    // 不删除 operand，因为它可能还在其他地方被使用
+    // delete operand;
     return result;
 }
 
@@ -218,7 +229,8 @@ String* Interpreter::calculate<String>(Value* operand, int op) {
         default: throw runtime_error("Unsupported unary operation for String");
     }
     
-    delete operand;
+    // 不删除 operand，因为它可能还在其他地方被使用
+    // delete operand;
     return result;
 }
 
@@ -229,8 +241,9 @@ Value* Interpreter::calculate_binary_casted(Value* left, Value* right, int opTag
     ConstantExpression* right_constant = new ConstantExpression(right);
     Value* left_casted = visit(new CastExpression<T>(left_constant));
     Value* right_casted = visit(new CastExpression<T>(right_constant));
-    delete left_constant;
-    delete right_constant;
+    // 不删除 ConstantExpression 对象，让它们自然销毁
+    // delete left_constant;
+    // delete right_constant;
     return calculate<T>(left_casted, right_casted, opTag);
 }
 
@@ -275,7 +288,8 @@ template<typename T>
 Value* Interpreter::calculate_unary_casted(Value* value, int opTag) {
     ConstantExpression* constant_operand = new ConstantExpression(value);
     Value* operand_casted = visit(new CastExpression<T>(constant_operand));
-    delete constant_operand; 
+    // 不删除 ConstantExpression 对象，让它们自然销毁
+    // delete constant_operand; 
     return calculate<T>(operand_casted, opTag);
 }
 
@@ -315,7 +329,8 @@ Value* Interpreter::calculate_assign_casted(Value* left, Value* right, int opTag
     // 对于赋值操作，我们需要将右操作数转换为左操作数的类型
     ConstantExpression* right_constant = new ConstantExpression(right);
     Value* right_casted = visit(new CastExpression<T>(right_constant));
-    delete right_constant;
+    // 不删除 ConstantExpression 对象，让它们自然销毁
+    // delete right_constant;
     return right_casted;
 }
 
@@ -348,10 +363,10 @@ Value* Interpreter::visit(CastExpression<Integer>* castExpr) {
     if (!operandValue) return nullptr;
     
     // 转换为Integer类型
-    Value* result = operandValue->convert<Integer>(Type::Int);
+    Value* result = operandValue->convert<Integer>();
     
-    // 清理操作数值
-    delete operandValue;
+    // 不删除操作数值，因为它可能还在其他地方被使用
+    // delete operandValue;
     
     return result;
 }
@@ -365,10 +380,10 @@ Value* Interpreter::visit(CastExpression<Double>* castExpr) {
     if (!operandValue) return nullptr;
     
     // 转换为Double类型
-    Value* result = operandValue->convert<Double>(Type::Double);
+    Value* result = operandValue->convert<Double>();
     
-    // 清理操作数值
-    delete operandValue;
+    // 不删除操作数值，因为它可能还在其他地方被使用
+    // delete operandValue;
     
     return result;
 }
@@ -382,10 +397,10 @@ Value* Interpreter::visit(CastExpression<Bool>* castExpr) {
     if (!operandValue) return nullptr;
     
     // 转换为Bool类型
-    Value* result = operandValue->convert<Bool>(Type::Bool);
+    Value* result = operandValue->convert<Bool>();
     
-    // 清理操作数值
-    delete operandValue;
+    // 不删除操作数值，因为它可能还在其他地方被使用
+    // delete operandValue;
     
     return result;
 }
@@ -399,10 +414,10 @@ Value* Interpreter::visit(CastExpression<Char>* castExpr) {
     if (!operandValue) return nullptr;
     
     // 转换为Char类型
-    Value* result = operandValue->convert<Char>(Type::Char);
+    Value* result = operandValue->convert<Char>();
     
-    // 清理操作数值
-    delete operandValue;
+    // 不删除操作数值，因为它可能还在其他地方被使用
+    // delete operandValue;
     
     return result;
 }
@@ -416,10 +431,10 @@ Value* Interpreter::visit(CastExpression<String>* castExpr) {
     if (!operandValue) return nullptr;
     
     // 转换为String类型
-    Value* result = operandValue->convert<String>(Type::String);
+    Value* result = operandValue->convert<String>();
     
-    // 清理操作数值
-    delete operandValue;
+    // 不删除操作数值，因为它可能还在其他地方被使用
+    // delete operandValue;
     
     return result;
 }

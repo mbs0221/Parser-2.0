@@ -93,6 +93,31 @@ string Dict::getTypeName() const {
 
 // ==================== convertTo方法实现 ====================
 
+template<>
+Value* Value::convert<Integer>(){
+    return convertTo(Type::Int);
+}
+
+template<>
+Value* Value::convert<Double>(){
+    return convertTo(Type::Double);
+}
+
+template<>
+Value* Value::convert<Bool>(){
+    return convertTo(Type::Bool);
+}
+
+template<>
+Value* Value::convert<Char>(){
+    return convertTo(Type::Char);
+}
+
+template<>
+Value* Value::convert<String>(){
+    return convertTo(Type::String);
+}
+
 // Bool类型的convertTo实现
 Value* Bool::convertTo(Type* type) {
     if (type == Type::Int) {

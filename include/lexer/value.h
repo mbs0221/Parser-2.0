@@ -263,10 +263,7 @@ struct Value : public Token, public Convertable {
     
     // 泛型转换方法
     template<typename T>
-    T* convert(Type* type) {
-        Value* result = convertTo(type);
-        return dynamic_cast<T*>(result);
-    }
+    Value* convert();
     
     // 虚函数：具体的转换实现
     virtual Value* convertTo(Type* type) = 0;
