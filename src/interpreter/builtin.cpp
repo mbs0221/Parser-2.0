@@ -12,14 +12,18 @@
 using namespace std;
 
 Value* builtin_print(vector<Variable*>& args) {
-    for (auto arg : args) {
-        if (arg) {
-            Value* value = arg->getValue();
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i]) {
+            Value* value = args[i]->getValue();
             if (value) {
                 cout << value->toString();
+                if (i < args.size() - 1) {
+                    cout << " ";
+                }
             }
         }
     }
+    cout << endl;
     return nullptr;
 };
 
@@ -346,6 +350,49 @@ Value* builtin_to_double(vector<Variable*>& args) {
     return nullptr;
 }
 
+// ==================== 通用类型转换函数 ====================
+
+Value* builtin_cast(vector<Variable*>& args) {
+    if (args.size() != 2 || !args[0] || !args[1]) {
+        cout << "Cast error: " << "args.size() != 2 || !args[0] || !args[1]" << endl;
+        return nullptr;
+    }
+    
+    Value* value = args[0]->getValue();
+    Value* typeArg = args[1]->getValue();
+    
+    if (!value || !typeArg) {
+        cout << "Cast error: " << "!value || !typeArg" << endl;
+        return nullptr;
+    }
+    
+    // 获取目标类型名称
+    string targetType = typeArg->getTypeName();
+    
+    // 确定目标类型
+    Type* targetTypeObj = nullptr;
+    if (targetType == "int") {
+        targetTypeObj = Type::Int;
+    } else if (targetType == "double") {
+        targetTypeObj = Type::Double;
+    } else if (targetType == "bool") {
+        targetTypeObj = Type::Bool;
+    } else if (targetType == "char") {
+        targetTypeObj = Type::Char;
+    } else if (targetType == "string") {
+        targetTypeObj = Type::String;
+    } else {
+        return nullptr; // 未知类型
+    }
+    
+    // 使用convert方法进行类型转换
+    try {
+        return value->convert(targetTypeObj);
+    } catch (const exception& e) {
+        return nullptr;
+    }
+}
+
 // ==================== 系统函数 ====================
 
 Value* builtin_random(vector<Variable*>& args) {
@@ -404,6 +451,7 @@ void registerBuiltinFunctionsToScope(ScopeManager& scopeManager) {
     scopeManager.defineIdentifier("to_string", new BuiltinFunction("to_string", builtin_to_string));
     scopeManager.defineIdentifier("to_int", new BuiltinFunction("to_int", builtin_to_int));
     scopeManager.defineIdentifier("to_double", new BuiltinFunction("to_double", builtin_to_double));
+    scopeManager.defineIdentifier("cast", new BuiltinFunction("cast", builtin_cast));
     
     // 系统函数
     scopeManager.defineIdentifier("random", new BuiltinFunction("random", builtin_random));

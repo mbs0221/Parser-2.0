@@ -282,96 +282,21 @@ Value* Interpreter::visit(BinaryExpression* binary) {
         return nullptr;
     }
     
-    // 4. 直接进行类型转换，避免创建临时对象
+    // 4. 使用CastExpression进行类型转换
     Value* convertedLeft = nullptr;
     Value* convertedRight = nullptr;
     
-    // 根据目标类型进行转换
-    if (targetType == "int") {
-        if (Integer* leftInt = dynamic_cast<Integer*>(left)) {
-            convertedLeft = new Integer(leftInt->getValue());
-        } else if (Double* leftDouble = dynamic_cast<Double*>(left)) {
-            convertedLeft = new Integer((int)leftDouble->getValue());
-        } else if (Bool* leftBool = dynamic_cast<Bool*>(left)) {
-            convertedLeft = new Integer(leftBool->getValue() ? 1 : 0);
-        } else {
-            convertedLeft = new Integer(0);
-        }
-        
-        if (Integer* rightInt = dynamic_cast<Integer*>(right)) {
-            convertedRight = new Integer(rightInt->getValue());
-        } else if (Double* rightDouble = dynamic_cast<Double*>(right)) {
-            convertedRight = new Integer((int)rightDouble->getValue());
-        } else if (Bool* rightBool = dynamic_cast<Bool*>(right)) {
-            convertedRight = new Integer(rightBool->getValue() ? 1 : 0);
-        } else {
-            convertedRight = new Integer(0);
-        }
-    } else if (targetType == "double") {
-        if (Integer* leftInt = dynamic_cast<Integer*>(left)) {
-            convertedLeft = new Double((double)leftInt->getValue());
-        } else if (Double* leftDouble = dynamic_cast<Double*>(left)) {
-            convertedLeft = new Double(leftDouble->getValue());
-        } else if (Bool* leftBool = dynamic_cast<Bool*>(left)) {
-            convertedLeft = new Double(leftBool->getValue() ? 1.0 : 0.0);
-        } else {
-            convertedLeft = new Double(0.0);
-        }
-        
-        if (Integer* rightInt = dynamic_cast<Integer*>(right)) {
-            convertedRight = new Double((double)rightInt->getValue());
-        } else if (Double* rightDouble = dynamic_cast<Double*>(right)) {
-            convertedRight = new Double(rightDouble->getValue());
-        } else if (Bool* rightBool = dynamic_cast<Bool*>(right)) {
-            convertedRight = new Double(rightBool->getValue() ? 1.0 : 0.0);
-        } else {
-            convertedRight = new Double(0.0);
-        }
-    } else if (targetType == "bool") {
-        if (Integer* leftInt = dynamic_cast<Integer*>(left)) {
-            convertedLeft = new Bool(leftInt->getValue() != 0);
-        } else if (Double* leftDouble = dynamic_cast<Double*>(left)) {
-            convertedLeft = new Bool(leftDouble->getValue() != 0.0);
-        } else if (Bool* leftBool = dynamic_cast<Bool*>(left)) {
-            convertedLeft = new Bool(leftBool->getValue());
-        } else {
-            convertedLeft = new Bool(false);
-        }
-        
-        if (Integer* rightInt = dynamic_cast<Integer*>(right)) {
-            convertedRight = new Bool(rightInt->getValue() != 0);
-        } else if (Double* rightDouble = dynamic_cast<Double*>(right)) {
-            convertedRight = new Bool(rightDouble->getValue() != 0.0);
-        } else if (Bool* rightBool = dynamic_cast<Bool*>(right)) {
-            convertedRight = new Bool(rightBool->getValue());
-        } else {
-            convertedRight = new Bool(false);
-        }
-    } else if (targetType == "string") {
-        if (Integer* leftInt = dynamic_cast<Integer*>(left)) {
-            convertedLeft = new String(std::to_string(leftInt->getValue()));
-        } else if (Double* leftDouble = dynamic_cast<Double*>(left)) {
-            convertedLeft = new String(std::to_string(leftDouble->getValue()));
-        } else if (Bool* leftBool = dynamic_cast<Bool*>(left)) {
-            convertedLeft = new String(leftBool->getValue() ? "true" : "false");
-        } else if (String* leftStr = dynamic_cast<String*>(left)) {
-            convertedLeft = new String(leftStr->getValue());
-        } else {
-            convertedLeft = new String("");
-        }
-        
-        if (Integer* rightInt = dynamic_cast<Integer*>(right)) {
-            convertedRight = new String(std::to_string(rightInt->getValue()));
-        } else if (Double* rightDouble = dynamic_cast<Double*>(right)) {
-            convertedRight = new String(std::to_string(rightDouble->getValue()));
-        } else if (Bool* rightBool = dynamic_cast<Bool*>(right)) {
-            convertedRight = new String(rightBool->getValue() ? "true" : "false");
-        } else if (String* rightStr = dynamic_cast<String*>(right)) {
-            convertedRight = new String(rightStr->getValue());
-        } else {
-            convertedRight = new String("");
-        }
-    }
+    // 创建CastExpression进行类型转换
+    CastExpression* leftCast = new CastExpression(new ConstantExpression(left), targetType);
+    CastExpression* rightCast = new CastExpression(new ConstantExpression(right), targetType);
+    
+    // 执行类型转换
+    convertedLeft = visit(leftCast);
+    convertedRight = visit(rightCast);
+    
+    // 清理临时对象
+    delete leftCast;
+    delete rightCast;
     
     if (!convertedLeft || !convertedRight) {
         reportError("Failed to convert operands to target type: " + targetType);
@@ -438,6 +363,16 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
         if (dynamic_cast<Bool*>(left) && dynamic_cast<Bool*>(right)) {
             return "bool";
         }
+    }
+    
+    // 字符串类型：如果任一操作数是字符串且操作符是+，则返回string
+    if (opTag == '+' && (dynamic_cast<String*>(left) || dynamic_cast<String*>(right))) {
+        return "string";
+    }
+    
+    // 字符串类型：如果两个操作数都是字符串，则返回string
+    if (dynamic_cast<String*>(left) && dynamic_cast<String*>(right)) {
+        return "string";
     }
     
     // 数值类型转换：优先级 double > int > char > bool
@@ -569,9 +504,7 @@ Value* Interpreter::visit(CallExpression* call) {
     vector<Value*> evaluatedArgs;
     for (Expression* arg : call->arguments) {
         Value* evaluatedArg = visit(arg);
-        if (evaluatedArg) {
-            evaluatedArgs.push_back(evaluatedArg);
-        }
+        evaluatedArgs.push_back(evaluatedArg); // 即使为nullptr也要添加，保持索引对应关系
     }
     
     // 使用函数名调用
@@ -1010,81 +943,30 @@ Value* Interpreter::visit(CastExpression* castExpr) {
     // 根据目标类型进行转换
     string targetType = castExpr->getTargetTypeName();
     
+    // 确定目标类型
+    Type* targetTypeObj = nullptr;
     if (targetType == "int") {
-        if (Integer* intVal = dynamic_cast<Integer*>(operandValue)) {
-            return new Integer(intVal->getValue());
-        } else if (Double* doubleVal = dynamic_cast<Double*>(operandValue)) {
-            return new Integer((int)doubleVal->getValue());
-        } else if (Bool* boolVal = dynamic_cast<Bool*>(operandValue)) {
-            return new Integer(boolVal->getValue() ? 1 : 0);
-        } else if (Char* charVal = dynamic_cast<Char*>(operandValue)) {
-            return new Integer((int)charVal->getValue());
-        } else if (String* strVal = dynamic_cast<String*>(operandValue)) {
-            // 字符串转整数：尝试解析数字
-            try {
-                return new Integer(std::stoi(strVal->getValue()));
-            } catch (...) {
-                return new Integer(0);
-            }
-        }
+        targetTypeObj = Type::Int;
     } else if (targetType == "double") {
-        if (Integer* intVal = dynamic_cast<Integer*>(operandValue)) {
-            return new Double((double)intVal->getValue());
-        } else if (Double* doubleVal = dynamic_cast<Double*>(operandValue)) {
-            return new Double(doubleVal->getValue());
-        } else if (Bool* boolVal = dynamic_cast<Bool*>(operandValue)) {
-            return new Double(boolVal->getValue() ? 1.0 : 0.0);
-        } else if (Char* charVal = dynamic_cast<Char*>(operandValue)) {
-            return new Double((double)charVal->getValue());
-        } else if (String* strVal = dynamic_cast<String*>(operandValue)) {
-            try {
-                return new Double(std::stod(strVal->getValue()));
-            } catch (...) {
-                return new Double(0.0);
-            }
-        }
+        targetTypeObj = Type::Double;
     } else if (targetType == "bool") {
-        if (Integer* intVal = dynamic_cast<Integer*>(operandValue)) {
-            return new Bool(intVal->getValue() != 0);
-        } else if (Double* doubleVal = dynamic_cast<Double*>(operandValue)) {
-            return new Bool(doubleVal->getValue() != 0.0);
-        } else if (Bool* boolVal = dynamic_cast<Bool*>(operandValue)) {
-            return new Bool(boolVal->getValue());
-        } else if (Char* charVal = dynamic_cast<Char*>(operandValue)) {
-            return new Bool(charVal->getValue() != '\0');
-        } else if (String* strVal = dynamic_cast<String*>(operandValue)) {
-            return new Bool(!strVal->getValue().empty());
-        }
+        targetTypeObj = Type::Bool;
     } else if (targetType == "char") {
-        if (Integer* intVal = dynamic_cast<Integer*>(operandValue)) {
-            return new Char((char)intVal->getValue());
-        } else if (Double* doubleVal = dynamic_cast<Double*>(operandValue)) {
-            return new Char((char)doubleVal->getValue());
-        } else if (Bool* boolVal = dynamic_cast<Bool*>(operandValue)) {
-            return new Char(boolVal->getValue() ? '1' : '0');
-        } else if (Char* charVal = dynamic_cast<Char*>(operandValue)) {
-            return new Char(charVal->getValue());
-        } else if (String* strVal = dynamic_cast<String*>(operandValue)) {
-            string str = strVal->getValue();
-            return new Char(str.empty() ? '\0' : str[0]);
-        }
+        targetTypeObj = Type::Char;
     } else if (targetType == "string") {
-        if (Integer* intVal = dynamic_cast<Integer*>(operandValue)) {
-            return new String(std::to_string(intVal->getValue()));
-        } else if (Double* doubleVal = dynamic_cast<Double*>(operandValue)) {
-            return new String(std::to_string(doubleVal->getValue()));
-        } else if (Bool* boolVal = dynamic_cast<Bool*>(operandValue)) {
-            return new String(boolVal->getValue() ? "true" : "false");
-        } else if (Char* charVal = dynamic_cast<Char*>(operandValue)) {
-            return new String(string(1, charVal->getValue()));
-        } else if (String* strVal = dynamic_cast<String*>(operandValue)) {
-            return new String(strVal->getValue());
-        }
+        targetTypeObj = Type::String;
+    } else {
+        reportError("Unknown target type: " + targetType);
+        return operandValue;
     }
     
-    // 如果无法转换，返回原值
-    reportError("Cannot cast to type: " + targetType);
-    return operandValue;
+    // 使用convert方法进行类型转换
+    try {
+        return operandValue->convert(targetTypeObj);
+    } catch (const std::exception& e) {
+        reportError("Cast error: " + string(e.what()));
+        return operandValue;
+    }
 }
 
 void Interpreter::visit(SwitchStatement* switchStmt) {

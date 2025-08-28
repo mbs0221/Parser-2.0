@@ -34,6 +34,7 @@ Value* builtin_sort(vector<Variable*>& args);
 Value* builtin_to_string(vector<Variable*>& args);
 Value* builtin_to_int(vector<Variable*>& args);
 Value* builtin_to_double(vector<Variable*>& args);
+Value* builtin_cast(vector<Variable*>& args);
 
 // 系统函数
 Value* builtin_random(vector<Variable*>& args);

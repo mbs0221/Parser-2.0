@@ -21,6 +21,7 @@ struct Type;
 #include <stdlib.h>
 #include <stdio.h>
 #include <cstring>
+#include <algorithm>
 
 using namespace std;
 
@@ -117,6 +118,16 @@ struct Type :Word{
 	}
 };
 
+// 前向声明
+struct Value;
+
+// 可转换接口
+struct Convertable {
+    virtual ~Convertable() = default;
+    virtual string getTypeName() const = 0;
+    virtual Value* convertTo(Type* type) = 0;
+};
+
 // 操作符
 struct Operator :Token {
 	string symbol;  // 操作符符号
@@ -197,7 +208,7 @@ struct Visibility : public Token {
 
 // ==================== 值类型基类 ====================
 // 所有值的基类 - 继承自Token
-struct Value : public Token {
+struct Value : public Token, public Convertable {
     Type* valueType;  // 值的类型
     static Value* NullValue;  // 空值
     
@@ -213,6 +224,25 @@ struct Value : public Token {
     
     // 转换为布尔值 - 用于逻辑运算
     virtual bool toBool() const { return false; }
+    
+    // Convertable接口实现
+    virtual string getTypeName() const override {
+        return valueType ? valueType->word : "unknown";
+    }
+    
+    // 转换为指定类型
+    Value* convert(Type* type) {
+        // 如果目标类型与当前类型相同，直接返回this
+        if (type == valueType) {
+            return this;
+        }
+        
+        // 否则调用具体的convert方法
+        return convertTo(type);
+    }
+    
+    // 虚函数：具体的转换实现
+    virtual Value* convertTo(Type* type) = 0;
     
     // 访问操作 - 默认不支持访问
     virtual Value* access(Value* key) {
@@ -271,6 +301,17 @@ struct Bool : public Value {
     string str() const override {
         return toString();
     }
+    
+    // 转换为布尔值
+    bool toBool() const override {
+        return value;
+    }
+    
+    // 获取类型名称
+    string getTypeName() const override;
+    
+    // 类型转换实现 - 将在文件末尾定义
+    Value* convertTo(Type* type) override;
 };
 
 struct Integer : public Value {
@@ -418,6 +459,12 @@ struct Integer : public Value {
     string str() const override {
         return toString();
     }
+    
+    // 获取类型名称
+    string getTypeName() const override;
+    
+    // 类型转换实现 - 将在文件末尾定义
+    Value* convertTo(Type* type) override;
 };
 
 // 字符值类型
@@ -459,6 +506,12 @@ struct Char : public Value {
     string str() const override {
         return toString();
     }
+    
+    // 获取类型名称
+    string getTypeName() const override;
+    
+    // 类型转换实现 - 将在文件末尾定义
+    Value* convertTo(Type* type) override;
 };
 
 // 浮点数类型 - 作为值类型
@@ -551,6 +604,12 @@ struct Double : public Value {
     string str() const override {
         return toString();
     }
+    
+    // 获取类型名称
+    string getTypeName() const override;
+    
+    // 类型转换实现 - 将在value.cpp中定义
+    Value* convertTo(Type* type) override;
 };
 
 // 复合值基类 - 支持访问操作
@@ -623,6 +682,12 @@ struct Array : public CompositeValue {
             return nullptr;
         }
     }
+    
+    // 获取类型名称
+    string getTypeName() const override;
+    
+    // 类型转换实现 - 将在value.cpp中定义
+    Value* convertTo(Type* type) override;
 };
 
 
@@ -746,6 +811,12 @@ struct String : public Array {
     String operator+(bool b) const {
         return String(value + (b ? "true" : "false"));
     }
+    
+    // 获取类型名称
+    string getTypeName() const override;
+    
+    // 类型转换实现 - 将在value.cpp中定义
+    Value* convertTo(Type* type) override;
 };
 
 // 全局运算符重载 - 支持String与其他类型的混合运算
@@ -843,6 +914,12 @@ struct Dict : public CompositeValue {
         auto it = entries.find(keyStr);
         return it != entries.end() ? it->second : nullptr;
     }
+    
+    // 获取类型名称
+    string getTypeName() const override;
+    
+    // 类型转换实现 - 将在value.cpp中定义
+    Value* convertTo(Type* type) override;
 };
 
 #endif // VALUE_H

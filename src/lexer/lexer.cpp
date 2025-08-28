@@ -513,9 +513,15 @@ void Lexer::matchToken(int tag) {
 
 // 匹配操作符
 Operator* Lexer::matchOperator() {
+    // 检查是否为操作符（包括ASCII字符和枚举值）
     if (look->Tag == '+' || look->Tag == '-' || look->Tag == '*' || look->Tag == '/' ||
         look->Tag == '%' || look->Tag == '=' || look->Tag == '<' || look->Tag == '>' ||
-        look->Tag == '!' || look->Tag == '&' || look->Tag == '|' || look->Tag == '^') {
+        look->Tag == '!' || look->Tag == '&' || look->Tag == '|' || look->Tag == '^' ||
+        look->Tag == '~' || look->Tag == '?' || look->Tag == ':' || look->Tag == '.' ||
+        look->Tag == LE || look->Tag == GE || look->Tag == EQ_EQ || look->Tag == NE_EQ ||
+        look->Tag == AND_AND || look->Tag == OR_OR || look->Tag == LEFT_SHIFT ||
+        look->Tag == RIGHT_SHIFT || look->Tag == INCREMENT || look->Tag == DECREMENT ||
+        look->Tag == ARROW) {
         Operator* op = static_cast<Operator*>(look);
         move();
         return op;
