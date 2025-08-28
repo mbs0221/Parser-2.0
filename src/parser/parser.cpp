@@ -28,7 +28,7 @@ Program* Parser::parse(const string& file) {
 Program* Parser::parseProgram() {
     Program* program = new Program();
     
-    while (lex.token()->Tag != '#' && lex.token()->Tag != -1 && lex.token()->Tag != END_OF_FILE) {
+    while (lex.token()->Tag != -1 && lex.token()->Tag != END_OF_FILE) {
         Statement* stmt = parseStatement();
         if (stmt) {
             program->addStatement(stmt);
@@ -391,7 +391,9 @@ Expression* Parser::parsePrimary() {
             }
         case '[': // 数组
             return parseArray();
-        case '{': // 字典
+        case '{': // 字典或结构体实例化
+            // 检查前面是否有标识符，如果有，可能是结构体实例化
+            // 这里暂时按字典处理，后续可以扩展为结构体实例化
             return parseDict();
         default:
             printf("SYNTAX ERROR line[%03d]: unexpected token in expression\n", lex.line);
@@ -575,6 +577,8 @@ Expression* Parser::parseDict() {
     // 将Dict包装在ConstantExpression中
     return new ConstantExpression(dict);
 }
+
+
 
 // 解析通用函数调用表达式
 Expression* Parser::parseCallExpression(Expression* calleeExpr) {

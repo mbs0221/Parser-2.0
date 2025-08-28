@@ -9,6 +9,8 @@
 #include <iostream>
 #include <sstream>
 #include <typeinfo>
+#include <map>
+#include <functional>
 
 using namespace std;
 
@@ -92,8 +94,16 @@ Value* Interpreter::visit(Expression* expr) {
         return visit(assignExpr);
     } else if (BinaryExpression* binaryExpr = dynamic_cast<BinaryExpression*>(expr)) {
         return visit(binaryExpr);
-    } else if (CastExpression* castExpr = dynamic_cast<CastExpression*>(expr)) {
-        return visit(castExpr);
+    } else if (CastExpression<Integer>* intCastExpr = dynamic_cast<CastExpression<Integer>*>(expr)) {
+        return visit(intCastExpr);
+    } else if (CastExpression<Double>* doubleCastExpr = dynamic_cast<CastExpression<Double>*>(expr)) {
+        return visit(doubleCastExpr);
+    } else if (CastExpression<Bool>* boolCastExpr = dynamic_cast<CastExpression<Bool>*>(expr)) {
+        return visit(boolCastExpr);
+    } else if (CastExpression<Char>* charCastExpr = dynamic_cast<CastExpression<Char>*>(expr)) {
+        return visit(charCastExpr);
+    } else if (CastExpression<String>* stringCastExpr = dynamic_cast<CastExpression<String>*>(expr)) {
+        return visit(stringCastExpr);
     } else if (AccessExpression* accessExpr = dynamic_cast<AccessExpression*>(expr)) {
         return visit(accessExpr);
     } else if (CallExpression* callExpr = dynamic_cast<CallExpression*>(expr)) {
@@ -182,10 +192,6 @@ Value* Interpreter::visit(VariableExpression* varExpr) {
     }
 }
 
-
-
-// 赋值表达式现在使用BinaryExpression处理，在visit(BinaryExpression*)中实现
-
 // 一元表达式求值
 Value* Interpreter::visit(UnaryExpression* unary) {
     if (!unary || !unary->operand || !unary->operator_) {
@@ -200,33 +206,7 @@ Value* Interpreter::visit(UnaryExpression* unary) {
         return nullptr;
     }
 
-    // 根据操作符类型确定目标类型
-    string targetType;
-    switch (unary->operator_->Tag) {
-        case '!': targetType = "bool"; break;   // 逻辑非
-        case '-': targetType = "double"; break; // 一元负号
-        case '+': targetType = "double"; break; // 一元正号
-        case '~': targetType = "int"; break;    // 位取反
-        default:
-            reportError("Unknown unary operator Tag " + to_string(unary->operator_->Tag));
-            return nullptr;
-    }
-    
-    // 使用泛型calculate方法进行计算，内部会自动进行类型转换
-    Value* result = nullptr;
-    if (targetType == "int") {
-        result = calculate<Integer>(unary->operand, unary->operator_->Tag);
-    } else if (targetType == "double") {
-        result = calculate<Double>(unary->operand, unary->operator_->Tag);
-    } else if (targetType == "bool") {
-        result = calculate<Bool>(unary->operand, unary->operator_->Tag);
-    } else if (targetType == "char") {
-        result = calculate<Char>(unary->operand, unary->operator_->Tag);
-    } else {
-        reportError("Unsupported operand type for unary operator");
-        return nullptr;
-    }
-    return result;
+    return calculate_unary_compatible(operand, unary->operator_->Tag);
 }
 
 // 二元运算表达式求值 - 返回Value类型
@@ -254,47 +234,10 @@ Value* Interpreter::visit(BinaryExpression* binary) {
         reportError("Invalid operator in binary expression");
         return nullptr;
     }
-    int opTag = op->Tag;
     LOG_DEBUG("executeBinaryOperation called with operator: " + op->getSymbol());
  
     // 4. 确定兼容类型
-    string targetType = determineTargetType(left, right, op);
-    if (targetType == "unknown") {
-        reportError("Cannot determine compatible type for operation");
-        return nullptr;
-    }
-    
-    CastExpression* leftCast = new CastExpression(binary->left, targetType);
-    CastExpression* rightCast = new CastExpression(binary->right, targetType);    
-
-    Value* result = nullptr;
-    try {
-        if (targetType == "int") {
-            result = calculate<Integer>(leftCast, rightCast, opTag);
-        } else if (targetType == "double") {
-            result = calculate<Double>(leftCast, rightCast, opTag);
-        } else if (targetType == "bool") {
-            result = calculate<Bool>(leftCast, rightCast, opTag);
-        } else if (targetType == "string") {
-            result = calculate<String>(leftCast, rightCast, opTag);
-        } else if (targetType == "char") {
-            result = calculate<Char>(leftCast, rightCast, opTag);
-        }
-    } catch (const std::exception& e) {
-        delete leftCast;
-        delete rightCast;
-        reportError("Binary operation error: " + string(e.what()));
-        return nullptr;
-    }
-
-    delete leftCast;
-    delete rightCast;
-    
-    if (!result) {
-        reportError("Type mismatch in binary expression: " + left->toString() + " " + std::string(1, opTag) + " " + right->toString());
-    }
-    
-    return result;
+    return calculate_binary_compatible(left, right, op->Tag);
 }
 
 // 赋值表达式求值 - 专门处理赋值操作
@@ -315,23 +258,20 @@ Value* Interpreter::visit(AssignExpression* assign) {
         
         // 获取变量的当前类型
         Variable* variable = scopeManager.lookupVariable(varExpr->name);
-        string targetType;
+        // 如果变量未定义，则使用右边的值的类型
+        Value* leftValue = nullptr;
         
         if (variable && variable->getValue()) {
             // 如果变量已定义，使用左边变量的类型
-            targetType = variable->getValue()->getTypeName();
+            leftValue = variable->getValue();
         } else {
             // 如果变量未定义，使用右边值的类型
-            targetType = rightValue->getTypeName();
+            leftValue = rightValue;
         }
         
-        // 将右边的值cast到目标类型
-        CastExpression* rightCast = new CastExpression(assign->right, targetType);
-        Value* castedValue = visit(rightCast);
-        delete rightCast;
-        
+        Value* castedValue = calculate_assign_compatible(leftValue, rightValue, '=');
         if (!castedValue) {
-            reportError("Failed to cast value to type " + targetType + " for assignment");
+            reportError("Failed to cast value to type " + leftValue->getTypeName() + " for assignment");
             delete rightValue;
             return nullptr;
         }
@@ -345,55 +285,6 @@ Value* Interpreter::visit(AssignExpression* assign) {
         return nullptr;
     }
 }
-
-// 辅助方法：确定运算的目标类型
-string Interpreter::determineTargetType(Value* left, Value* right, Operator* op) {
-    if (!op) return "unknown";
-    
-    int opTag = op->Tag;
-
-    // 逻辑运算：统一转换为布尔类型
-    if (opTag == AND_AND || opTag == OR_OR) {
-        return "bool";
-    }
-    
-    // 比较运算：统一返回布尔类型
-    if (opTag == EQ_EQ || opTag == NE_EQ || opTag == '<' || opTag == '>' || opTag == LT || opTag == GT || opTag == LE || opTag == GE) {
-        return "bool";
-    }
-    
-    // 位运算：统一转换为整数类型
-    if (opTag == '&' || opTag == '|' || opTag == '^' || 
-        opTag == BIT_AND || opTag == BIT_OR || opTag == BIT_XOR || 
-        opTag == LEFT_SHIFT || opTag == RIGHT_SHIFT) {
-        return "int";
-    }
-    
-    // 字符串类型：如果任一操作数是字符串，则返回string
-    // 数值类型转换：优先级 double > int > char > bool
-    if ((dynamic_cast<String*>(left) || dynamic_cast<String*>(right))) {
-        return "string";
-    } else if (dynamic_cast<Double*>(left) || dynamic_cast<Double*>(right)) {
-        return "double";
-    } else if (dynamic_cast<Integer*>(left) || dynamic_cast<Integer*>(right)) {
-        return "int";
-    } else if (dynamic_cast<Char*>(left) || dynamic_cast<Char*>(right)) {
-        // 对于字符运算，根据操作符类型决定返回类型
-        if (opTag == '+') {
-            return "char";  // 字符拼接返回字符
-        } else {
-            return "int";   // 其他运算转换为整数
-        }
-    } else if (dynamic_cast<Bool*>(left) || dynamic_cast<Bool*>(right)) {
-        return "int";  // 布尔转换为整数进行运算
-    }
-    
-    return "unknown";
-}
-
-
-
-
 
 // 访问表达式求值 - 统一处理数组/字典访问和成员访问
 Value* Interpreter::visit(AccessExpression* access) {
@@ -620,7 +511,6 @@ void Interpreter::visit(ReturnStatement* returnStmt) {
     // 抛出带有返回值的ReturnException
     throw ReturnException(result);
 }
-
 
 // 执行函数定义
 void Interpreter::visit(UserFunction* userFunc) {
@@ -884,43 +774,7 @@ Value* Interpreter::visit(ConstantExpression* constExpr) {
 }
 
 // 类型转换表达式求值
-Value* Interpreter::visit(CastExpression* castExpr) {
-    if (!castExpr || !castExpr->operand) return nullptr;
-    
-    LOG_DEBUG("CastExpression: " + castExpr->getLocation());
-    
-    // 先求值操作数
-    Value* operandValue = visit(castExpr->operand);
-    if (!operandValue) return nullptr;
-    
-    // 根据目标类型进行转换
-    string targetType = castExpr->getTargetTypeName();
-    
-    // 确定目标类型
-    Type* targetTypeObj = nullptr;
-    if (targetType == "int") {
-        targetTypeObj = Type::Int;
-    } else if (targetType == "double") {
-        targetTypeObj = Type::Double;
-    } else if (targetType == "bool") {
-        targetTypeObj = Type::Bool;
-    } else if (targetType == "char") {
-        targetTypeObj = Type::Char;
-    } else if (targetType == "string") {
-        targetTypeObj = Type::String;
-    } else {
-        reportError("Unknown target type: " + targetType);
-        return operandValue;
-    }
-    
-    // 使用convert方法进行类型转换
-    try {
-        return operandValue->convert(targetTypeObj);
-    } catch (const std::exception& e) {
-        reportError("Cast error: " + string(e.what()));
-        return operandValue;
-    }
-}
+
 
 void Interpreter::visit(SwitchStatement* switchStmt) {
     if (!switchStmt) return;
@@ -1089,8 +943,10 @@ Value* Interpreter::createDefaultValue(Type* type) {
     } else if (type == Type::String) {
         return new String("");
     } else {
-        return new Integer(0); // 默认返回整数0
-    }
+            return new Integer(0); // 默认返回整数0
+}
+
+
 }
 
 

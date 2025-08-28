@@ -62,7 +62,7 @@ Token *Lexer::scan(){//LL(1)
 		else if (peek == '/' || peek == '#'){
 			Token *t;
 			if (t = skip_comment()){
-				return t;
+				continue; // 跳过注释，继续处理下一个字符
 			}
 			// 如果不是注释，跳出循环让后续处理处理为运算符
 			break;
@@ -348,45 +348,64 @@ Token *Lexer::skip_comment(){
 		inf.read(&peek, 1);
 		if (peek == '/'){
 			// 单行注释 //
+			string content = "//";
 			while (peek != '\n' && !inf.eof()){
+				content += peek;
 				inf.read(&peek, 1);
 			}
-			return nullptr;
+			// 如果遇到换行符，需要更新行号和列号
+			if (peek == '\n') {
+				column = 0;
+				line++;
+			}
+			return new Comment(content, "//");
 		}
 		else if (peek == '*'){
 			// 多行注释 /* */
+			string content = "/*";
 			inf.read(&peek, 1);
 			while (!inf.eof()){
+				content += peek;
 				if (peek == '*'){
 					inf.read(&peek, 1);
+					content += peek;
 					if (peek == '/'){
 						inf.read(&peek, 1);
-						return nullptr;
+						return new Comment(content, "/*");
 					}
+				}
+				// 更新行号和列号
+				if (peek == '\n') {
+					column = 0;
+					line++;
+				} else {
+					column++;
 				}
 				inf.read(&peek, 1);
 			}
-			return nullptr;
+			return new Comment(content, "/*");
 		}
 		else{
-			peek = '/';
+			// 不是注释，回退文件指针，让scan()方法处理除法运算
 			inf.seekg(-1, ios_base::cur);
-			return nullptr;  // 返回nullptr，让scan()方法继续处理
+			peek = '/';
+			return nullptr;
 		}
 	}
 	else if (peek == '#'){
 		// 单行注释 #
+		string content = "#";
 		inf.read(&peek, 1);
 		while (peek != '\n' && !inf.eof()){
+			content += peek;
 			inf.read(&peek, 1);
 		}
-		// 如果遇到换行符，需要更新行号和列号，并继续读取下一个字符
+		// 如果遇到换行符，需要更新行号和列号
 		if (peek == '\n') {
 			column = 0;
 			line++;
-			inf.read(&peek, 1); // 读取换行符后的下一个字符
 		}
-		return nullptr;
+		return new Comment(content, "#");
 	}
 	return nullptr;
 }

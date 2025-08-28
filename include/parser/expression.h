@@ -26,9 +26,7 @@ struct ConstantExpression : public Expression {
     ConstantExpression(char val) : value(new Char(val)) {}
     ConstantExpression(const string& val) : value(new String(val)) {}
     
-    ~ConstantExpression() {
-        if (value) delete value;
-    }
+    ~ConstantExpression() { }
     
     void accept(ASTVisitor* visitor) override;
     
@@ -114,28 +112,43 @@ struct AssignExpression : public BinaryExpression {
 };
 
 // 类型转换表达式 - 支持Value类型转换
+// 类型转换表达式 - 支持Value类型转换
+template<typename T>
 struct CastExpression : public Expression {
     Expression* operand;     // 被转换的表达式
-    string targetType;       // 目标类型名称
     
-    CastExpression(Expression* expr, const string& type) 
-        : operand(expr), targetType(type) {}
+    CastExpression(Expression* expr) : operand(expr) {}
     
     void accept(ASTVisitor* visitor) override;
     
     // 获取目标类型名称
     string getTargetTypeName() const {
-        return targetType;
+        if (std::is_same<T, Integer>::value) return "int";
+        else if (std::is_same<T, Double>::value) return "double";
+        else if (std::is_same<T, Bool>::value) return "bool";
+        else if (std::is_same<T, Char>::value) return "char";
+        else if (std::is_same<T, String>::value) return "string";
+        else return "unknown";
+    }
+    
+    // 获取目标类型对象
+    Type* getTargetType() const {
+        if (std::is_same<T, Integer>::value) return Type::Int;
+        else if (std::is_same<T, Double>::value) return Type::Double;
+        else if (std::is_same<T, Bool>::value) return Type::Bool;
+        else if (std::is_same<T, Char>::value) return Type::Char;
+        else if (std::is_same<T, String>::value) return Type::String;
+        else return nullptr;
     }
     
     // 获取目标类型优先级
     int getTargetTypePriority() const {
-        if (targetType == "int") return 2;
-        if (targetType == "double") return 3;
-        if (targetType == "bool") return 0;
-        if (targetType == "char") return 1;
-        if (targetType == "string") return 4;
-        return 0;
+        if (std::is_same<T, Integer>::value) return 2;
+        else if (std::is_same<T, Double>::value) return 3;
+        else if (std::is_same<T, Bool>::value) return 0;
+        else if (std::is_same<T, Char>::value) return 1;
+        else if (std::is_same<T, String>::value) return 4;
+        else return 0;
     }
     
     int getTypePriority() const override {
@@ -143,9 +156,11 @@ struct CastExpression : public Expression {
     }
     
     string getLocation() const override {
-        return "cast to " + targetType;
+        return "cast to " + getTargetTypeName();
     }
 };
+
+
 
 // ==================== 访问和调用表达式 ====================
 // 访问表达式节点 - 统一处理数组/字典访问和成员访问

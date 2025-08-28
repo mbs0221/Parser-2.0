@@ -36,6 +36,9 @@ enum Tag{
 	BEGIN, END, FUNCTION, LAMBDA,
 	STRUCT, CLASS, PUBLIC, PRIVATE, PROTECTED, IMPORT,
 	
+	// 注释
+	COMMENT,
+	
 	// 运算符范围：300-399
 	// 算术运算符
 	PLUS = 300, MINUS, MULTIPLY, DIVIDE, MODULO,
@@ -96,6 +99,28 @@ struct Word :Token{
 	// 获取字面值的字符串表示
 	string str() const override {
 		return word;
+	}
+};
+
+// 注释Token
+struct Comment :Token{
+	string content;	//注释内容
+	string type;		//注释类型："//", "/*", "#"
+	
+	Comment(){
+		this->Tag = COMMENT;
+		this->content = "";
+		this->type = "";
+	}
+	
+	Comment(string content, string type) :Token(COMMENT){
+		this->content = content;
+		this->type = type;
+	}
+	
+	// 获取字面值的字符串表示
+	string str() const override {
+		return "comment: " + content;
 	}
 };
 
@@ -234,6 +259,13 @@ struct Value : public Token, public Convertable {
     Value* convert(Type* type) {
         // 总是调用具体的convert方法，即使是相同类型也创建新对象
         return convertTo(type);
+    }
+    
+    // 泛型转换方法
+    template<typename T>
+    T* convert(Type* type) {
+        Value* result = convertTo(type);
+        return dynamic_cast<T*>(result);
     }
     
     // 虚函数：具体的转换实现

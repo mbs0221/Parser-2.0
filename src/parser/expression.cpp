@@ -27,9 +27,17 @@ void AssignExpression::accept(ASTVisitor* visitor) {
 }
 
 // ==================== CastExpression实现 ====================
-void CastExpression::accept(ASTVisitor* visitor) {
+template<typename T>
+void CastExpression<T>::accept(ASTVisitor* visitor) {
     visitor->visit(this);
 }
+
+// 显式实例化
+template void CastExpression<Integer>::accept(ASTVisitor* visitor);
+template void CastExpression<Double>::accept(ASTVisitor* visitor);
+template void CastExpression<Bool>::accept(ASTVisitor* visitor);
+template void CastExpression<Char>::accept(ASTVisitor* visitor);
+template void CastExpression<String>::accept(ASTVisitor* visitor);
 
 // ==================== AccessExpression实现 ====================
 void AccessExpression::accept(ASTVisitor* visitor) {

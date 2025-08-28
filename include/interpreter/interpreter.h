@@ -45,7 +45,12 @@ public:
     Value* visit(UnaryExpression* expr) override;
     Value* visit(BinaryExpression* expr) override;
     Value* visit(AssignExpression* expr) override;
-    Value* visit(CastExpression* expr) override;
+    // 泛型CastExpression的访问方法
+    Value* visit(CastExpression<Integer>* expr) override;
+    Value* visit(CastExpression<Double>* expr) override;
+    Value* visit(CastExpression<Bool>* expr) override;
+    Value* visit(CastExpression<Char>* expr) override;
+    Value* visit(CastExpression<String>* expr) override;
     Value* visit(AccessExpression* expr) override;
     Value* visit(CallExpression* expr) override;
     Value* visit(MethodCallExpression* expr) override;
@@ -90,16 +95,25 @@ public:
     Value* createDefaultValue(Type* type);
 
     // 类型转换辅助方法
-    string determineTargetType(Value* left, Value* right, Operator* op);
-    int getTypePriority(Value* value);
-    string getTypeName(Value* value);
+    template<typename T>
+    Value* calculate_unary_casted(Value* value, int opTag);
+    Value* calculate_unary_compatible(Value* value, int opTag);
+    
+    // 一元操作的类型转换辅助方法
+    template<typename T>
+    Value* calculate_binary_casted(Value* left, Value* right, int opTag);
+    Value* calculate_binary_compatible(Value* left, Value* right, int opTag);
+    
+    // 赋值操作的类型转换辅助方法
+    template<typename T>
+    Value* calculate_assign_casted(Value* left, Value* right, int opTag);
+    Value* calculate_assign_compatible(Value* left, Value* right, int opTag);
     
     // 泛型计算方法 - 使用模板参数作为返回类型
     template<typename T>
-    T* calculate(Expression* left, Expression* right, int op);
-    
+    T* calculate(Value* left, Value* right, int op);
     template<typename T>
-    T* calculate(Expression* operand, int op);
+    T* calculate(Value* value, int op);
     
     // 作用域管理辅助函数 - 处理有返回值的函数
     template<typename Func>
@@ -132,17 +146,5 @@ public:
     void reportError(const string& message);
     void reportTypeError(const string& expected, const string& actual);
 };
-
-// 模板特化声明
-template<> Bool* Interpreter::calculate<Bool>(Expression* left, Expression* right, int op);
-template<> Integer* Interpreter::calculate<Integer>(Expression* left, Expression* right, int op);
-template<> Double* Interpreter::calculate<Double>(Expression* left, Expression* right, int op);
-template<> Char* Interpreter::calculate<Char>(Expression* left, Expression* right, int op);
-template<> String* Interpreter::calculate<String>(Expression* left, Expression* right, int op);
-
-template<> Bool* Interpreter::calculate<Bool>(Expression* operand, int op);
-template<> Integer* Interpreter::calculate<Integer>(Expression* operand, int op);
-template<> Double* Interpreter::calculate<Double>(Expression* operand, int op);
-template<> Char* Interpreter::calculate<Char>(Expression* operand, int op);
 
 #endif // INTERPRETER_H

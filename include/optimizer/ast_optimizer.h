@@ -1,8 +1,8 @@
 #ifndef AST_OPTIMIZER_H
 #define AST_OPTIMIZER_H
 
-#include "inter.h"
-#include "ast_visitor.h"
+#include "parser/inter.h"
+#include "parser/ast_visitor.h"
 #include <string>
 
 // AST优化器基类

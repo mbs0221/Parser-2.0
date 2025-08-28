@@ -2,6 +2,7 @@
 #define AST_VISITOR_H
 
 #include <string>
+#include "lexer/value.h"
 
 // 前向声明
 class AST;
@@ -19,7 +20,9 @@ class AssignExpression;
 class AccessExpression;
 class CallExpression;
 class MethodCallExpression;
-class CastExpression;
+
+// 泛型CastExpression的前向声明
+template<typename T> class CastExpression;
 
 // 语句类型
 class ImportStatement;
@@ -65,7 +68,12 @@ public:
     virtual Value* visit(UnaryExpression* expr) = 0;
     virtual Value* visit(BinaryExpression* expr) = 0;
     virtual Value* visit(AssignExpression* expr) = 0;
-    virtual Value* visit(CastExpression* expr) = 0;
+    // 泛型CastExpression的访问方法
+    virtual Value* visit(CastExpression<Integer>* expr) = 0;
+    virtual Value* visit(CastExpression<Double>* expr) = 0;
+    virtual Value* visit(CastExpression<Bool>* expr) = 0;
+    virtual Value* visit(CastExpression<Char>* expr) = 0;
+    virtual Value* visit(CastExpression<String>* expr) = 0;
     virtual Value* visit(AccessExpression* expr) = 0;
     virtual Value* visit(CallExpression* expr) = 0;
     virtual Value* visit(MethodCallExpression* expr) = 0;
