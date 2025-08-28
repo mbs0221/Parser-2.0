@@ -16,7 +16,7 @@ Value* builtin_print(vector<Variable*>& args) {
         if (args[i]) {
             Value* value = args[i]->getValue();
             if (value) {
-                cout << value->toString();
+                cout << value->str();  // 使用str()方法，不添加引号
                 if (i < args.size() - 1) {
                     cout << " ";
                 }
@@ -367,7 +367,14 @@ Value* builtin_cast(vector<Variable*>& args) {
     }
     
     // 获取目标类型名称
-    string targetType = typeArg->getTypeName();
+    string targetType;
+    if (String* strType = dynamic_cast<String*>(typeArg)) {
+        // 如果是字符串类型，使用str()方法获取不带引号的值
+        targetType = strType->str();
+    } else {
+        // 否则使用getTypeName()方法
+        targetType = typeArg->getTypeName();
+    }
     
     // 确定目标类型
     Type* targetTypeObj = nullptr;
