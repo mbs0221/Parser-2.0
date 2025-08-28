@@ -399,9 +399,9 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
     if (!op) return "unknown";
     
     int opTag = op->Tag;
-    
+
     // 逻辑运算：统一转换为布尔类型
-    if (opTag == AND_AND || opTag == OR_OR || opTag == '&' || opTag == '|') {
+    if (opTag == AND_AND || opTag == OR_OR) {
         return "bool";
     }
     
@@ -410,18 +410,18 @@ string Interpreter::determineTargetType(Value* left, Value* right, Operator* op)
         return "bool";
     }
     
-    // 字符串类型：如果任一操作数是字符串且操作符是+，则返回string
-    if (opTag == '+' && (dynamic_cast<String*>(left) || dynamic_cast<String*>(right))) {
-        return "string";
+    // 位运算：统一转换为整数类型
+    if (opTag == '&' || opTag == '|' || opTag == '^' || 
+        opTag == BIT_AND || opTag == BIT_OR || opTag == BIT_XOR || 
+        opTag == LEFT_SHIFT || opTag == RIGHT_SHIFT) {
+        return "int";
     }
     
-    // 字符串类型：如果两个操作数都是字符串，则返回string
-    if (dynamic_cast<String*>(left) && dynamic_cast<String*>(right)) {
-        return "string";
-    }
-    
+    // 字符串类型：如果任一操作数是字符串，则返回string
     // 数值类型转换：优先级 double > int > char > bool
-    if (dynamic_cast<Double*>(left) || dynamic_cast<Double*>(right)) {
+    if ((dynamic_cast<String*>(left) || dynamic_cast<String*>(right))) {
+        return "string";
+    } else if (dynamic_cast<Double*>(left) || dynamic_cast<Double*>(right)) {
         return "double";
     } else if (dynamic_cast<Integer*>(left) || dynamic_cast<Integer*>(right)) {
         return "int";
@@ -442,12 +442,22 @@ Value* Interpreter::calculate(Integer* left, Integer* right, int op) {
             case '*': return new Integer(*left * *right);
             case '/': return new Integer(*left / *right);
             case '%': return new Integer(*left % *right);
+            case '&': return new Integer(*left & *right);
+            case '|': return new Integer(*left | *right);
+            case '^': return new Integer(*left ^ *right);
             case '<': return new Bool(*left < *right);
             case '>': return new Bool(*left > *right);
             case LE: return new Bool(*left <= *right);
             case GE: return new Bool(*left >= *right);
             case EQ_EQ: return new Bool(*left == *right);
             case NE_EQ: return new Bool(*left != *right);
+            case AND_AND: return new Bool(*left && *right);
+            case OR_OR: return new Bool(*left || *right);
+            case BIT_AND: return new Integer(*left & *right);
+            case BIT_OR: return new Integer(*left | *right);
+            case BIT_XOR: return new Integer(*left ^ *right);
+            case LEFT_SHIFT: return new Integer(*left << *right);
+            case RIGHT_SHIFT: return new Integer(*left >> *right);
             default: return new Integer(0);
         }
     } catch (const std::exception& e) {
@@ -469,6 +479,8 @@ Value* Interpreter::calculate(Double* left, Double* right, int op) {
             case GE: return new Bool(*left >= *right);
             case EQ_EQ: return new Bool(*left == *right);
             case NE_EQ: return new Bool(*left != *right);
+            case AND_AND: return new Bool(*left && *right);
+            case OR_OR: return new Bool(*left || *right);
             default: return new Double(0.0);
         }
     } catch (const std::exception& e) {

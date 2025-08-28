@@ -149,9 +149,17 @@ Value *Lexer::match_number(){
 		} else if (isdigit(peek) && peek >= '1' && peek <= '7'){
 			return match_oct();
 		}
-		inf.seekg(-1, ios_base::cur);  // 回到0的位置
-		peek = '0';  // 确保peek是'0'
-		return match_decimal();  // 让match_decimal处理所有情况，包括0.0
+		// 对于0.0等情况，直接处理
+		if (peek == '.' || isdigit(peek)){
+			// 重新设置peek为'0'，然后处理
+			inf.seekg(-1, ios_base::cur);
+			peek = '0';
+			return match_decimal();
+		}
+		// 单独的0
+		inf.seekg(-1, ios_base::cur);
+		peek = '0';
+		return new Integer(0);
 	}
 	else{
 		return match_decimal();
@@ -184,6 +192,7 @@ Value *Lexer::match_decimal(){
 		}
 	}
 	
+	// 回退一个字符，让peek指向下一个要处理的字符
 	inf.seekg(-1, ios_base::cur);
 	
 	// 根据是否为浮点数返回相应的Token
@@ -247,7 +256,10 @@ Token *Lexer::match_other(){
 		}
 	} else if (peek == '<') {
 		inf.read(&peek, 1);
-		if (peek == '=') {
+		if (peek == '<') {
+			// <<
+			return Operator::LeftShift;  // 使用静态常量
+		} else if (peek == '=') {
 			// <=
 			return Operator::LE;  // 使用静态常量
 		} else {
@@ -257,9 +269,11 @@ Token *Lexer::match_other(){
 		}
 	} else if (peek == '>') {
 		inf.read(&peek, 1);
-		if (peek == '=') {
+		if (peek == '>') {
+			// >>
+			return Operator::RightShift;  // 使用静态常量
+		} else if (peek == '=') {
 			// >=
-			inf.read(&peek, 1);
 			return Operator::GE;  // 使用静态常量
 		} else {
 			// >
