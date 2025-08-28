@@ -149,8 +149,9 @@ Value *Lexer::match_number(){
 		} else if (isdigit(peek) && peek >= '1' && peek <= '7'){
 			return match_oct();
 		}
-		inf.seekg(-1, ios_base::cur);
-		return new Integer(0);
+		inf.seekg(-1, ios_base::cur);  // 回到0的位置
+		peek = '0';  // 确保peek是'0'
+		return match_decimal();  // 让match_decimal处理所有情况，包括0.0
 	}
 	else{
 		return match_decimal();

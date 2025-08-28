@@ -596,7 +596,7 @@ struct Double : public Value {
     
     string toString() const override {
         ostringstream oss;
-        oss << value;
+        oss << std::fixed << std::setprecision(6) << value;
         return oss.str();
     }
     
