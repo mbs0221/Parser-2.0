@@ -1,0 +1,17 @@
+print("=== Convertable接口和cast函数测试 ===");
+print("1. 整数转换测试:");
+print("   42 -> double: ", cast(42, "double"));
+print("   42 -> string: ", cast(42, "string"));
+print("   42 -> bool: ", cast(42, "bool"));
+
+print("2. 浮点数转换测试:");
+print("   3.14 -> int: ", cast(3.14, "int"));
+print("   3.14 -> string: ", cast(3.14, "string"));
+
+print("3. 字符串转换测试:");
+print("   \"123\" -> int: ", cast("123", "int"));
+print("   \"true\" -> bool: ", cast("true", "bool"));
+
+print("4. 布尔值转换测试:");
+print("   true -> int: ", cast(true, "int"));
+print("   false -> string: ", cast(false, "string"));

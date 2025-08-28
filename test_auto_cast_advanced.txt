@@ -1,0 +1,24 @@
+print("=== 高级自动类型转换测试 ===");
+
+print("1. 比较运算:");
+print("   5 > 3.14 = ", 5 > 3.14);
+print("   3.14 < 5 = ", 3.14 < 5);
+print("   true == 1 = ", true == 1);
+print("   false == 0 = ", false == 0);
+
+print("2. 算术运算:");
+print("   10 / 3 = ", 10 / 3);
+print("   10 / 3.0 = ", 10 / 3.0);
+print("   10.0 / 3 = ", 10.0 / 3);
+print("   10 % 3 = ", 10 % 3);
+
+print("3. 逻辑运算:");
+print("   true && 5 = ", true && 5);
+print("   false || 3.14 = ", false || 3.14);
+print("   !0 = ", !0);
+print("   !1 = ", !1);
+
+print("4. 混合运算:");
+print("   (5 + 3.14) * 2 = ", (5 + 3.14) * 2);
+print("   \"Result: \" + (10 / 2) = ", "Result: " + (10 / 2));
+print("   (true && 5) + (false || 3) = ", (true && 5) + (false || 3));

@@ -1,0 +1,6 @@
+print("=== 修复后的类型转换测试 ===");
+print("0.0 -> int: ", cast(0.0, "int"));
+print("0.0 -> bool: ", cast(0.0, "bool"));
+print("1.0 -> bool: ", cast(1.0, "bool"));
+print("0.5 -> int: ", cast(0.5, "int"));
+print("0.5 -> bool: ", cast(0.5, "bool"));

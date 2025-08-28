@@ -268,16 +268,23 @@ Value* Interpreter::visit(BinaryExpression* binary) {
     CastExpression* rightCast = new CastExpression(binary->right, targetType);    
 
     Value* result = nullptr;
-    if (targetType == "int") {
-        result = calculate<Integer>(leftCast, rightCast, opTag);
-    } else if (targetType == "double") {
-        result = calculate<Double>(leftCast, rightCast, opTag);
-    } else if (targetType == "bool") {
-        result = calculate<Bool>(leftCast, rightCast, opTag);
-    } else if (targetType == "string") {
-        result = calculate<String>(leftCast, rightCast, opTag);
-    } else if (targetType == "char") {
-        result = calculate<Char>(leftCast, rightCast, opTag);
+    try {
+        if (targetType == "int") {
+            result = calculate<Integer>(leftCast, rightCast, opTag);
+        } else if (targetType == "double") {
+            result = calculate<Double>(leftCast, rightCast, opTag);
+        } else if (targetType == "bool") {
+            result = calculate<Bool>(leftCast, rightCast, opTag);
+        } else if (targetType == "string") {
+            result = calculate<String>(leftCast, rightCast, opTag);
+        } else if (targetType == "char") {
+            result = calculate<Char>(leftCast, rightCast, opTag);
+        }
+    } catch (const std::exception& e) {
+        delete leftCast;
+        delete rightCast;
+        reportError("Binary operation error: " + string(e.what()));
+        return nullptr;
     }
 
     delete leftCast;

@@ -1,0 +1,4 @@
+print("=== 浮点数识别测试 ===");
+print("0.0: ", cast(0.0, "int"));
+print("1.0: ", cast(1.0, "int"));
+print("0.5: ", cast(0.5, "int"));

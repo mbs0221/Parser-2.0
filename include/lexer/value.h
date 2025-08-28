@@ -232,12 +232,7 @@ struct Value : public Token, public Convertable {
     
     // 转换为指定类型
     Value* convert(Type* type) {
-        // 如果目标类型与当前类型相同，直接返回this
-        if (type == valueType) {
-            return this;
-        }
-        
-        // 否则调用具体的convert方法
+        // 总是调用具体的convert方法，即使是相同类型也创建新对象
         return convertTo(type);
     }
     

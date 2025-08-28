@@ -1,0 +1,5 @@
+print("=== 类型转换测试 ===");
+print("int -> double: ", cast(42, "double"));
+print("double -> int: ", cast(3.14, "int"));
+print("string -> int: ", cast("123", "int"));
+print("bool -> int: ", cast(true, "int"));

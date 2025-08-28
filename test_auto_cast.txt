@@ -1,0 +1,17 @@
+print("=== 表达式计算中的自动类型转换测试 ===");
+
+print("1. 整数 + 浮点数:");
+print("   5 + 3.14 = ", 5 + 3.14);
+print("   3.14 + 5 = ", 3.14 + 5);
+
+print("2. 字符串 + 数字:");
+print("   \"Hello\" + 42 = ", "Hello" + 42);
+print("   42 + \"Hello\" = ", 42 + "Hello");
+
+print("3. 布尔值 + 数字:");
+print("   true + 5 = ", true + 5);
+print("   false + 3.14 = ", false + 3.14);
+
+print("4. 字符 + 数字:");
+print("   'A' + 5 = ", 'A' + 5);
+print("   5 + 'A' = ", 5 + 'A');

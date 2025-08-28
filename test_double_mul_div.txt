@@ -1,0 +1,4 @@
+let x = 10.0;
+let y = 5.0;
+print(x * y);
+print(x / y);

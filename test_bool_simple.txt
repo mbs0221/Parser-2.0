@@ -1,0 +1,3 @@
+print("=== 简单布尔值测试 ===");
+print("true = ", true);
+print("false = ", false);

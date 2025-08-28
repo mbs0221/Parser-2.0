@@ -1,0 +1,29 @@
+print("=== 完整的类型转换测试 ===");
+print("1. 整数转换:");
+print("   42 -> double: ", cast(42, "double"));
+print("   42 -> string: ", cast(42, "string"));
+print("   42 -> bool: ", cast(42, "bool"));
+print("   0 -> bool: ", cast(0, "bool"));
+
+print("2. 浮点数转换:");
+print("   3.14 -> int: ", cast(3.14, "int"));
+print("   3.99 -> int: ", cast(3.99, "int"));
+print("   3.14 -> string: ", cast(3.14, "string"));
+print("   0.0 -> bool: ", cast(0.0, "bool"));
+print("   1.5 -> bool: ", cast(1.5, "bool"));
+
+print("3. 字符串转换:");
+print("   \"123\" -> int: ", cast("123", "int"));
+print("   \"3.14\" -> double: ", cast("3.14", "double"));
+print("   \"true\" -> bool: ", cast("true", "bool"));
+print("   \"false\" -> bool: ", cast("false", "bool"));
+print("   \"1\" -> bool: ", cast("1", "bool"));
+print("   \"0\" -> bool: ", cast("0", "bool"));
+
+print("4. 布尔值转换:");
+print("   true -> int: ", cast(true, "int"));
+print("   false -> int: ", cast(false, "int"));
+print("   true -> double: ", cast(true, "double"));
+print("   false -> double: ", cast(false, "double"));
+print("   true -> string: ", cast(true, "string"));
+print("   false -> string: ", cast(false, "string"));

@@ -1,0 +1,2 @@
+print("Hello");
+print(cast(42, "double"));

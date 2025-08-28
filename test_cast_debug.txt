@@ -1,0 +1,1 @@
+print(cast(42, "double"));
