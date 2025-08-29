@@ -1,0 +1,87 @@
+// ==================== 类型转换综合测试 ====================
+
+print("=== 类型转换综合测试 ===
+");
+
+// 1. 数值运算中的自动类型转换
+print("1. 数值运算中的自动类型转换:");
+print("   5 + 3.14 = " + (5 + 3.14));
+print("   10 / 3 = " + (10 / 3));
+print("   10 / 3.0 = " + (10 / 3.0));
+print("   10 % 3 = " + (10 % 3));
+print("   3.14 * 2 = " + (3.14 * 2));
+print("
+");
+
+// 2. 字符串运算中的自动类型转换
+print("2. 字符串运算中的自动类型转换:");
+print("   \"Hello\" + 42 = " + ("Hello" + 42));
+print("   42 + \"Hello\" = " + (42 + "Hello"));
+print("   \"Result: \" + (5 + 3) = " + ("Result: " + (5 + 3)));
+print("   \"Value: \" + 3.14 = " + ("Value: " + 3.14));
+print("   true + \" is true\" = " + (true + " is true"));
+print("
+");
+
+// 3. 比较运算中的自动类型转换
+print("3. 比较运算中的自动类型转换:");
+print("   5 > 3.14 = " + (5 > 3.14));
+print("   3.14 < 5 = " + (3.14 < 5));
+print("   10 == 10.0 = " + (10 == 10.0));
+print("   10 != 5 = " + (10 != 5));
+print("   5 >= 5.0 = " + (5 >= 5.0));
+print("   3 <= 5.0 = " + (3 <= 5.0));
+print("
+");
+
+// 4. 布尔运算中的自动类型转换
+print("4. 布尔运算中的自动类型转换:");
+print("   true && 5 = " + (true && 5));
+print("   false || 3 = " + (false || 3));
+print("   !0 = " + (!0));
+print("   !1 = " + (!1));
+print("   !5 = " + (!5));
+print("   !0.0 = " + (!0.0));
+print("
+");
+
+// 5. 混合运算中的自动类型转换
+print("5. 混合运算中的自动类型转换:");
+print("   (5 + 3.14) * 2 = " + ((5 + 3.14) * 2));
+print("   (10 > 5) && (3 < 7) = " + ((10 > 5) && (3 < 7)));
+print("   \"Sum: \" + (5 + 3) + \" is greater than 5: \" + ((5 + 3) > 5) = " + ("Sum: " + (5 + 3) + " is greater than 5: " + ((5 + 3) > 5)));
+print("
+");
+
+// 6. 类型转换函数
+print("6. 类型转换函数:");
+let num_str = "123";
+let num_int = to_int(num_str);
+print("to_int(\"123\") = " + num_int);
+
+let double_str = "3.14";
+let num_double = to_double(double_str);
+print("to_double(\"3.14\") = " + num_double);
+
+let str_result = to_string(42);
+print("to_string(42) = " + str_result);
+
+let float_result = to_string(3.14);
+print("to_string(3.14) = " + float_result);
+print("
+");
+
+// 7. 复杂类型转换场景
+print("7. 复杂类型转换场景:");
+let x = 10;
+let y = 3.14;
+let z = "5";
+print("x = " + x + ", y = " + y + ", z = " + z);
+print("x + y + z = " + (x + y + z));
+print("x * y + to_int(z) = " + (x * y + to_int(z)));
+print("to_string(x) + to_string(y) + z = " + (to_string(x) + to_string(y) + z));
+print("
+");
+
+print("=== 类型转换测试完成 ===
+");

@@ -1,1 +1,0 @@
-print(cast(42, "double")); print(cast(3.14, "int")); print(cast("true", "bool"));

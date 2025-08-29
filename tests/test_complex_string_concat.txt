@@ -1,5 +1,0 @@
-let name = "Alice";
-let age = 25;
-let score = 95.5;
-let passed = true;
-print("Name: " + name + ", Age: " + age + ", Score: " + score + ", Passed: " + passed);

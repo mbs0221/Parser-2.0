@@ -1,6 +1,0 @@
-print("=== 类型转换测试 ===");
-print("int -> double: ", cast(42, "double"));
-print("double -> int: ", cast(3.14, "int"));
-print("string -> bool: ", cast("true", "bool"));
-print("int -> string: ", cast(123, "string"));
-print("bool -> int: ", cast(true, "int"));

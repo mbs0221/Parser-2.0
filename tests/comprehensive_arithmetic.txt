@@ -1,0 +1,110 @@
+// ==================== 算术运算综合测试 ====================
+
+print("=== 算术运算综合测试 ===
+");
+
+// 1. 基本算术运算
+print("1. 基本算术运算:");
+let a = 10;
+let b = 3;
+print("a = " + a + ", b = " + b);
+print("a + b = " + (a + b));
+print("a - b = " + (a - b));
+print("a * b = " + (a * b));
+print("a / b = " + (a / b));
+print("a % b = " + (a % b));
+print("
+");
+
+// 2. 浮点数运算
+print("2. 浮点数运算:");
+let c = 10.5;
+let d = 3.2;
+print("c = " + c + ", d = " + d);
+print("c + d = " + (c + d));
+print("c - d = " + (c - d));
+print("c * d = " + (c * d));
+print("c / d = " + (c / d));
+print("
+");
+
+// 3. 混合类型运算
+print("3. 混合类型运算:");
+let e = 10;
+let f = 3.14;
+print("e = " + e + ", f = " + f);
+print("e + f = " + (e + f));
+print("e * f = " + (e * f));
+print("e / f = " + (e / f));
+print("
+");
+
+// 4. 位运算
+print("4. 位运算:");
+let g = 5;
+let h = 3;
+print("g = " + g + ", h = " + h);
+print("g & h = " + (g & h));
+print("g | h = " + (g | h));
+print("g ^ h = " + (g ^ h));
+print("~g = " + (~g));
+print("g << 1 = " + (g << 1));
+print("g >> 1 = " + (g >> 1));
+print("
+");
+
+// 5. 比较运算
+print("5. 比较运算:");
+let i = 10;
+let j = 5;
+print("i = " + i + ", j = " + j);
+print("i > j = " + (i > j));
+print("i < j = " + (i < j));
+print("i >= j = " + (i >= j));
+print("i <= j = " + (i <= j));
+print("i == j = " + (i == j));
+print("i != j = " + (i != j));
+print("
+");
+
+// 6. 逻辑运算
+print("6. 逻辑运算:");
+let k = true;
+let l = false;
+print("k = " + k + ", l = " + l);
+print("k && l = " + (k && l));
+print("k || l = " + (k || l));
+print("!k = " + (!k));
+print("!l = " + (!l));
+print("
+");
+
+// 7. 复杂表达式
+print("7. 复杂表达式:");
+let m = 15;
+let n = 3;
+let o = 7;
+print("m = " + m + ", n = " + n + ", o = " + o);
+print("m + n * o = " + (m + n * o));
+print("(m + n) * o = " + ((m + n) * o));
+print("m + n + o = " + (m + n + o));
+print("m * n + o = " + (m * n + o));
+print("~(m + n) * (o + n * m) = " + (~(m + n) * (o + n * m)));
+print("
+");
+
+// 8. 赋值运算
+print("8. 赋值运算:");
+let p = 10;
+print("p = " + p);
+p = p + 5;
+print("p = p + 5: " + p);
+p = p * 2;
+print("p = p * 2: " + p);
+p = p - 10;
+print("p = p - 10: " + p);
+print("
+");
+
+print("=== 算术运算测试完成 ===
+");

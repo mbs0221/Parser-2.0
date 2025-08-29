@@ -1,7 +1,0 @@
-let str = "Hello";
-let char0 = str[0];
-let char1 = str[1];
-print(char0);
-print(char1);
-print(str);
-#

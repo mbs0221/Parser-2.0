@@ -1,6 +1,0 @@
-print("=== 浮点数转整数截断测试 ===");
-print("3.14 -> int: ", cast(3.14, "int"));
-print("3.99 -> int: ", cast(3.99, "int"));
-print("3.01 -> int: ", cast(3.01, "int"));
-print("-3.14 -> int: ", cast(-3.14, "int"));
-print("-3.99 -> int: ", cast(-3.99, "int"));

@@ -1,7 +1,0 @@
-struct Student {
-    string name;
-}
-
-let student1 = Student("Alice");
-
-print(student1.name);

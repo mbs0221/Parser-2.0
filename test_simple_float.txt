@@ -1,2 +1,0 @@
-print("Simple test:");
-print("0.0");

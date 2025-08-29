@@ -1,8 +1,0 @@
-// 最小化函数测试
-
-function abs(x) {
-    return x;
-}
-
-let result = abs(5);
-print("result = " + result + "\n");

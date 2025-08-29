@@ -1,1 +1,0 @@
-function testException() { try { let x = 10 / 0; } catch (error) { print("Caught: " + error); } } testException();

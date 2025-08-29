@@ -1,9 +1,0 @@
-// 测试import错误处理
-
-// 尝试导入不存在的文件
-import "nonexistent_module.txt";
-
-// 尝试导入语法错误的文件
-import "tests/test_syntax_error.txt";
-
-print("如果看到这条消息，说明import错误处理有问题\n");

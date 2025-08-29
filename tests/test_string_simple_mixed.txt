@@ -1,2 +1,0 @@
-let name = "Alice";
-print("Hello " + name);

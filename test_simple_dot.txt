@@ -1,4 +1,0 @@
-# 简单测试
-print("Hello");
-let x = 10;
-print(x);

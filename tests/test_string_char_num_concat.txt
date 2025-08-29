@@ -1,5 +1,0 @@
-let str = "Hello";
-let ch = "W";
-let num = 42;
-print(str + ch);
-print(str + num);

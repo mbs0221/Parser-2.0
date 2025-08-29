@@ -1,8 +1,0 @@
-// 测试一元负号
-
-let x = 10;
-let y = -x;
-print("x = " + x + ", y = " + y + "\n");
-
-let z = -5;
-print("z = " + z + "\n");

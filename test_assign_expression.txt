@@ -1,8 +1,0 @@
-x = 42;
-print(x);
-y = 3.14;
-print(y);
-y = 100;
-print(y);
-
-

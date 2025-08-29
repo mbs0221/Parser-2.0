@@ -1,4 +1,0 @@
-let x = 1;
-print("x = " + x + "\n");
-let y = "Hello\kWorld";  // 无效转义字符 \k
-let z = 4 + 5;

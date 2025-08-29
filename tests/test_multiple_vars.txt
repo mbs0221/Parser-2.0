@@ -1,4 +1,0 @@
-let x = 10, y = 20, z;
-print("x = " + x + "\n");
-print("y = " + y + "\n");
-print("z = " + z + "\n");

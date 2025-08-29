@@ -1,3 +1,0 @@
-print("Hello World");
-print("\n");
-print("Testing basic functionality");

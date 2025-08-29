@@ -1,4 +1,0 @@
-let num = 42;
-let str = "Hello";
-let result = num + str;
-print(result);

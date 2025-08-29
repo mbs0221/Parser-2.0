@@ -1,0 +1,85 @@
+// ==================== 内置函数综合测试 ====================
+
+print("=== 内置函数综合测试 ===
+");
+
+// 1. 数学函数
+print("1. 数学函数:");
+let x = -5;
+let y = 10;
+let z = 3.14;
+
+print("abs(-5) = " + abs(x));
+print("max(10, 5, 8) = " + max(y, 5, 8));
+print("min(10, 5, 8) = " + min(y, 5, 8));
+print("pow(2, 3) = " + pow(2, 3));
+print("sqrt(16) = " + sqrt(16));
+print("floor(3.7) = " + floor(3.7));
+print("ceil(3.2) = " + ceil(3.2));
+print("round(3.6) = " + round(3.6));
+print("
+");
+
+// 2. 字符串函数
+print("2. 字符串函数:");
+let str = "Hello World";
+print("length(\"Hello World\") = " + length(str));
+print("substring(\"Hello World\", 0, 5) = " + substring(str, 0, 5));
+print("upper(\"hello\") = " + upper("hello"));
+print("lower(\"WORLD\") = " + lower("WORLD"));
+print("trim(\"  hello  \") = " + trim("  hello  "));
+print("indexOf(\"Hello World\", \"World\") = " + indexOf(str, "World"));
+print("replace(\"Hello World\", \"World\", \"Universe\") = " + replace(str, "World", "Universe"));
+print("
+");
+
+// 3. 类型转换函数
+print("3. 类型转换函数:");
+let num_str = "123";
+let num_int = to_int(num_str);
+print("to_int(\"123\") = " + num_int);
+
+let double_str = "3.14";
+let num_double = to_double(double_str);
+print("to_double(\"3.14\") = " + num_double);
+
+let str_result = to_string(42);
+print("to_string(42) = " + str_result);
+
+let bool_result = to_bool("true");
+print("to_bool(\"true\") = " + bool_result);
+print("
+");
+
+// 4. 随机数函数
+print("4. 随机数函数:");
+let rand1 = random();
+print("random() = " + rand1);
+let rand2 = random(100);
+print("random(100) = " + rand2);
+let rand3 = random(10, 20);
+print("random(10, 20) = " + rand3);
+print("
+");
+
+// 5. 数组函数
+print("5. 数组函数:");
+let arr = [1, 2, 3, 4, 5];
+print("count([1,2,3,4,5]) = " + count(arr));
+print("sum([1,2,3,4,5]) = " + sum(arr));
+print("max([1,2,3,4,5]) = " + max(arr));
+print("min([1,2,3,4,5]) = " + min(arr));
+print("reverse([1,2,3,4,5]) = " + reverse(arr));
+print("
+");
+
+// 6. 系统函数
+print("6. 系统函数:");
+print("time() = " + time());
+print("date() = " + date());
+print("version() = " + version());
+print("
+");
+
+print("=== 内置函数测试完成 ===
+");
