@@ -1,5 +1,5 @@
 #include "Parser/ast_visitor.h"
-#include "Parser/inter.h"
+#include "parser/inter.h"
 #include <iostream>
 
 int main() {

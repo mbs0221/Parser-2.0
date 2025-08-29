@@ -1,11 +1,11 @@
-#include "Parser/value.h"
-#include "Parser/expression.h"
-#include "Parser/interpreter.h"
+#include "lexer/value.h"
+#include "parser/expression.h"
+#include "interpreter/interpreter.h"
 #include <iostream>
 
 using namespace std;
 
-int main() {
+int test_constant_expression() {
     cout << "测试ConstantExpression和Value类型..." << endl;
     
     // 创建解释器
@@ -33,21 +33,21 @@ int main() {
     cout << "ConstantExpression(\"Hello\") = " << stringValue->toString() << endl;
     
     // 测试Value类型的运算符重载
-    if (IntegerValue* intVal = dynamic_cast<IntegerValue*>(intValue)) {
-        IntegerValue result = *intVal + IntegerValue(8);
-        cout << "IntegerValue运算: 42 + 8 = " << result.toString() << endl;
+    if (Integer* intVal = dynamic_cast<Integer*>(intValue)) {
+        Integer result = *intVal + Integer(8);
+        cout << "Integer运算: 42 + 8 = " << result.toString() << endl;
         
-        BoolValue comparison = *intVal > IntegerValue(40);
-        cout << "IntegerValue比较: 42 > 40 = " << comparison.toString() << endl;
+        Bool comparison = *intVal > Integer(40);
+        cout << "Integer比较: 42 > 40 = " << comparison.toString() << endl;
     }
     
-    if (DoubleValue* doubleVal = dynamic_cast<DoubleValue*>(doubleValue)) {
-        DoubleValue result = *doubleVal * DoubleValue(2.0);
+    if (Double* doubleVal = dynamic_cast<Double*>(doubleValue)) {
+        Double result = *doubleVal * Double(2.0);
         cout << "DoubleValue运算: 3.14 * 2.0 = " << result.toString() << endl;
     }
     
-    if (BoolValue* boolVal = dynamic_cast<BoolValue*>(boolValue)) {
-        BoolValue result = *boolVal && BoolValue(false);
+    if (Bool* boolVal = dynamic_cast<Bool*>(boolValue)) {
+        Bool result = *boolVal && Bool(false);
         cout << "BoolValue运算: true && false = " << result.toString() << endl;
     }
     

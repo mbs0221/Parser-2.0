@@ -1,11 +1,11 @@
-#include "Parser/value.h"
-#include "Parser/expression.h"
+#include "lexer/value.h"
+#include "parser/expression.h"
 #include "Parser/interpreter.h"
 #include <iostream>
 
 using namespace std;
 
-int main() {
+int test_cast_expression() {
     cout << "测试CastExpression类型转换系统..." << endl;
     
     // 创建解释器

@@ -4,7 +4,7 @@
 // 简单的测试，不依赖复杂的头文件
 using namespace std;
 
-int main() {
+int test_str_simple() {
     cout << "=== 测试 str 方法的基本功能 ===" << endl;
     
     // 测试字符串字面量

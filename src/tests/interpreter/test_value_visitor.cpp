@@ -1,6 +1,6 @@
 #include "Parser/value.h"
 #include "Parser/expression.h"
-#include "Parser/interpreter.h"
+#include "interpreter/interpreter.h"
 #include <iostream>
 
 using namespace std;

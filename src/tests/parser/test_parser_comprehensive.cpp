@@ -64,7 +64,7 @@ TEST_F(ParserComprehensiveTest, ExpressionStatements) {
     ConstantExpression* expr = new ConstantExpression(42);
     ExpressionStatement* stmt = new ExpressionStatement(expr);
     
-    EXPECT_NOT_NULL(stmt);
+    EXPECT_NE(stmt, nullptr);
     
     delete expr;
     delete stmt;
@@ -75,7 +75,7 @@ TEST_F(ParserComprehensiveTest, VariableDeclarations) {
     ConstantExpression* value = new ConstantExpression(42);
     VariableDeclaration* varDecl = new VariableDeclaration("y", "int", value);
     
-    EXPECT_NOT_NULL(varDecl);
+    EXPECT_NE(varDecl, nullptr);
     
     delete value;
     delete varDecl;
@@ -90,7 +90,7 @@ TEST_F(ParserComprehensiveTest, ProgramStructure) {
     statements.push_back(stmt);
     
     Program* program = new Program(statements);
-    EXPECT_NOT_NULL(program);
+    EXPECT_NE(program, nullptr);
     
     delete expr;
     delete stmt;
@@ -151,14 +151,14 @@ TEST_F(ParserComprehensiveTest, AssignmentBinaryExpressions) {
 // 测试AST结构
 TEST_F(ParserComprehensiveTest, ASTStructure) {
     ConstantExpression* expr = new ConstantExpression(42);
-    EXPECT_NOT_NULL(expr);
+    EXPECT_NE(expr, nullptr);
     delete expr;
 }
 
 // 测试访问者模式
 TEST_F(ParserComprehensiveTest, VisitorPattern) {
     ConstantExpression* expr = new ConstantExpression(42);
-    EXPECT_NOT_NULL(expr);
+    EXPECT_NE(expr, nullptr);
     delete expr;
 }
 

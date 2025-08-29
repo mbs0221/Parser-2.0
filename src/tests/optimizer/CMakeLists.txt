@@ -1,57 +1,27 @@
-# Optimizer测试配置
-add_executable(test_optimizer_comprehensive test_optimizer_comprehensive.cpp)
-target_include_directories(test_optimizer_comprehensive PRIVATE 
-    ${CMAKE_SOURCE_DIR}/include
+# Optimizer测试配置 - 只依赖lexer库
+set(OPTIMIZER_TEST_SOURCES
+    test_simple_optimizer.cpp
 )
-target_link_libraries(test_optimizer_comprehensive 
-    optimizer
-    parser
-    lexer
-    gtest
-    gtest_main
-    pthread
-)
-add_test(NAME test_optimizer_comprehensive COMMAND test_optimizer_comprehensive)
 
-# 其他optimizer相关测试
-add_executable(test_optimizer_basic test_optimizer.cpp)
-target_include_directories(test_optimizer_basic PRIVATE 
+# 创建统一的optimizer测试目标
+add_executable(test_optimizer ${OPTIMIZER_TEST_SOURCES})
+target_include_directories(test_optimizer PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
-target_link_libraries(test_optimizer_basic 
-    optimizer
-    parser
-    lexer
-    gtest
-    gtest_main
-    pthread
-)
-add_test(NAME test_optimizer_basic COMMAND test_optimizer_basic)
 
-add_executable(test_operator_precedence test_operator_precedence.cpp)
-target_include_directories(test_operator_precedence PRIVATE 
-    ${CMAKE_SOURCE_DIR}/include
-)
-target_link_libraries(test_operator_precedence 
-    optimizer
-    parser
+# 只链接lexer库
+target_link_libraries(test_optimizer
     lexer
+    ${LOG4CPP_LIBRARIES}
     gtest
     gtest_main
     pthread
 )
-add_test(NAME test_operator_precedence COMMAND test_operator_precedence)
 
-add_executable(test_updated_parser test_updated_parser.cpp)
-target_include_directories(test_updated_parser PRIVATE 
-    ${CMAKE_SOURCE_DIR}/include
+# 设置输出目录
+set_target_properties(test_optimizer PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
-target_link_libraries(test_updated_parser 
-    optimizer
-    parser
-    lexer
-    gtest
-    gtest_main
-    pthread
-)
-add_test(NAME test_updated_parser COMMAND test_updated_parser)
+
+# 添加测试
+add_test(NAME test_optimizer COMMAND test_optimizer)

@@ -1,6 +1,6 @@
-#include "Parser/inter.h"
-#include "Parser/interpreter.h"
-#include "Parser/lexer.h"
+#include "parser/inter.h"
+#include "interpreter/interpreter.h"
+#include "lexer/lexer.h"
 #include <iostream>
 #include <memory>
 

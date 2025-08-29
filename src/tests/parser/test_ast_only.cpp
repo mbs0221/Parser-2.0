@@ -5,7 +5,7 @@
 
 using namespace std;
 
-int main() {
+int test_ast_only() {
     cout << "=== AST结构测试 ===" << endl;
     
     // 测试常量表达式

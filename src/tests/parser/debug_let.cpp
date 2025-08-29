@@ -1,7 +1,7 @@
 #include "lexer/value.h"
 #include <iostream>
 
-int main() {
+int test_debug_let() {
     std::cout << "BASIC = " << BASIC << std::endl;
     std::cout << "LET = " << LET << std::endl;
     std::cout << "ID = " << ID << std::endl;

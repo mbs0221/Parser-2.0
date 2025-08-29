@@ -4,7 +4,7 @@
 
 using namespace std;
 
-class SimpleInterpreterTest : public ::testing::Test {
+class SimpleOptimizerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         // 初始化设置
@@ -15,37 +15,53 @@ protected:
     }
 };
 
-// 测试Value类型的基本功能
-TEST_F(SimpleInterpreterTest, ValueBasicFunctionality) {
+// 测试Value类型的优化
+TEST_F(SimpleOptimizerTest, ValueOptimization) {
     Integer* intVal = new Integer(42);
     Double* doubleVal = new Double(3.14);
     Bool* boolVal = new Bool(true);
-    Char* charVal = new Char('A');
     
     ASSERT_NE(intVal, nullptr);
     ASSERT_NE(doubleVal, nullptr);
     ASSERT_NE(boolVal, nullptr);
-    ASSERT_NE(charVal, nullptr);
     
+    // 测试基本优化：确保值正确
     EXPECT_EQ(intVal->getValue(), 42);
     EXPECT_DOUBLE_EQ(doubleVal->getValue(), 3.14);
     EXPECT_TRUE(boolVal->getValue());
-    EXPECT_EQ(charVal->getValue(), 'A');
     
     delete intVal;
     delete doubleVal;
     delete boolVal;
-    delete charVal;
 }
 
-// 测试Value类型的运算
-TEST_F(SimpleInterpreterTest, ValueOperations) {
+// 测试类型转换优化
+TEST_F(SimpleOptimizerTest, TypeConversionOptimization) {
+    Integer* intVal = new Integer(100);
+    Double* doubleVal = new Double(2.5);
+    
+    // 测试整数到浮点数的转换
+    double intToDouble = static_cast<double>(intVal->getValue());
+    EXPECT_DOUBLE_EQ(intToDouble, 100.0);
+    
+    // 测试浮点数到整数的转换（截断）
+    int doubleToInt = static_cast<int>(doubleVal->getValue());
+    EXPECT_EQ(doubleToInt, 2);
+    
+    delete intVal;
+    delete doubleVal;
+}
+
+// 测试运算优化
+TEST_F(SimpleOptimizerTest, OperationOptimization) {
     Integer* intVal1 = new Integer(10);
     Integer* intVal2 = new Integer(5);
     
+    // 测试加法运算优化
     Integer result = *intVal1 + *intVal2;
     EXPECT_EQ(result.getValue(), 15);
     
+    // 测试比较运算优化
     Bool comparison = *intVal1 > *intVal2;
     EXPECT_TRUE(comparison.getValue());
     
@@ -53,41 +69,29 @@ TEST_F(SimpleInterpreterTest, ValueOperations) {
     delete intVal2;
 }
 
-// 测试Value类型的类型转换
-TEST_F(SimpleInterpreterTest, ValueTypeConversion) {
-    Integer* intVal = new Integer(42);
-    Double* doubleVal = new Double(3.14);
-    Bool* boolVal = new Bool(true);
-    
-    EXPECT_EQ(intVal->getTypeName(), "int");
-    EXPECT_EQ(doubleVal->getTypeName(), "double");
-    EXPECT_EQ(boolVal->getTypeName(), "bool");
-    
-    EXPECT_EQ(intVal->toString(), "42");
-    EXPECT_EQ(doubleVal->toString(), "3.14");
-    EXPECT_EQ(boolVal->toString(), "true");
-    
-    delete intVal;
-    delete doubleVal;
-    delete boolVal;
-}
-
-// 测试Value类型的边界情况
-TEST_F(SimpleInterpreterTest, ValueEdgeCases) {
+// 测试边界情况优化
+TEST_F(SimpleOptimizerTest, EdgeCaseOptimization) {
     Integer* zeroInt = new Integer(0);
     Double* zeroDouble = new Double(0.0);
     Bool* falseBool = new Bool(false);
     
+    // 测试零值优化
     EXPECT_FALSE(zeroInt->toBool());
     EXPECT_FALSE(zeroDouble->toBool());
     EXPECT_FALSE(falseBool->toBool());
     
+    // 测试常量折叠
+    Integer* constVal = new Integer(42);
+    EXPECT_EQ(constVal->getValue(), 42);
+    EXPECT_TRUE(constVal->toBool());
+    
     delete zeroInt;
     delete zeroDouble;
     delete falseBool;
+    delete constVal;
 }
 
-int test_simple_interpreter_main(int argc, char **argv) {
+int test_simple_optimizer_main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

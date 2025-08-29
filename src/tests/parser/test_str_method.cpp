@@ -4,7 +4,7 @@
 
 using namespace std;
 
-int main() {
+int test_str_method() {
     cout << "=== 测试 Token 及其子类型的 str 方法 ===" << endl;
     
     // 测试基本 Token

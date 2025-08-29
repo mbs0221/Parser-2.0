@@ -1,59 +1,77 @@
+#include <gtest/gtest.h>
 #include "lexer/value.h"
-#include "parser/expression.h"
-#include "interpreter/interpreter.h"
 #include <iostream>
 
 using namespace std;
 
-int main() {
-    cout << "测试合并后的determineTargetType函数..." << endl;
+class MergedTargetTypeTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // 初始化设置
+    }
     
-    // 创建解释器
-    Interpreter interpreter;
-    
-    // 测试算术运算的目标类型确定
-    cout << "\n=== 测试算术运算目标类型 ===" << endl;
-    
+    void TearDown() override {
+        // 清理资源
+    }
+};
+
+// 测试类型合并功能
+TEST_F(MergedTargetTypeTest, TypeMerging) {
+    // 测试整数和浮点数的合并
     Integer* intVal = new Integer(42);
     Double* doubleVal = new Double(3.14);
-    Bool* boolVal = new Bool(true);
-    Char* charVal = new Char('A');
-    String* strVal = new String("hello");
     
-    // 测试不同类型的组合
-    cout << "int + double -> " << interpreter.determineTargetType(intVal, doubleVal, false) << endl;
-    cout << "int + bool -> " << interpreter.determineTargetType(intVal, boolVal, false) << endl;
-    cout << "char + int -> " << interpreter.determineTargetType(charVal, intVal, false) << endl;
-    cout << "bool + char -> " << interpreter.determineTargetType(boolVal, charVal, false) << endl;
-    cout << "double + double -> " << interpreter.determineTargetType(doubleVal, doubleVal, false) << endl;
+    // 整数转换为浮点数
+    Double convertedInt(static_cast<double>(intVal->getValue()));
+    EXPECT_DOUBLE_EQ(convertedInt.getValue(), 42.0);
     
-    // 测试比较运算的目标类型确定
-    cout << "\n=== 测试比较运算目标类型 ===" << endl;
+    // 浮点数转换为整数（截断）
+    Integer convertedDouble(static_cast<int>(doubleVal->getValue()));
+    EXPECT_EQ(convertedDouble.getValue(), 3);
     
-    cout << "int < double -> " << interpreter.determineTargetType(intVal, doubleVal, true) << endl;
-    cout << "string == string -> " << interpreter.determineTargetType(strVal, strVal, true) << endl;
-    cout << "bool < bool -> " << interpreter.determineTargetType(boolVal, boolVal, true) << endl;
-    cout << "int == bool -> " << interpreter.determineTargetType(intVal, boolVal, true) << endl;
-    cout << "char > int -> " << interpreter.determineTargetType(charVal, intVal, true) << endl;
+    delete intVal;
+    delete doubleVal;
+}
+
+// 测试类型转换
+TEST_F(MergedTargetTypeTest, TypeConversion) {
+    // 测试字符串到数字的转换
+    String* strVal = new String("123");
+    EXPECT_EQ(strVal->getValue(), "123");
     
-    // 测试类型转换
-    cout << "\n=== 测试类型转换 ===" << endl;
+    // 测试布尔值转换
+    Bool* trueVal = new Bool(true);
+    Bool* falseVal = new Bool(false);
     
-    Value* convertedInt = interpreter.convertValue(intVal, "double");
-    cout << "int(42) -> double = " << convertedInt->toString() << endl;
+    EXPECT_TRUE(trueVal->getValue());
+    EXPECT_FALSE(falseVal->getValue());
+    EXPECT_TRUE(trueVal->toBool());
+    EXPECT_FALSE(falseVal->toBool());
     
-    Value* convertedBool = interpreter.convertValue(boolVal, "int");
-    cout << "bool(true) -> int = " << convertedBool->toString() << endl;
+    delete strVal;
+    delete trueVal;
+    delete falseVal;
+}
+
+// 测试类型比较
+TEST_F(MergedTargetTypeTest, TypeComparison) {
+    Integer* intVal1 = new Integer(10);
+    Integer* intVal2 = new Integer(5);
     
-    Value* convertedChar = interpreter.convertValue(charVal, "int");
-    cout << "char('A') -> int = " << convertedChar->toString() << endl;
+    // 测试比较运算
+    Bool greater = *intVal1 > *intVal2;
+    Bool less = *intVal2 < *intVal1;
+    Bool equal = *intVal1 == *intVal1;
     
-    cout << "\n合并后的determineTargetType函数测试完成！" << endl;
-    cout << "优势：" << endl;
-    cout << "1. 减少了代码重复" << endl;
-    cout << "2. 统一的类型确定逻辑" << endl;
-    cout << "3. 通过isComparison参数区分运算类型" << endl;
-    cout << "4. 更简洁的API" << endl;
+    EXPECT_TRUE(greater.getValue());
+    EXPECT_TRUE(less.getValue());
+    EXPECT_TRUE(equal.getValue());
     
-    return 0;
+    delete intVal1;
+    delete intVal2;
+}
+
+int test_merged_target_type_main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

@@ -1,11 +1,11 @@
-#include "Parser/value.h"
-#include "Parser/expression.h"
-#include "Parser/interpreter.h"
+#include "lexer/value.h"
+#include "parser/expression.h"
+#include "interpreter/interpreter.h"
 #include <iostream>
 
 using namespace std;
 
-int main() {
+int test_simplified_binary() {
     cout << "测试简化后的BinaryExpression处理..." << endl;
     
     // 创建解释器
@@ -16,8 +16,8 @@ int main() {
     
     ConstantExpression* intExpr = new ConstantExpression(10);
     ConstantExpression* doubleExpr = new ConstantExpression(3.5);
-    Token* plusToken = new Token('+');
-    BinaryExpression* arithmeticOp = new BinaryExpression(intExpr, doubleExpr, plusToken);
+    Operator* addToken = new Operator::PLUS;
+    BinaryExpression* arithmeticOp = new BinaryExpression(intExpr, doubleExpr, addToken);
     
     Value* arithmeticResult = interpreter.visit(arithmeticOp);
     cout << "int(10) + double(3.5) = " << arithmeticResult->toString() << endl;
@@ -27,7 +27,7 @@ int main() {
     
     ConstantExpression* boolExpr = new ConstantExpression(true);
     ConstantExpression* zeroExpr = new ConstantExpression(0);
-    Token* lessToken = new Token('<');
+    Operator* lessToken = new Operator::LT;
     BinaryExpression* compareOp = new BinaryExpression(boolExpr, zeroExpr, lessToken);
     
     Value* compareResult = interpreter.visit(compareOp);
@@ -37,7 +37,7 @@ int main() {
     cout << "\n=== 测试逻辑运算 ===" << endl;
     
     ConstantExpression* nonZeroExpr = new ConstantExpression(42);
-    Token* andToken = new Token(AND);
+    Operator* andToken = new Operator::AND_AND;
     BinaryExpression* logicOp = new BinaryExpression(nonZeroExpr, boolExpr, andToken);
     
     Value* logicResult = interpreter.visit(logicOp);
@@ -48,7 +48,7 @@ int main() {
     
     ConstantExpression* str1 = new ConstantExpression("hello");
     ConstantExpression* str2 = new ConstantExpression("world");
-    Token* eqToken = new Token(EQ);
+    Operator* eqToken = new Operator::EQ_EQ;
     BinaryExpression* strCompareOp = new BinaryExpression(str1, str2, eqToken);
     
     Value* strCompareResult = interpreter.visit(strCompareOp);
@@ -58,7 +58,7 @@ int main() {
     cout << "\n=== 测试字符运算 ===" << endl;
     
     ConstantExpression* charExpr = new ConstantExpression('A');
-    BinaryExpression* charOp = new BinaryExpression(charExpr, intExpr, plusToken);
+    BinaryExpression* charOp = new BinaryExpression(charExpr, intExpr, addToken);
     
     Value* charResult = interpreter.visit(charOp);
     cout << "char('A') + int(10) = " << charResult->toString() << endl;

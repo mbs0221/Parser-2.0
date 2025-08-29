@@ -5,7 +5,7 @@
 
 using namespace std;
 
-int main() {
+int test_parser_simple() {
     cout << "=== Parser库简化测试 ===" << endl;
     
     // 测试常量表达式

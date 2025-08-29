@@ -64,7 +64,7 @@ TEST_F(ParserTest, ExpressionStatements) {
     ConstantExpression* expr = new ConstantExpression(42);
     ExpressionStatement* stmt = new ExpressionStatement(expr);
     
-    EXPECT_NOT_NULL(stmt);
+    EXPECT_NE(stmt, nullptr);
     
     delete expr;
     delete stmt;
@@ -75,7 +75,7 @@ TEST_F(ParserTest, VariableDeclarations) {
     ConstantExpression* value = new ConstantExpression(42);
     VariableDeclaration* varDecl = new VariableDeclaration("y", "int", value);
     
-    EXPECT_NOT_NULL(varDecl);
+    EXPECT_NE(varDecl, nullptr);
     
     delete value;
     delete varDecl;
@@ -90,14 +90,14 @@ TEST_F(ParserTest, ProgramStructure) {
     statements.push_back(stmt);
     
     Program* program = new Program(statements);
-    EXPECT_NOT_NULL(program);
+    EXPECT_NE(program, nullptr);
     
     delete expr;
     delete stmt;
     delete program;
 }
 
-int main(int argc, char **argv) {
+int test_parser(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

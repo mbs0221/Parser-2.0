@@ -54,7 +54,7 @@ TEST_F(InterpreterComprehensiveTest, ExpressionStatementStructure) {
     ConstantExpression* expr = new ConstantExpression(42);
     ExpressionStatement* stmt = new ExpressionStatement(expr);
     
-    EXPECT_NOT_NULL(stmt);
+    EXPECT_NE(stmt, nullptr);
     
     delete expr;
     delete stmt;
@@ -65,7 +65,7 @@ TEST_F(InterpreterComprehensiveTest, VariableDeclarationStructure) {
     ConstantExpression* value = new ConstantExpression(42);
     VariableDeclaration* varDecl = new VariableDeclaration("y", "int", value);
     
-    EXPECT_NOT_NULL(varDecl);
+    EXPECT_NE(varDecl, nullptr);
     
     delete value;
     delete varDecl;
@@ -80,7 +80,7 @@ TEST_F(InterpreterComprehensiveTest, ProgramStructure) {
     statements.push_back(stmt);
     
     Program* program = new Program(statements);
-    EXPECT_NOT_NULL(program);
+    EXPECT_NE(program, nullptr);
     
     delete expr;
     delete stmt;
@@ -90,7 +90,7 @@ TEST_F(InterpreterComprehensiveTest, ProgramStructure) {
 // 测试AST访问者模式
 TEST_F(InterpreterComprehensiveTest, ASTVisitorPattern) {
     ConstantExpression* expr = new ConstantExpression(42);
-    EXPECT_NOT_NULL(expr);
+    EXPECT_NE(expr, nullptr);
     delete expr;
 }
 
@@ -103,7 +103,7 @@ TEST_F(InterpreterComprehensiveTest, BuiltinFunctions) {
 // 测试访问者模式
 TEST_F(InterpreterComprehensiveTest, VisitorPattern) {
     ConstantExpression* expr = new ConstantExpression(42);
-    EXPECT_NOT_NULL(expr);
+    EXPECT_NE(expr, nullptr);
     delete expr;
 }
 

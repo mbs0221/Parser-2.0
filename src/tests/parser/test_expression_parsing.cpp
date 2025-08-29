@@ -1,12 +1,12 @@
 #include <iostream>
 #include <string>
-#include "Parser/lexer.h"
-#include "Parser/parser.h"
-#include "Parser/value.h"
+#include "lexer/lexer.h"
+#include "parser/parser.h"
+#include "lexer/value.h"
 
 using namespace std;
 
-int main() {
+int test_expression_parsing() {
     cout << "测试移除parseAdditive后的表达式解析" << endl;
     
     cout << "\n1. 测试加减运算" << endl;

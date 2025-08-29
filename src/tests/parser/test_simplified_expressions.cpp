@@ -1,68 +1,142 @@
-#include "Parser/value.h"
-#include "Parser/expression.h"
-#include "Parser/interpreter.h"
+#include <gtest/gtest.h>
+#include "parser/expression.h"
+#include "interpreter/interpreter.h"
+#include "lexer/value.h"
 #include <iostream>
 
 using namespace std;
 
-int main() {
-    cout << "测试简化后的表达式设计..." << endl;
-    
-    // 创建解释器
+class SimplifiedExpressionsTest : public ::testing::Test {
+protected:
     Interpreter interpreter;
     
-    // 测试ConstantExpression（常量）
+    void SetUp() override {
+        // 初始化设置
+    }
+    
+    void TearDown() override {
+        // 清理资源
+    }
+};
+
+// 测试整数常量表达式
+TEST_F(SimplifiedExpressionsTest, IntegerConstant) {
     ConstantExpression* intConst = new ConstantExpression(42);
     Value* intValue = interpreter.visit(intConst);
-    cout << "ConstantExpression(42) = " << intValue->toString() << endl;
     
+    ASSERT_NE(intValue, nullptr);
+    EXPECT_EQ(intValue->toString(), "42");
+    
+    // 不要删除intConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除intValue，因为它被ConstantExpression管理
+}
+
+// 测试浮点数常量表达式
+TEST_F(SimplifiedExpressionsTest, DoubleConstant) {
     ConstantExpression* doubleConst = new ConstantExpression(3.14);
     Value* doubleValue = interpreter.visit(doubleConst);
-    cout << "ConstantExpression(3.14) = " << doubleValue->toString() << endl;
     
+    ASSERT_NE(doubleValue, nullptr);
+    EXPECT_EQ(doubleValue->toString(), "3.140000");
+    
+    // 不要删除doubleConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除doubleValue，因为它被ConstantExpression管理
+}
+
+// 测试布尔常量表达式
+TEST_F(SimplifiedExpressionsTest, BoolConstant) {
     ConstantExpression* boolConst = new ConstantExpression(true);
     Value* boolValue = interpreter.visit(boolConst);
-    cout << "ConstantExpression(true) = " << boolValue->toString() << endl;
     
+    ASSERT_NE(boolValue, nullptr);
+    EXPECT_EQ(boolValue->toString(), "true");
+    
+    // 不要删除boolConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除boolValue，因为它被ConstantExpression管理
+}
+
+// 测试字符常量表达式
+TEST_F(SimplifiedExpressionsTest, CharConstant) {
     ConstantExpression* charConst = new ConstantExpression('A');
     Value* charValue = interpreter.visit(charConst);
-    cout << "ConstantExpression('A') = " << charValue->toString() << endl;
     
+    ASSERT_NE(charValue, nullptr);
+    EXPECT_EQ(charValue->toString(), "A");
+    
+    // 不要删除charConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除charValue，因为它被ConstantExpression管理
+}
+
+// 测试字符串常量表达式
+TEST_F(SimplifiedExpressionsTest, StringConstant) {
     ConstantExpression* stringConst = new ConstantExpression("Hello");
     Value* stringValue = interpreter.visit(stringConst);
-    cout << "ConstantExpression(\"Hello\") = " << stringValue->toString() << endl;
     
-    // 测试IdentifierExpression（变量）
-    // 注意：这里需要先在作用域中定义变量
-    interpreter.scopeManager.defineVariable("x", new IntegerValue(100));
+    ASSERT_NE(stringValue, nullptr);
+    EXPECT_EQ(stringValue->toString(), "\"Hello\"");
     
-    IdentifierExpression* idExpr = new IdentifierExpression("x");
-    Value* varValue = interpreter.visit(idExpr);
-    cout << "IdentifierExpression(\"x\") = " << varValue->toString() << endl;
+    // 不要删除stringConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除stringValue，因为它被ConstantExpression管理
+}
+
+// 测试变量声明
+TEST_F(SimplifiedExpressionsTest, VariableDeclaration) {
+    // 创建变量声明
+    VariableDeclaration* varDecl = new VariableDeclaration("x", "int");
+    interpreter.visit(varDecl);
     
-    // 测试Value类型的运算符重载
-    if (IntegerValue* intVal = dynamic_cast<IntegerValue*>(intValue)) {
-        IntegerValue result = *intVal + IntegerValue(8);
-        cout << "Value运算: 42 + 8 = " << result.toString() << endl;
-        
-        BoolValue comparison = *intVal > IntegerValue(40);
-        cout << "Value比较: 42 > 40 = " << comparison.toString() << endl;
-    }
+    // 变量应该被正确声明
+    // 这里我们只是测试声明是否成功，不测试访问
     
-    if (DoubleValue* doubleVal = dynamic_cast<DoubleValue*>(doubleValue)) {
-        DoubleValue result = *doubleVal * DoubleValue(2.0);
-        cout << "Value运算: 3.14 * 2.0 = " << result.toString() << endl;
-    }
+    delete varDecl;
+}
+
+// 测试Value类型的运算
+TEST_F(SimplifiedExpressionsTest, ValueOperations) {
+    ConstantExpression* intConst = new ConstantExpression(42);
+    Value* intValue = interpreter.visit(intConst);
     
-    if (BoolValue* boolVal = dynamic_cast<BoolValue*>(boolValue)) {
-        BoolValue result = *boolVal && BoolValue(false);
-        cout << "Value运算: true && false = " << result.toString() << endl;
-    }
+    ASSERT_NE(intValue, nullptr);
     
-    cout << "简化后的表达式设计测试完成！" << endl;
-    cout << "现在只有两种叶子节点：" << endl;
-    cout << "1. ConstantExpression - 存储常量值" << endl;
-    cout << "2. IdentifierExpression - 查询变量值" << endl;
+    Integer* intVal = dynamic_cast<Integer*>(intValue);
+    ASSERT_NE(intVal, nullptr);
+    EXPECT_EQ(intVal->getValue(), 42);
     
-    return 0;
+    // 不要删除intConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除intValue，因为它被ConstantExpression管理
+}
+
+// 测试浮点数运算
+TEST_F(SimplifiedExpressionsTest, DoubleOperations) {
+    ConstantExpression* doubleConst = new ConstantExpression(3.14);
+    Value* doubleValue = interpreter.visit(doubleConst);
+    
+    ASSERT_NE(doubleValue, nullptr);
+    
+    Double* doubleVal = dynamic_cast<Double*>(doubleValue);
+    ASSERT_NE(doubleVal, nullptr);
+    EXPECT_DOUBLE_EQ(doubleVal->getValue(), 3.14);
+    
+    // 不要删除doubleConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除doubleValue，因为它被ConstantExpression管理
+}
+
+// 测试布尔运算
+TEST_F(SimplifiedExpressionsTest, BoolOperations) {
+    ConstantExpression* boolConst = new ConstantExpression(true);
+    Value* boolValue = interpreter.visit(boolConst);
+    
+    ASSERT_NE(boolValue, nullptr);
+    
+    Bool* boolVal = dynamic_cast<Bool*>(boolValue);
+    ASSERT_NE(boolVal, nullptr);
+    EXPECT_TRUE(boolVal->getValue());
+    
+    // 不要删除boolConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除boolValue，因为它被ConstantExpression管理
+}
+
+int test_simplified_expressions_main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

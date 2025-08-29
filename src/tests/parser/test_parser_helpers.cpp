@@ -1,12 +1,12 @@
 #include <iostream>
 #include <string>
-#include "Parser/parser.h"
-#include "Parser/lexer.h"
-#include "Parser/value.h"
+#include "parser/parser.h"
+#include "lexer/lexer.h"
+#include "lexer/value.h"
 
 using namespace std;
 
-int main() {
+int test_parser_helpers() {
     cout << "测试Parser的Helper方法" << endl;
     
     // 测试matchOperator

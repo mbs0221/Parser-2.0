@@ -1,7 +1,7 @@
 #include "lexer/lexer.h"
 #include <iostream>
 
-int main() {
+int test_debug_lexer() {
     Lexer lexer;
     
     // 检查words映射中是否有"let"

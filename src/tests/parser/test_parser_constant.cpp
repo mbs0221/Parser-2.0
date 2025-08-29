@@ -1,58 +1,120 @@
-#include "Parser/parser.h"
-#include "Parser/interpreter.h"
+#include <gtest/gtest.h>
+#include "parser/parser.h"
+#include "interpreter/interpreter.h"
+#include "lexer/value.h"
 #include <iostream>
 
 using namespace std;
 
-int main() {
-    cout << "测试parser解析常量表达式..." << endl;
-    
-    // 创建parser和interpreter
+class ParserConstantTest : public ::testing::Test {
+protected:
     Parser parser;
     Interpreter interpreter;
     
-    // 测试解析不同类型的常量
-    // 注意：这里我们直接创建AST节点来测试，实际使用时parser会从文件解析
+    void SetUp() override {
+        // 初始化设置
+    }
     
-    // 测试整数常量
+    void TearDown() override {
+        // 清理资源
+    }
+};
+
+// 测试整数常量解析
+TEST_F(ParserConstantTest, IntegerConstant) {
     ConstantExpression* intConst = new ConstantExpression(42);
     Value* intValue = interpreter.visit(intConst);
-    cout << "解析整数常量 42 = " << intValue->toString() << endl;
     
-    // 测试浮点数常量
+    ASSERT_NE(intValue, nullptr);
+    EXPECT_EQ(intValue->toString(), "42");
+    
+    // 不要删除intConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除intValue，因为它被ConstantExpression管理
+}
+
+// 测试浮点数常量解析
+TEST_F(ParserConstantTest, DoubleConstant) {
     ConstantExpression* doubleConst = new ConstantExpression(3.14);
     Value* doubleValue = interpreter.visit(doubleConst);
-    cout << "解析浮点数常量 3.14 = " << doubleValue->toString() << endl;
     
-    // 测试布尔常量
+    ASSERT_NE(doubleValue, nullptr);
+    EXPECT_EQ(doubleValue->toString(), "3.140000");
+    
+    // 不要删除doubleConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除doubleValue，因为它被ConstantExpression管理
+}
+
+// 测试布尔常量解析
+TEST_F(ParserConstantTest, BoolConstant) {
     ConstantExpression* boolConst = new ConstantExpression(true);
     Value* boolValue = interpreter.visit(boolConst);
-    cout << "解析布尔常量 true = " << boolValue->toString() << endl;
     
-    // 测试字符常量
+    ASSERT_NE(boolValue, nullptr);
+    EXPECT_EQ(boolValue->toString(), "true");
+    
+    // 不要删除boolConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除boolValue，因为它被ConstantExpression管理
+}
+
+// 测试字符常量解析
+TEST_F(ParserConstantTest, CharConstant) {
     ConstantExpression* charConst = new ConstantExpression('A');
     Value* charValue = interpreter.visit(charConst);
-    cout << "解析字符常量 'A' = " << charValue->toString() << endl;
     
-    // 测试字符串常量
+    ASSERT_NE(charValue, nullptr);
+    EXPECT_EQ(charValue->toString(), "A");
+    
+    // 不要删除charConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除charValue，因为它被ConstantExpression管理
+}
+
+// 测试字符串常量解析
+TEST_F(ParserConstantTest, StringConstant) {
     ConstantExpression* stringConst = new ConstantExpression("Hello World");
     Value* stringValue = interpreter.visit(stringConst);
-    cout << "解析字符串常量 \"Hello World\" = " << stringValue->toString() << endl;
     
-    // 测试Value类型的运算符重载
-    if (IntegerValue* intVal = dynamic_cast<IntegerValue*>(intValue)) {
-        IntegerValue result = *intVal + IntegerValue(8);
-        cout << "Value运算: 42 + 8 = " << result.toString() << endl;
-        
-        BoolValue comparison = *intVal > IntegerValue(40);
-        cout << "Value比较: 42 > 40 = " << comparison.toString() << endl;
-    }
+    ASSERT_NE(stringValue, nullptr);
+    EXPECT_EQ(stringValue->toString(), "\"Hello World\"");
     
-    if (DoubleValue* doubleVal = dynamic_cast<DoubleValue*>(doubleValue)) {
-        DoubleValue result = *doubleVal * DoubleValue(2.0);
-        cout << "Value运算: 3.14 * 2.0 = " << result.toString() << endl;
-    }
+    // 不要删除stringConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除stringValue，因为它被ConstantExpression管理
+}
+
+// 测试Value类型的运算
+TEST_F(ParserConstantTest, ValueOperations) {
+    ConstantExpression* intConst = new ConstantExpression(42);
+    Value* intValue = interpreter.visit(intConst);
     
-    cout << "parser常量表达式解析测试完成！" << endl;
-    return 0;
+    ASSERT_NE(intValue, nullptr);
+    
+    // 测试类型转换
+    Integer* intVal = dynamic_cast<Integer*>(intValue);
+    ASSERT_NE(intVal, nullptr);
+    EXPECT_EQ(intVal->getValue(), 42);
+    
+    // 测试布尔转换
+    EXPECT_TRUE(intVal->toBool());
+    
+    // 不要删除intConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除intValue，因为它被ConstantExpression管理
+}
+
+// 测试浮点数运算
+TEST_F(ParserConstantTest, DoubleOperations) {
+    ConstantExpression* doubleConst = new ConstantExpression(3.14);
+    Value* doubleValue = interpreter.visit(doubleConst);
+    
+    ASSERT_NE(doubleValue, nullptr);
+    
+    Double* doubleVal = dynamic_cast<Double*>(doubleValue);
+    ASSERT_NE(doubleVal, nullptr);
+    EXPECT_DOUBLE_EQ(doubleVal->getValue(), 3.14);
+    
+    // 不要删除doubleConst，因为它的析构函数是空的，会导致内存泄漏
+    // 也不要删除doubleValue，因为它被ConstantExpression管理
+}
+
+int test_parser_constant_main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

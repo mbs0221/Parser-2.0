@@ -40,7 +40,7 @@ TEST_F(OptimizerComprehensiveTest, UpdatedParser) {
 // 测试AST优化
 TEST_F(OptimizerComprehensiveTest, ASTOptimization) {
     ConstantExpression* expr = new ConstantExpression(42);
-    EXPECT_NOT_NULL(expr);
+    EXPECT_NE(expr, nullptr);
     delete expr;
 }
 

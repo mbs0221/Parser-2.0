@@ -1,17 +1,17 @@
 #include <iostream>
 #include <string>
-#include "Parser/expression.h"
-#include "Parser/lexer.h"
-#include "Parser/value.h"
+#include "parser/expression.h"
+#include "lexer/lexer.h"
+#include "lexer/value.h"
 
 using namespace std;
 
-int main() {
+int test_assignment_binary() {
     cout << "测试赋值表达式作为二元运算符的设计" << endl;
     
     // 创建标识符表达式
-    IdentifierExpression* varA = new IdentifierExpression("a");
-    IdentifierExpression* varB = new IdentifierExpression("b");
+    VariableExpression* varA = new VariableExpression(new Variable("a"));
+    VariableExpression* varB = new VariableExpression(new Variable("b"));
     
     // 创建常量表达式
     Integer* intVal = new Integer(42);

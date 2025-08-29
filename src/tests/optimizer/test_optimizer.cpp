@@ -1,5 +1,5 @@
-#include "Parser/ast_optimizer.h"
-#include "Parser/inter.h"
+#include "optimizer/ast_optimizer.h"
+#include "parser/inter.h"
 #include <iostream>
 
 using namespace std;

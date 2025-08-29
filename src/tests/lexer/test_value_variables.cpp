@@ -1,51 +1,73 @@
+#include <gtest/gtest.h>
 #include "lexer/value.h"
-#include "parser/expression.h"
-#include "interpreter/interpreter.h"
 #include <iostream>
 
 using namespace std;
 
-int main() {
-    cout << "测试变量存储Value类型..." << endl;
+class ValueVariablesTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // 初始化设置
+    }
     
-    // 创建解释器
-    Interpreter interpreter;
+    void TearDown() override {
+        // 清理资源
+    }
+};
+
+// 测试变量值的基本功能
+TEST_F(ValueVariablesTest, VariableValueCreation) {
+    Integer* intVar = new Integer(100);
+    Double* doubleVar = new Double(2.718);
+    String* stringVar = new String("test string");
     
-    // 测试变量声明和赋值
-    IntExpression* intExpr = new IntExpression(42);
-    Value* intValue = interpreter.visit(intExpr);
-    cout << "IntExpression(42) = " << intValue->toString() << endl;
+    ASSERT_NE(intVar, nullptr);
+    ASSERT_NE(doubleVar, nullptr);
+    ASSERT_NE(stringVar, nullptr);
     
-    // 声明变量
-    VariableDeclaration* decl = new VariableDeclaration();
-    Variable var;
-    var.name = "x";
-    var.initializer = intExpr;
-    decl->variables.push_back(var);
+    EXPECT_EQ(intVar->getValue(), 100);
+    EXPECT_DOUBLE_EQ(doubleVar->getValue(), 2.718);
+    EXPECT_EQ(stringVar->getValue(), "test string");
     
-    interpreter.visit(decl);
-    cout << "声明变量 x = 42" << endl;
+    delete intVar;
+    delete doubleVar;
+    delete stringVar;
+}
+
+// 测试变量值的类型信息
+TEST_F(ValueVariablesTest, VariableTypeInfo) {
+    Integer* intVar = new Integer(42);
+    Double* doubleVar = new Double(3.14);
+    Bool* boolVar = new Bool(true);
+    Char* charVar = new Char('X');
     
-    // 查找变量
-    IdentifierExpression* idExpr = new IdentifierExpression("x");
-    Value* retrievedValue = interpreter.visit(idExpr);
-    cout << "查找变量 x = " << retrievedValue->toString() << endl;
+    EXPECT_EQ(intVar->getTypeName(), "int");
+    EXPECT_EQ(doubleVar->getTypeName(), "double");
+    EXPECT_EQ(boolVar->getTypeName(), "bool");
+    EXPECT_EQ(charVar->getTypeName(), "char");
     
-    // 测试赋值
-    IntExpression* newValue = new IntExpression(100);
-    Value* newValueResult = interpreter.visit(newValue);
+    delete intVar;
+    delete doubleVar;
+    delete boolVar;
+    delete charVar;
+}
+
+// 测试变量值的字符串表示
+TEST_F(ValueVariablesTest, VariableStringRepresentation) {
+    Integer* intVar = new Integer(123);
+    Double* doubleVar = new Double(1.23);
+    String* stringVar = new String("hello");
     
-    AssignmentExpression* assign = new AssignmentExpression();
-    assign->variableName = "x";
-    assign->value = newValue;
+    EXPECT_EQ(intVar->toString(), "123");
+    EXPECT_EQ(doubleVar->toString(), "1.23");
+    EXPECT_EQ(stringVar->toString(), "\"hello\"");
     
-    Value* assignResult = interpreter.visit(assign);
-    cout << "赋值 x = 100, 结果 = " << assignResult->toString() << endl;
-    
-    // 再次查找变量
-    Value* finalValue = interpreter.visit(idExpr);
-    cout << "最终变量 x = " << finalValue->toString() << endl;
-    
-    cout << "变量存储Value类型测试完成！" << endl;
-    return 0;
+    delete intVar;
+    delete doubleVar;
+    delete stringVar;
+}
+
+int test_value_variables_main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
