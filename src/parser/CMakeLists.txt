@@ -22,6 +22,9 @@ set(PARSER_HEADERS
 # 创建parser静态库
 add_library(parser STATIC ${PARSER_SOURCES} ${PARSER_HEADERS})
 
+# 设置位置无关代码
+set_property(TARGET parser PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 # 设置包含目录
 target_include_directories(parser PUBLIC 
     ${CMAKE_SOURCE_DIR}/include

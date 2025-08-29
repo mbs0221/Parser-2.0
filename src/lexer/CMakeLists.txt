@@ -16,6 +16,9 @@ set(LEXER_HEADERS
 # 创建lexer静态库
 add_library(lexer STATIC ${LEXER_SOURCES} ${LEXER_HEADERS})
 
+# 设置位置无关代码
+set_property(TARGET lexer PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 # 设置包含目录
 target_include_directories(lexer PUBLIC 
     ${CMAKE_SOURCE_DIR}/include

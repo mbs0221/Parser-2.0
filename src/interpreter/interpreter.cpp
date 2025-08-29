@@ -20,6 +20,9 @@ Interpreter::Interpreter() {
     
     // 注册内置函数到作用域管理器
     registerBuiltinFunctionsToScope();
+    
+    // 注册所有插件函数
+    pluginManager.registerAllPlugins(scopeManager);
 }
 
 // 解释器析构函数
@@ -203,4 +206,27 @@ void Interpreter::reportError(const string& message) {
 
 void Interpreter::reportTypeError(const string& expected, const string& actual) {
     cerr << "Type Error: expected " << expected << ", got " << actual << endl;
+}
+
+// 插件管理方法
+void Interpreter::loadPlugin(const string& pluginPath) {
+    if (pluginManager.loadPlugin(pluginPath)) {
+        // 重新注册所有插件函数到作用域
+        pluginManager.registerAllPlugins(scopeManager);
+        cout << "插件加载成功: " << pluginPath << endl;
+    } else {
+        cerr << "插件加载失败: " << pluginPath << endl;
+    }
+}
+
+void Interpreter::unloadPlugin(const string& pluginName) {
+    if (pluginManager.unloadPlugin(pluginName)) {
+        cout << "插件卸载成功: " << pluginName << endl;
+    } else {
+        cerr << "插件卸载失败: " << pluginName << endl;
+    }
+}
+
+vector<string> Interpreter::getLoadedPlugins() const {
+    return pluginManager.getLoadedPlugins();
 }

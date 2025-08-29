@@ -9,6 +9,7 @@ set(INTERPRETER_SOURCES
     ${CMAKE_SOURCE_DIR}/src/interpreter/logger.cpp
     ${CMAKE_SOURCE_DIR}/src/interpreter/builtin.cpp
     ${CMAKE_SOURCE_DIR}/src/interpreter/scope.cpp
+    ${CMAKE_SOURCE_DIR}/src/interpreter/plugins/plugin_manager.cpp
 )
 
 # 设置头文件
@@ -16,6 +17,7 @@ set(INTERPRETER_HEADERS
     ${CMAKE_SOURCE_DIR}/include/interpreter/interpreter.h
     ${CMAKE_SOURCE_DIR}/include/interpreter/logger.h
     ${CMAKE_SOURCE_DIR}/include/interpreter/builtin.h
+    ${CMAKE_SOURCE_DIR}/include/interpreter/builtin_plugin.h
     ${CMAKE_SOURCE_DIR}/include/interpreter/control_flow.h
     ${CMAKE_SOURCE_DIR}/include/interpreter/scope.h
 )
@@ -34,7 +36,7 @@ target_include_directories(interpreter PUBLIC
 target_compile_options(interpreter PRIVATE ${LOG4CPP_CFLAGS_OTHER})
 
 # 链接依赖库
-target_link_libraries(interpreter parser)
+target_link_libraries(interpreter parser dl)
 
 # 设置输出目录
 set_target_properties(interpreter PROPERTIES
@@ -42,3 +44,6 @@ set_target_properties(interpreter PROPERTIES
     CXX_STANDARD 11
     CXX_STANDARD_REQUIRED ON
 )
+
+# 添加插件构建
+add_subdirectory(plugins)

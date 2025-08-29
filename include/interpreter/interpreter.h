@@ -6,6 +6,7 @@
 #include "interpreter/control_flow.h"
 #include "parser/ast_visitor.h"
 #include "interpreter/scope.h"
+#include "interpreter/builtin_plugin.h"
 #include "parser/function.h"
 #include "lexer/value.h"
 #include "parser/expression.h"
@@ -26,6 +27,9 @@ class Interpreter : public ASTVisitor {
 private:
     // 作用域管理器
     ScopeManager scopeManager;
+    
+    // 插件管理器
+    PluginManager pluginManager;
     
     // 调用栈（用于调试和错误报告）
     vector<string> callStack;
@@ -86,6 +90,11 @@ public:
     
     // 内置函数管理
     void registerBuiltinFunctionsToScope();
+    
+    // 插件管理
+    void loadPlugin(const string& pluginPath);
+    void unloadPlugin(const string& pluginName);
+    vector<string> getLoadedPlugins() const;
     
     // 类/结构体实例化
     Value* instantiateClass(ClassDefinition* classDef, vector<Value*>& args);

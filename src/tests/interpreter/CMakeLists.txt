@@ -154,3 +154,20 @@ target_link_libraries(test_value_visitor
     pthread
 )
 add_test(NAME test_value_visitor COMMAND test_value_visitor)
+
+# 插件系统测试
+add_executable(test_plugin_system test_plugin_system.cpp)
+target_include_directories(test_plugin_system PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_link_libraries(test_plugin_system 
+    interpreter
+    parser
+    lexer
+    dl
+    pthread
+    ${LOG4CPP_LIBRARIES}
+)
+set_target_properties(test_plugin_system PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
