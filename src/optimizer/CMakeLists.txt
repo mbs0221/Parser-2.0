@@ -9,7 +9,6 @@ set(OPTIMIZER_SOURCES
 set(OPTIMIZER_HEADERS
     ${CMAKE_SOURCE_DIR}/include/optimizer/ast_optimizer.h
     ${CMAKE_SOURCE_DIR}/include/parser/ast_visitor.h
-    ${CMAKE_SOURCE_DIR}/include/parser/inter.h
 )
 
 # 创建optimizer静态库
