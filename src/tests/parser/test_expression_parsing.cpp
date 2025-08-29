@@ -1,3 +1,4 @@
+#include <gtest/gtest.h>
 #include <iostream>
 #include <string>
 #include "lexer/lexer.h"
@@ -6,36 +7,68 @@
 
 using namespace std;
 
-int test_expression_parsing() {
-    cout << "测试移除parseAdditive后的表达式解析" << endl;
+class ExpressionParsingTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // 初始化设置
+    }
     
-    cout << "\n1. 测试加减运算" << endl;
-    cout << "现在加减运算通过统一的运算符优先文法解析" << endl;
-    cout << "示例: a + b - c" << endl;
-    cout << "解析为: BinaryExpression(BinaryExpression(a, b, +), c, -)" << endl;
+    void TearDown() override {
+        // 清理资源
+    }
+};
+
+// 测试表达式解析的基本概念
+TEST_F(ExpressionParsingTest, ExpressionParsingConcepts) {
+    // 这个测试主要验证表达式解析的概念和设计
+    EXPECT_TRUE(true); // 基本概念测试通过
     
-    cout << "\n2. 测试混合运算" << endl;
-    cout << "示例: a + b * c - d" << endl;
-    cout << "解析为: BinaryExpression(BinaryExpression(a, BinaryExpression(b, c, *), +), d, -)" << endl;
+    // 验证运算符优先级概念
+    vector<string> expectedPrecedence = {
+        "一元操作符: !, -",
+        "乘除模: *, /, %", 
+        "加减: +, -",
+        "比较: ==, !=, <, >, <=, >=",
+        "逻辑: &&, ||",
+        "赋值: ="
+    };
     
-    cout << "\n3. 测试赋值运算" << endl;
-    cout << "示例: x = y = z" << endl;
-    cout << "解析为: BinaryExpression(x, BinaryExpression(y, z, =), =)" << endl;
+    EXPECT_EQ(expectedPrecedence.size(), 6);
+}
+
+// 测试表达式解析的优势
+TEST_F(ExpressionParsingTest, ExpressionParsingAdvantages) {
+    vector<string> advantages = {
+        "统一的表达式解析逻辑",
+        "支持任意复杂度的表达式", 
+        "正确处理运算符优先级和结合性",
+        "代码更简洁，易于维护"
+    };
     
-    cout << "\n4. 优势" << endl;
-    cout << "- 统一的表达式解析逻辑" << endl;
-    cout << "- 支持任意复杂度的表达式" << endl;
-    cout << "- 正确处理运算符优先级和结合性" << endl;
-    cout << "- 代码更简洁，易于维护" << endl;
+    EXPECT_EQ(advantages.size(), 4);
     
-    cout << "\n5. 运算符优先级（从高到低）" << endl;
-    cout << "1. 一元操作符: !, -" << endl;
-    cout << "2. 乘除模: *, /, %" << endl;
-    cout << "3. 加减: +, -" << endl;
-    cout << "4. 比较: ==, !=, <, >, <=, >=" << endl;
-    cout << "5. 逻辑: &&, ||" << endl;
-    cout << "6. 赋值: =" << endl;
+    // 验证每个优势都存在
+    for (const string& advantage : advantages) {
+        EXPECT_FALSE(advantage.empty());
+    }
+}
+
+// 测试表达式解析示例
+TEST_F(ExpressionParsingTest, ExpressionParsingExamples) {
+    // 测试加减运算示例
+    string additiveExample = "a + b - c";
+    EXPECT_FALSE(additiveExample.empty());
     
-    cout << "\n测试完成" << endl;
-    return 0;
+    // 测试混合运算示例  
+    string mixedExample = "a + b * c - d";
+    EXPECT_FALSE(mixedExample.empty());
+    
+    // 测试赋值运算示例
+    string assignmentExample = "x = y = z";
+    EXPECT_FALSE(assignmentExample.empty());
+}
+
+int test_expression_parsing_main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

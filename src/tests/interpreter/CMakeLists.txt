@@ -1,6 +1,7 @@
-# Interpreter测试配置 - 只依赖lexer库
+# Interpreter测试配置 - 依赖lexer、parser和interpreter库
 set(INTERPRETER_TEST_SOURCES
     test_simple_interpreter.cpp
+    test_constant_expression.cpp
 )
 
 # 创建统一的interpreter测试目标
@@ -9,9 +10,12 @@ target_include_directories(test_interpreter PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-# 只链接lexer库
+# 链接所有必要的库
 target_link_libraries(test_interpreter
     lexer
+    parser
+    interpreter
+    optimizer
     ${LOG4CPP_LIBRARIES}
     gtest
     gtest_main

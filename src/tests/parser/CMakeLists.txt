@@ -1,16 +1,20 @@
-# Parser测试配置 - 只依赖lexer和parser库
+# Parser测试配置 - 依赖lexer和parser库
 set(PARSER_TEST_SOURCES
     test_simple_parser.cpp
+    test_parser.cpp
+    test_leaf_expression.cpp
+    test_assignment_binary.cpp
+    test_expression_parsing.cpp
 )
 
 # 创建统一的parser测试目标
 add_executable(test_parser ${PARSER_TEST_SOURCES})
-target_include_directories(test_parser PRIVATE 
+target_include_directories(test_parser PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-# 只链接lexer和parser库
-target_link_libraries(test_parser 
+# 链接lexer和parser库
+target_link_libraries(test_parser
     lexer
     parser
     ${LOG4CPP_LIBRARIES}

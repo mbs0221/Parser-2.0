@@ -3,6 +3,10 @@ set(LEXER_TEST_SOURCES
     test_simple_lexer.cpp
     test_value_variables.cpp
     test_merged_target_type.cpp
+    test_operator_design.cpp
+    test_string_operations.cpp
+    test_lexer_comprehensive.cpp
+    test_lexer.cpp
 )
 
 # 创建统一的lexer测试目标
