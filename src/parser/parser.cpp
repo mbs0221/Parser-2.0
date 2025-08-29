@@ -402,6 +402,8 @@ Expression* Parser::parsePrimary() {
                 // 检查是否在表达式开头，如果是，则作为一元正号处理
                 Operator* op = lex.matchOperator();
                 Expression* operand = parsePrimary();
+                // 对操作数进行后缀处理，以支持函数调用等
+                operand = parsePostfix(operand);
                 return new UnaryExpression(operand, op);
             }
         case ID: // 标识符
