@@ -8,6 +8,7 @@ set(LEXER_TEST_SOURCES
     test_lexer_comprehensive.cpp
     test_lexer.cpp
     debug_lexer.cpp
+    test_char_flyweight.cpp
 )
 
 # 创建统一的lexer测试目标

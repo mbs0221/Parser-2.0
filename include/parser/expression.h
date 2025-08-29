@@ -28,8 +28,15 @@ struct ConstantExpression : public Expression {
     
     ~ConstantExpression() { 
         if (value) {
-            delete value;
-            value = nullptr;
+            // 只有Char类型通过享元模式管理，不删除
+            // Integer和Double可能是作用域中的常量，需要正常删除
+            if (dynamic_cast<Char*>(value)) {
+                // Char对象通过享元模式管理，不删除
+                value = nullptr;
+            } else {
+                delete value;
+                value = nullptr;
+            }
         }
     }
     

@@ -1,6 +1,15 @@
 #include "lexer/value.h"
+#include "lexer/lexer.h"
+#include <map>
+#include <mutex>
 
-// 静态成员定义
+// 声明外部factory变量
+extern TokenFlyweight* factory;
+
+// Token静态成员定义 - 直接初始化
+Token* Token::END_OF_FILE = new Token(::END_OF_FILE);
+
+// 静态成员定义 - 直接初始化
 Type *Type::Int = new Type(NUM, "int", 4);
 Type *Type::Double = new Type(REAL, "double", 8);
 Type *Type::Char = new Type(CHAR, "char", 1);
@@ -9,8 +18,8 @@ Type *Type::Bool = new Type(BOOL, "bool", 1);
 Type *Type::String = new Type(STR, "string", 0);
 
 // 定义Array和Dict的静态Type成员
-Type* Array::ArrayType = new Type(STR, "array", 0);
-Type* Dict::DictType = new Type(STR, "dict", 0);
+Type* Array::ArrayType = new Type(ARRAY, "array", 0);
+Type* Dict::DictType = new Type(DICT, "dict", 0);
 
 // 赋值运算符
 Operator *Operator::Assign = new Operator('=', "=", 2, false);
@@ -50,17 +59,15 @@ Operator *Operator::Dot = new Operator('.', ".", 7, true);
 Operator *Operator::Arrow = new Operator(ARROW, "->", 7, true);
 Operator *Operator::Question = new Operator('?', "?", 1, false);
 Operator *Operator::Colon = new Operator(':', ":", 1, false);
-// NULL_VALUE 应该是 Value 类型，不应该是 Operator
 
-// 标点符号不是运算符，在词法分析器中直接返回Token类型
+// Bool静态成员定义 - 直接初始化
+Bool *Bool::True = new Bool(true);
+Bool *Bool::False = new Bool(false);
 
 // 访问修饰符
 Visibility *Visibility::Public = new Visibility(PUBLIC, VIS_PUBLIC);
 Visibility *Visibility::Private = new Visibility(PRIVATE, VIS_PRIVATE);
 Visibility *Visibility::Protected = new Visibility(PROTECTED, VIS_PROTECTED);
-
-Bool *Bool::True = new Bool(true);
-Bool *Bool::False = new Bool(false);
 
 // 空值 - 使用Integer(0)作为空值表示
 Value *Value::NullValue = new Integer(0);
@@ -129,7 +136,7 @@ Value* Bool::convertTo(Type* type) {
     } else if (type == Type::Double) {
         return new Double(value ? 1.0 : 0.0);
     } else if (type == Type::Char) {
-        return new Char(value ? '1' : '0');
+        return factory->getChar(value ? '1' : '0').get();
     } else if (type == Type::String) {
         return new String(value ? "true" : "false");
     } else if (type == Type::Bool) {
@@ -146,7 +153,7 @@ Value* Integer::convertTo(Type* type) {
     } else if (type == Type::Double) {
         return new Double(static_cast<double>(value));
     } else if (type == Type::Char) {
-        return new Char(static_cast<char>(value));
+        return factory->getChar(static_cast<char>(value)).get();
     } else if (type == Type::String) {
         return new String(to_string(value));
     } else if (type == Type::Bool) {
@@ -163,7 +170,7 @@ Value* Char::convertTo(Type* type) {
     } else if (type == Type::Double) {
         return new Double(static_cast<double>(value));
     } else if (type == Type::Char) {
-        return new Char(value);
+        return factory->getChar(value).get();
     } else if (type == Type::String) {
         return new String(string(1, value));
     } else if (type == Type::Bool) {
@@ -180,7 +187,7 @@ Value* Double::convertTo(Type* type) {
     } else if (type == Type::Double) {
         return new Double(value);
     } else if (type == Type::Char) {
-        return new Char(static_cast<char>(value));
+        return factory->getChar(static_cast<char>(value)).get();
     } else if (type == Type::String) {
         ostringstream oss;
         oss << value;
@@ -208,7 +215,7 @@ Value* String::convertTo(Type* type) {
         }
     } else if (type == Type::Char) {
         if (value.length() == 1) {
-            return new Char(value[0]);
+            return factory->getChar(value[0]).get();
         } else {
             throw runtime_error("Cannot convert string '" + value + "' to Char (length != 1)");
         }
@@ -358,18 +365,18 @@ Value* Double::calculate(Double* operand, int op) {
 // Char类型的静态calculate方法
 Value* Char::calculate(Char* left, Char* right, int op) {
     switch (op) {
-        case '+': return new Char(left->getValue() + right->getValue());
-        default: return new Char(left->getValue());
+        case '+': return factory->getChar(left->getValue() + right->getValue()).get();
+        default: return factory->getChar(left->getValue()).get();
     }
 }
 
 Value* Char::calculate(Char* operand, int op) {
     switch (op) {
-        case '+': return new Char(operand->getValue());
-        case '-': return new Char(-operand->getValue());
-        case '~': return new Char(~operand->getValue());
+        case '+': return factory->getChar(operand->getValue()).get();
+        case '-': return factory->getChar(-operand->getValue()).get();
+        case '~': return factory->getChar(~operand->getValue()).get();
         case '!': return new Bool(!operand->getValue());
-        default: return new Char(operand->getValue());
+        default: return factory->getChar(operand->getValue()).get();
     }
 }
 

@@ -28,7 +28,7 @@ using namespace std;
 //词法分析器标记
 enum Tag{
 	// 基本类型
-	BASIC = 256, ID, NUM, REAL, DOUBLE, CHAR, STR, BOOL, END_OF_FILE,
+	BASIC = 256, ID, NUM, REAL, DOUBLE, CHAR, STR, BOOL, ARRAY, DICT, END_OF_FILE,
 	
 	// 关键字
 	IF, THEN, ELSE, DO, WHILE, FOR, CASE, DEFAULT,
@@ -72,6 +72,8 @@ enum VisibilityType {
 //词法单元
 struct Token{
 	int Tag;		//标记
+	static Token* END_OF_FILE;  // 静态END_OF_FILE Token
+	
 	Token(){
 		Tag = 0;
 	}

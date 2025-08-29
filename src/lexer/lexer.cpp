@@ -52,7 +52,7 @@ bool Lexer::open(string file){
 
 Token *Lexer::scan(){//LL(1)
 	if (inf.eof()){
-		return new Token(END_OF_FILE);
+		return Token::END_OF_FILE;
 	}
 	while (inf.read(&peek, 1)){
 		column++;
@@ -72,7 +72,7 @@ Token *Lexer::scan(){//LL(1)
 	
 	// 检查是否到达文件末尾
 	if (inf.eof()){
-		return new Token(END_OF_FILE);
+		return Token::END_OF_FILE;
 	}
 	if (peek == '\''){
 		return match_char();
@@ -122,7 +122,8 @@ Value *Lexer::match_char(){
 		exit(1);  // 强制退出
 	}
 	
-	return new Char(c);
+	// 使用TokenFlyweight管理Char对象
+	return factory->getChar(c).get();
 }
 
 Token *Lexer::match_id(){
@@ -136,7 +137,8 @@ Token *Lexer::match_id(){
 	if (words.find(str) != words.end()){
 		return words[str];
 	}
-	Word *w = new Word(ID, str);
+	// 使用TokenFlyweight管理Word对象
+	Word *w = factory->getWord(ID, str).get();
 	words[str] = w;
 	return w;
 }
@@ -156,10 +158,11 @@ Value *Lexer::match_number(){
 			peek = '0';
 			return match_decimal();
 		}
-		// 单独的0
+		// 单独的0 - 使用TokenFactory管理
 		inf.seekg(-1, ios_base::cur);
 		peek = '0';
-		return new Integer(0);
+		// 0在256以内，使用TokenFactory
+		return factory->getInteger(0).get();
 	}
 	else{
 		return match_decimal();
@@ -197,9 +200,10 @@ Value *Lexer::match_decimal(){
 	
 	// 根据是否为浮点数返回相应的Token
 	if (isFloat){
-		return new Double(floatVal);
+		return factory->getDouble(floatVal).get();
 	} else {
-		return new Integer(val);
+		// 使用享元模式管理Integer对象
+		return factory->getInteger(val).get();
 	}
 }
 
@@ -219,7 +223,8 @@ Value *Lexer::match_hex(){
 		inf.read(&peek, 1);
 	} while (isxdigit(peek));
 	inf.seekg(-1, ios_base::cur);
-	return new Integer(val);
+	// 使用享元模式管理Integer对象
+	return factory->getInteger(val).get();
 }
 
 Value *Lexer::match_oct(){
@@ -229,7 +234,8 @@ Value *Lexer::match_oct(){
 		inf.read(&peek, 1);
 	} while (isdigit(peek) && peek >= '0' && peek <= '7');
 	inf.seekg(-1, ios_base::cur);
-	return new Integer(val);
+	// 使用享元模式管理Integer对象
+	return factory->getInteger(val).get();
 }
 
 Token *Lexer::match_other(){
@@ -340,13 +346,9 @@ Token *Lexer::match_other(){
 		return Operator::Dot;  // 使用静态常量
 	} else {
 		// 其他字符返回Token类型
-		if (peek > 31 && peek < 127){
-			// 使用静态Token对象而不是动态分配
-			static Token* staticTokens[128] = {nullptr};
-			if (!staticTokens[peek]) {
-				staticTokens[peek] = new Token(peek);
-			}
-			return staticTokens[peek];
+		if (peek > 31 && peek < 256){
+			// 使用享元模式管理Token - 31到255之间的字符
+			return factory->getToken(peek).get();
 		}
 		// 无法识别的字符
 		printf("LEXICAL ERROR line[%03d]: unrecognized character '\\x%02x'\n", line, (unsigned char)peek);
@@ -369,7 +371,7 @@ Token *Lexer::skip_comment(){
 				column = 0;
 				line++;
 			}
-			// 使用静态Comment对象而不是动态分配
+			// 使用享元模式管理Comment对象
 			static Comment* staticSingleLineComment = nullptr;
 			if (!staticSingleLineComment) {
 				staticSingleLineComment = new Comment(content, "//");
@@ -387,7 +389,7 @@ Token *Lexer::skip_comment(){
 					content += peek;
 					if (peek == '/'){
 						inf.read(&peek, 1);
-						// 使用静态Comment对象而不是动态分配
+						// 使用享元模式管理Comment对象
 						static Comment* staticMultiLineComment = nullptr;
 						if (!staticMultiLineComment) {
 							staticMultiLineComment = new Comment(content, "/*");
@@ -426,7 +428,7 @@ Token *Lexer::skip_comment(){
 			column = 0;
 			line++;
 		}
-		// 使用静态Comment对象而不是动态分配
+		// 使用享元模式管理Comment对象
 		static Comment* staticHashComment = nullptr;
 		if (!staticHashComment) {
 			staticHashComment = new Comment(content, "#");

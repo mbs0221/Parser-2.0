@@ -111,6 +111,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	
+
+	
 	// 初始化日志系统
 	Logger::initialize("parser.log");
 	setLogLevel(logLevel);

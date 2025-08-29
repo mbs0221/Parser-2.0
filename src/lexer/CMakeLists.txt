@@ -4,6 +4,7 @@
 set(LEXER_SOURCES
     ${CMAKE_SOURCE_DIR}/src/lexer/lexer.cpp
     ${CMAKE_SOURCE_DIR}/src/lexer/value.cpp
+    ${CMAKE_SOURCE_DIR}/src/lexer/token.cpp
 )
 
 # 设置头文件
