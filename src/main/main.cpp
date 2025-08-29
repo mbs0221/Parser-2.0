@@ -3,6 +3,7 @@
 #include "parser/parser.h"
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <cstdio>
 #include <getopt.h>
 #include <unistd.h>
@@ -16,13 +17,17 @@ void showUsage(const char* programName) {
     printf("  -l, --log-level LEVEL    Set log level (DEBUG, INFO, WARN, ERROR, FATAL)\n");
     printf("  -v, --verbose            Enable verbose output (same as --log-level DEBUG)\n");
     printf("  -q, --quiet              Enable quiet output (same as --log-level ERROR)\n");
+    printf("  -p, --plugins PLUGINS    Load specific plugins (comma-separated, default: basic)\n");
+    printf("  -n, --no-plugins         Disable plugin loading\n");
     printf("  -h, --help               Show this help message\n");
     printf("\nExamples:\n");
-    printf("  %s input.txt                    # Use default log level (INFO)\n", programName);
+    printf("  %s input.txt                    # Use default log level (INFO) and basic plugins\n", programName);
     printf("  %s -l DEBUG input.txt           # Enable debug logging\n", programName);
     printf("  %s --log-level WARN input.txt   # Only show warnings and errors\n", programName);
     printf("  %s -v input.txt                 # Verbose mode\n", programName);
     printf("  %s -q input.txt                 # Quiet mode\n", programName);
+    printf("  %s -p basic,math input.txt      # Load basic and math plugins\n", programName);
+    printf("  %s -n input.txt                 # Run without plugins\n", programName);
 }
 
 // 设置日志级别
@@ -48,12 +53,16 @@ int main(int argc, char *argv[])
 {
 	string logLevel = "INFO";  // 默认日志级别
 	string fileName;
+	bool loadPlugins = true;   // 默认加载插件
+	string pluginList = ""; // 默认不加载插件
 	
 	// 定义长选项
 	static struct option long_options[] = {
 		{"log-level", required_argument, 0, 'l'},
 		{"verbose",   no_argument,       0, 'v'},
 		{"quiet",     no_argument,       0, 'q'},
+		{"plugins",   required_argument, 0, 'p'},
+		{"no-plugins", no_argument,      0, 'n'},
 		{"help",      no_argument,       0, 'h'},
 		{0, 0, 0, 0}
 	};
@@ -62,7 +71,7 @@ int main(int argc, char *argv[])
 	int c;
 	
 	// 解析命令行参数
-	while ((c = getopt_long(argc, argv, "l:vqh", long_options, &option_index)) != -1) {
+	while ((c = getopt_long(argc, argv, "l:vqnp:h", long_options, &option_index)) != -1) {
 		switch (c) {
 			case 'l':
 				logLevel = optarg;
@@ -72,6 +81,13 @@ int main(int argc, char *argv[])
 				break;
 			case 'q':
 				logLevel = "ERROR";
+				break;
+			case 'p':
+				pluginList = optarg;
+				loadPlugins = true;
+				break;
+			case 'n':
+				loadPlugins = false;
 				break;
 			case 'h':
 				showUsage(argv[0]);
@@ -100,6 +116,10 @@ int main(int argc, char *argv[])
 	setLogLevel(logLevel);
 	
 	LOG_INFO("Parser application started with log level: " + logLevel);
+	LOG_INFO("Plugin loading: " + string(loadPlugins ? "enabled" : "disabled"));
+	if (loadPlugins) {
+		LOG_INFO("Plugins to load: " + pluginList);
+	}
 	
 	LOG_INFO("Parsing file: " + fileName);
 	Parser p;
@@ -112,7 +132,26 @@ int main(int argc, char *argv[])
 		// Program* optimizedProgram = optimizer.optimize(program);
 		
 		LOG_INFO("Executing program");
-		Interpreter interpreter;
+		Interpreter interpreter(loadPlugins);
+		
+		// 如果启用了插件加载，加载指定的插件
+		if (loadPlugins && !pluginList.empty()) {
+			// 解析插件列表（逗号分隔）
+			stringstream ss(pluginList);
+			string plugin;
+			while (getline(ss, plugin, ',')) {
+				// 去除空格
+				plugin.erase(0, plugin.find_first_not_of(" \t"));
+				plugin.erase(plugin.find_last_not_of(" \t") + 1);
+				
+				if (!plugin.empty()) {
+					string pluginPath = "./plugins/lib" + plugin + "_plugin.so";
+					LOG_INFO("Loading plugin: " + pluginPath);
+					interpreter.loadPlugin(pluginPath);
+				}
+			}
+		}
+		
 		interpreter.execute(program);
 		LOG_INFO("Program execution completed");
 	} else {
