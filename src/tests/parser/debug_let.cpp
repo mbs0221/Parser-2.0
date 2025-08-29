@@ -1,3 +1,4 @@
+#include "gtest/gtest.h"
 #include "lexer/value.h"
 #include <iostream>
 
