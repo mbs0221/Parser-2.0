@@ -24,6 +24,19 @@ struct PluginInfo {
 
 // 插件接口类
 class BuiltinPlugin {
+protected:
+    // 辅助方法：注册内置函数到作用域
+    void defineBuiltinFunction(ScopeManager& scopeManager, const string& name, BuiltinFunctionPtr func) {
+        scopeManager.defineIdentifier(name, new BuiltinFunction(name, func));
+    }
+    
+    // 辅助方法：批量注册函数
+    void defineBuiltinFunctions(ScopeManager& scopeManager, const map<string, BuiltinFunctionPtr>& functions) {
+        for (const auto& pair : functions) {
+            defineBuiltinFunction(scopeManager, pair.first, pair.second);
+        }
+    }
+
 public:
     virtual ~BuiltinPlugin() = default;
     virtual PluginInfo getPluginInfo() const = 0;
@@ -55,5 +68,17 @@ public:
         BuiltinPlugin* createPlugin() { return new PluginClass(); } \
         void destroyPlugin(BuiltinPlugin* plugin) { delete plugin; } \
     }
+
+// 简化插件开发的宏
+#define REGISTER_BUILTIN_FUNCTION(scopeManager, funcName, funcPtr) \
+    scopeManager.defineIdentifier(funcName, new BuiltinFunction(funcName, funcPtr))
+
+#define REGISTER_BUILTIN_FUNCTIONS(scopeManager, ...) \
+    do { \
+        std::map<std::string, BuiltinFunctionPtr> funcMap = {__VA_ARGS__}; \
+        for (const auto& pair : funcMap) { \
+            scopeManager.defineIdentifier(pair.first, new BuiltinFunction(pair.first, pair.second)); \
+        } \
+    } while(0)
 
 #endif // BUILTIN_PLUGIN_H

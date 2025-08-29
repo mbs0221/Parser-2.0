@@ -7,16 +7,16 @@ set(INTERPRETER_SOURCES
     ${CMAKE_SOURCE_DIR}/src/interpreter/expression.cpp
     ${CMAKE_SOURCE_DIR}/src/interpreter/calculate.cpp
     ${CMAKE_SOURCE_DIR}/src/interpreter/logger.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/builtin.cpp
+
     ${CMAKE_SOURCE_DIR}/src/interpreter/scope.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/plugins/plugin_manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/interpreter/plugin_manager.cpp
 )
 
 # 设置头文件
 set(INTERPRETER_HEADERS
     ${CMAKE_SOURCE_DIR}/include/interpreter/interpreter.h
     ${CMAKE_SOURCE_DIR}/include/interpreter/logger.h
-    ${CMAKE_SOURCE_DIR}/include/interpreter/builtin.h
+
     ${CMAKE_SOURCE_DIR}/include/interpreter/builtin_plugin.h
     ${CMAKE_SOURCE_DIR}/include/interpreter/control_flow.h
     ${CMAKE_SOURCE_DIR}/include/interpreter/scope.h
@@ -24,6 +24,9 @@ set(INTERPRETER_HEADERS
 
 # 创建interpreter静态库
 add_library(interpreter STATIC ${INTERPRETER_SOURCES} ${INTERPRETER_HEADERS})
+
+# 设置位置无关代码
+set_property(TARGET interpreter PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # 设置包含目录
 target_include_directories(interpreter PUBLIC 
@@ -45,5 +48,4 @@ set_target_properties(interpreter PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
-# 添加插件构建
-add_subdirectory(plugins)
+

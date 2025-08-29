@@ -167,13 +167,8 @@ public:
     }
     
     void registerFunctions(ScopeManager& scopeManager) override {
-        scopeManager.defineIdentifier("trim", new BuiltinFunction("trim", string_trim));
-        scopeManager.defineIdentifier("replace", new BuiltinFunction("replace", string_replace));
-        scopeManager.defineIdentifier("split", new BuiltinFunction("split", string_split));
-        scopeManager.defineIdentifier("join", new BuiltinFunction("join", string_join));
-        scopeManager.defineIdentifier("starts_with", new BuiltinFunction("starts_with", string_starts_with));
-        scopeManager.defineIdentifier("ends_with", new BuiltinFunction("ends_with", string_ends_with));
-        scopeManager.defineIdentifier("contains", new BuiltinFunction("contains", string_contains));
+        // 使用辅助方法批量注册函数
+        defineBuiltinFunctions(scopeManager, getFunctionMap());
     }
     
     map<string, BuiltinFunctionPtr> getFunctionMap() const override {

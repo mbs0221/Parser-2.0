@@ -2,6 +2,7 @@
 #include "lexer/value.h"
 #include "parser/function.h"
 #include "interpreter/scope.h"
+#include "interpreter/interpreter.h"
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -110,13 +111,8 @@ public:
     }
     
     void registerFunctions(ScopeManager& scopeManager) override {
-        scopeManager.defineIdentifier("sin", new BuiltinFunction("sin", math_sin));
-        scopeManager.defineIdentifier("cos", new BuiltinFunction("cos", math_cos));
-        scopeManager.defineIdentifier("tan", new BuiltinFunction("tan", math_tan));
-        scopeManager.defineIdentifier("sqrt", new BuiltinFunction("sqrt", math_sqrt));
-        scopeManager.defineIdentifier("log", new BuiltinFunction("log", math_log));
-        scopeManager.defineIdentifier("floor", new BuiltinFunction("floor", math_floor));
-        scopeManager.defineIdentifier("ceil", new BuiltinFunction("ceil", math_ceil));
+        // 使用辅助方法批量注册函数
+        defineBuiltinFunctions(scopeManager, getFunctionMap());
     }
     
     map<string, BuiltinFunctionPtr> getFunctionMap() const override {

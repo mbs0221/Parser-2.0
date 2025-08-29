@@ -88,13 +88,19 @@ public:
     // ASTVisitor接口实现 - 程序访问方法
     void visit(Program* program) override;
     
-    // 内置函数管理
-    void registerBuiltinFunctionsToScope();
-    
     // 插件管理
     void loadPlugin(const string& pluginPath);
     void unloadPlugin(const string& pluginName);
     vector<string> getLoadedPlugins() const;
+    
+private:
+    // 自动加载默认插件
+    void loadDefaultPlugins();
+    void loadDefaultPlugins(const string& pluginDir);
+    
+    // 辅助函数
+    string extractPluginName(const string& filePath);
+    string join(const vector<string>& vec, const string& delimiter);
     
     // 类/结构体实例化
     Value* instantiateClass(ClassDefinition* classDef, vector<Value*>& args);

@@ -1,4 +1,5 @@
 #include "interpreter/builtin_plugin.h"
+#include "interpreter/logger.h"
 #include <iostream>
 #include <dlfcn.h>
 #include <filesystem>
@@ -20,14 +21,14 @@ bool PluginManager::loadPlugin(const string& pluginPath) {
     // 打开动态库
     void* handle = dlopen(pluginPath.c_str(), RTLD_LAZY);
     if (!handle) {
-        cerr << "无法加载插件 " << pluginPath << ": " << dlerror() << endl;
+        LOG_ERROR("无法加载插件 " + pluginPath + ": " + string(dlerror()));
         return false;
     }
     
     // 获取创建插件函数
     CreatePluginFunc createFunc = (CreatePluginFunc)dlsym(handle, "createPlugin");
     if (!createFunc) {
-        cerr << "无法找到createPlugin函数: " << dlerror() << endl;
+        LOG_ERROR("无法找到createPlugin函数: " + string(dlerror()));
         dlclose(handle);
         return false;
     }
@@ -35,7 +36,7 @@ bool PluginManager::loadPlugin(const string& pluginPath) {
     // 创建插件实例
     BuiltinPlugin* plugin = createFunc();
     if (!plugin) {
-        cerr << "创建插件实例失败" << endl;
+        LOG_ERROR("创建插件实例失败");
         dlclose(handle);
         return false;
     }
@@ -46,7 +47,7 @@ bool PluginManager::loadPlugin(const string& pluginPath) {
     
     // 检查插件是否已加载
     if (plugins.find(pluginName) != plugins.end()) {
-        cerr << "插件 " << pluginName << " 已加载" << endl;
+        LOG_ERROR("插件 " + pluginName + " 已加载");
         delete plugin;
         dlclose(handle);
         return false;
@@ -56,13 +57,12 @@ bool PluginManager::loadPlugin(const string& pluginPath) {
     plugins[pluginName] = plugin;
     pluginHandles[pluginName] = handle;
     
-    cout << "成功加载插件: " << pluginName << " v" << info.version << endl;
-    cout << "描述: " << info.description << endl;
-    cout << "函数: ";
+    LOG_INFO("成功加载插件: " + pluginName + " v" + info.version);
+    LOG_INFO("描述: " + info.description);
+    LOG_INFO("函数: ");
     for (const string& func : info.functions) {
-        cout << func << " ";
+        LOG_INFO(func);
     }
-    cout << endl;
     
     return true;
 }
@@ -72,7 +72,7 @@ bool PluginManager::unloadPlugin(const string& pluginName) {
     auto handleIt = pluginHandles.find(pluginName);
     
     if (pluginIt == plugins.end() || handleIt == pluginHandles.end()) {
-        cerr << "插件 " << pluginName << " 未找到" << endl;
+        LOG_ERROR("插件 " + pluginName + " 未找到");
         return false;
     }
     
@@ -91,7 +91,7 @@ bool PluginManager::unloadPlugin(const string& pluginName) {
     plugins.erase(pluginIt);
     pluginHandles.erase(handleIt);
     
-    cout << "成功卸载插件: " << pluginName << endl;
+    LOG_INFO("成功卸载插件: " + pluginName);
     return true;
 }
 
