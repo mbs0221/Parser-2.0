@@ -36,6 +36,7 @@ private:
 
 public:
     Interpreter();
+    Interpreter(bool loadPlugins); // 新增构造函数，可以选择是否加载插件
     ~Interpreter();
     
     // AST求值方法

@@ -379,9 +379,9 @@ Expression* Parser::parseExpressionWithPrecedence(int minPrecedence) {
             }
         } else {
             // 处理其他二元操作符
-            // 对于左结合操作符，递归调用时使用更高优先级
-            // 对于右结合操作符，递归调用时使用相同优先级
-            int nextPrecedence = isLeftAssoc ? precedence + 1 : precedence;
+            // 对于左结合操作符，递归调用时使用相同优先级
+            // 对于右结合操作符，递归调用时使用更低优先级
+            int nextPrecedence = isLeftAssoc ? precedence : precedence - 1;
             Expression* right = parseExpressionWithPrecedence(nextPrecedence);
             
             left = new BinaryExpression(left, right, op);
@@ -397,11 +397,6 @@ Expression* Parser::parsePrimary() {
         case '!': // 逻辑非 (ASCII 33)
         case '-': // 负号 (ASCII 45)
         case '~': // 位运算取反 (ASCII 126)
-            {
-                Operator* op = lex.matchOperator();
-                Expression* operand = parsePrimary();
-                return new UnaryExpression(operand, op);
-            }
         case '+': // 正号 (ASCII 43) - 只在表达式开头时作为一元操作符
             {
                 // 检查是否在表达式开头，如果是，则作为一元正号处理

@@ -27,6 +27,19 @@ Interpreter::Interpreter() {
     pluginManager.registerAllPlugins(scopeManager);
 }
 
+// 解释器构造函数（可选择是否加载插件）
+Interpreter::Interpreter(bool loadPlugins) {
+    // ScopeManager在构造函数中自动初始化
+    
+    if (loadPlugins) {
+        // 自动加载插件目录中的插件
+        loadDefaultPlugins();
+        
+        // 注册所有插件函数
+        pluginManager.registerAllPlugins(scopeManager);
+    }
+}
+
 // 解释器析构函数
 Interpreter::~Interpreter() {
     // ScopeManager在析构函数中自动清理

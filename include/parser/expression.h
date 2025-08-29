@@ -26,7 +26,12 @@ struct ConstantExpression : public Expression {
     ConstantExpression(char val) : value(new Char(val)) {}
     ConstantExpression(const string& val) : value(new String(val)) {}
     
-    ~ConstantExpression() { }
+    ~ConstantExpression() { 
+        if (value) {
+            delete value;
+            value = nullptr;
+        }
+    }
     
     void accept(ASTVisitor* visitor) override;
     
