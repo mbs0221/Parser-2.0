@@ -113,7 +113,7 @@ TEST_F(InterpreterComprehensiveTest, ValueVisitor) {
     EXPECT_EQ(intVal.toString(), "42");
 }
 
-int main(int argc, char **argv) {
+int test_interpreter_comprehensive_main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

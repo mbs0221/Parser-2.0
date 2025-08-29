@@ -1,24 +1,31 @@
 #include "lexer/value.h"
 #include <iostream>
 
-int test_debug_let() {
-    std::cout << "BASIC = " << BASIC << std::endl;
-    std::cout << "LET = " << LET << std::endl;
-    std::cout << "ID = " << ID << std::endl;
-    std::cout << "NUM = " << NUM << std::endl;
-    std::cout << "REAL = " << REAL << std::endl;
-    std::cout << "DOUBLE = " << DOUBLE << std::endl;
-    std::cout << "CHAR = " << CHAR << std::endl;
-    std::cout << "STR = " << STR << std::endl;
-    std::cout << "BOOL = " << BOOL << std::endl;
-    std::cout << "END_OF_FILE = " << END_OF_FILE << std::endl;
-    std::cout << "IF = " << IF << std::endl;
-    std::cout << "THEN = " << THEN << std::endl;
-    std::cout << "ELSE = " << ELSE << std::endl;
-    std::cout << "DO = " << DO << std::endl;
-    std::cout << "WHILE = " << WHILE << std::endl;
-    std::cout << "FOR = " << FOR << std::endl;
-    std::cout << "CASE = " << CASE << std::endl;
-    std::cout << "DEFAULT = " << DEFAULT << std::endl;
-    return 0;
+class DebugLetTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // 设置测试环境
+    }
+};
+
+TEST_F(DebugLetTest, DebugLet) {
+    EXPECT_EQ(BASIC, 1);
+    EXPECT_EQ(LET, 2);
+    EXPECT_EQ(ID, 3);
+    EXPECT_EQ(NUM, 4);
+    EXPECT_EQ(REAL, 5);
+    EXPECT_EQ(DOUBLE, 6);
+    EXPECT_EQ(CHAR, 7);
+    EXPECT_EQ(STR, 8);
+    EXPECT_EQ(BOOL, 9);
+    EXPECT_EQ(END_OF_FILE, 10);
+    EXPECT_EQ(IF, 11);
+    EXPECT_EQ(THEN, 12);
+    EXPECT_EQ(ELSE, 13);
+    EXPECT_EQ(DO, 14);
+    EXPECT_EQ(WHILE, 15);
+    EXPECT_EQ(FOR, 16);
+    EXPECT_EQ(CASE, 17);
+    EXPECT_EQ(DEFAULT, 18);
 }
+

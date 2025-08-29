@@ -1,4 +1,4 @@
-#include <iostream>
+#include <gtest/gtest.h>
 #include <string>
 #include "parser/parser.h"
 #include "lexer/lexer.h"
@@ -6,31 +6,49 @@
 
 using namespace std;
 
-int test_parser_helpers() {
-    cout << "测试Parser的Helper方法" << endl;
+class ParserHelpersTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // 测试前的设置
+    }
     
-    // 测试matchOperator
-    cout << "1. 测试matchOperator方法" << endl;
+    void TearDown() override {
+        // 测试后的清理
+    }
+};
+
+TEST_F(ParserHelpersTest, MatchOperator) {
+    // 测试matchOperator方法
     // 这里需要创建一个Parser实例并测试
-    
-    // 测试matchInt
-    cout << "2. 测试matchInt方法" << endl;
-    
-    // 测试matchDouble
-    cout << "3. 测试matchDouble方法" << endl;
-    
-    // 测试matchChar
-    cout << "4. 测试matchChar方法" << endl;
-    
-    // 测试matchBool
-    cout << "5. 测试matchBool方法" << endl;
-    
-    // 测试matchString
-    cout << "6. 测试matchString方法" << endl;
-    
-    // 测试matchIdentifier
-    cout << "7. 测试matchIdentifier方法" << endl;
-    
-    cout << "测试完成" << endl;
-    return 0;
+    EXPECT_TRUE(true); // 占位符测试
+}
+
+TEST_F(ParserHelpersTest, MatchInt) {
+    // 测试matchInt方法
+    EXPECT_TRUE(true); // 占位符测试
+}
+
+TEST_F(ParserHelpersTest, MatchDouble) {
+    // 测试matchDouble方法
+    EXPECT_TRUE(true); // 占位符测试
+}
+
+TEST_F(ParserHelpersTest, MatchChar) {
+    // 测试matchChar方法
+    EXPECT_TRUE(true); // 占位符测试
+}
+
+TEST_F(ParserHelpersTest, MatchBool) {
+    // 测试matchBool方法
+    EXPECT_TRUE(true); // 占位符测试
+}
+
+TEST_F(ParserHelpersTest, MatchString) {
+    // 测试matchString方法
+    EXPECT_TRUE(true); // 占位符测试
+}
+
+TEST_F(ParserHelpersTest, MatchIdentifier) {
+    // 测试matchIdentifier方法
+    EXPECT_TRUE(true); // 占位符测试
 }

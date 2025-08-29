@@ -1,65 +1,80 @@
-#include "include/lexer/value.h"
-#include "src/lexer/value.cpp"
-#include <iostream>
+#include <gtest/gtest.h>
+#include "lexer/value.h"
 
 using namespace std;
 
-int test_str_method() {
-    cout << "=== 测试 Token 及其子类型的 str 方法 ===" << endl;
+class StrMethodTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // 测试前的设置
+    }
     
-    // 测试基本 Token
+    void TearDown() override {
+        // 测试后的清理
+    }
+};
+
+TEST_F(StrMethodTest, TokenStr) {
     Token token(123);
-    cout << "Token: " << token.str() << endl;
-    
-    // 测试 Word
+    EXPECT_EQ(token.str(), "token");
+}
+
+TEST_F(StrMethodTest, WordStr) {
     Word word(ID, "variable");
-    cout << "Word: " << word.str() << endl;
-    
-    // 测试 Type
+    EXPECT_EQ(word.str(), "variable");
+}
+
+TEST_F(StrMethodTest, TypeStr) {
     Type type(ID, "int", 4);
-    cout << "Type: " << type.str() << endl;
-    
-    // 测试 Operator
+    EXPECT_EQ(type.str(), "int");
+}
+
+TEST_F(StrMethodTest, OperatorStr) {
     Operator op(PLUS, "+", 1, true);
-    cout << "Operator: " << op.str() << endl;
-    
-    // 测试 Visibility
+    EXPECT_EQ(op.str(), "+");
+}
+
+TEST_F(StrMethodTest, VisibilityStr) {
     Visibility vis(PUBLIC, VIS_PUBLIC);
-    cout << "Visibility: " << vis.str() << endl;
-    
-    // 测试 Bool
+    EXPECT_EQ(vis.str(), "public");
+}
+
+TEST_F(StrMethodTest, BoolStr) {
     Bool boolVal(true);
-    cout << "Bool: " << boolVal.str() << endl;
-    
-    // 测试 Integer
+    EXPECT_EQ(boolVal.str(), "true");
+}
+
+TEST_F(StrMethodTest, IntegerStr) {
     Integer intVal(42);
-    cout << "Integer: " << intVal.str() << endl;
-    
-    // 测试 Char
+    EXPECT_EQ(intVal.str(), "42");
+}
+
+TEST_F(StrMethodTest, CharStr) {
     Char charVal('A');
-    cout << "Char: " << charVal.str() << endl;
-    
-    // 测试 Double
+    EXPECT_EQ(charVal.str(), "A");
+}
+
+TEST_F(StrMethodTest, DoubleStr) {
     Double doubleVal(3.14);
-    cout << "Double: " << doubleVal.str() << endl;
-    
-    // 测试 String
+    EXPECT_EQ(doubleVal.str(), "3.14");
+}
+
+TEST_F(StrMethodTest, StringStr) {
     String stringVal("Hello World");
-    cout << "String: " << stringVal.str() << endl;
-    
-    // 测试 Array
+    EXPECT_EQ(stringVal.str(), "Hello World");
+}
+
+TEST_F(StrMethodTest, ArrayStr) {
     Array array;
     array.addElement(new Integer(1));
     array.addElement(new Integer(2));
     array.addElement(new Integer(3));
-    cout << "Array: " << array.str() << endl;
-    
-    // 测试 Dict
+    EXPECT_EQ(array.str(), "[1, 2, 3]");
+}
+
+TEST_F(StrMethodTest, DictStr) {
     Dict dict;
     dict.setEntry("name", new String("John"));
     dict.setEntry("age", new Integer(25));
-    cout << "Dict: " << dict.str() << endl;
-    
-    cout << "\n=== 测试完成 ===" << endl;
-    return 0;
+    EXPECT_EQ(dict.str(), "{\"age\": 25, \"name\": \"John\"}");
 } 

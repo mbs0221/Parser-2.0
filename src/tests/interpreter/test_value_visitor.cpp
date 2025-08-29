@@ -1,38 +1,68 @@
-#include "Parser/value.h"
-#include "Parser/expression.h"
+#include <gtest/gtest.h>
+#include "lexer/value.h"
+#include "parser/expression.h"
 #include "interpreter/interpreter.h"
-#include <iostream>
 
 using namespace std;
 
-int main() {
-    cout << "测试Value类型的表达式访问方法..." << endl;
+class ValueVisitorTest : public ::testing::Test {
+protected:
+    Interpreter* interpreter;
     
-    // 创建解释器
-    Interpreter interpreter;
+    void SetUp() override {
+        interpreter = new Interpreter(false);
+    }
     
-    // 测试基本表达式
-    IntExpression* intExpr = new IntExpression(42);
-    Value* intResult = interpreter.visit(intExpr);
-    cout << "IntExpression(42) = " << intResult->toString() << endl;
+    void TearDown() override {
+        delete interpreter;
+    }
+};
+
+TEST_F(ValueVisitorTest, IntegerExpression) {
+    ConstantExpression* intExpr = new ConstantExpression(42);
+    Value* intResult = interpreter->visit(intExpr);
     
-    DoubleExpression* doubleExpr = new DoubleExpression(3.14);
-    Value* doubleResult = interpreter.visit(doubleExpr);
-    cout << "DoubleExpression(3.14) = " << doubleResult->toString() << endl;
+    ASSERT_NE(intResult, nullptr);
+    EXPECT_EQ(intResult->toString(), "42");
     
-    BoolExpression* boolExpr = new BoolExpression(true);
-    Value* boolResult = interpreter.visit(boolExpr);
-    cout << "BoolExpression(true) = " << boolResult->toString() << endl;
+    delete intExpr;
+}
+
+TEST_F(ValueVisitorTest, DoubleExpression) {
+    ConstantExpression* doubleExpr = new ConstantExpression(3.14);
+    Value* doubleResult = interpreter->visit(doubleExpr);
     
-    // 测试二元运算
-    IntExpression* left = new IntExpression(10);
-    IntExpression* right = new IntExpression(5);
-    Token* plusToken = new Token('+');
-    BinaryExpression* binaryExpr = new BinaryExpression(left, plusToken, right);
+    ASSERT_NE(doubleResult, nullptr);
+    EXPECT_EQ(doubleResult->toString(), "3.14");
     
-    Value* binaryResult = interpreter.visit(binaryExpr);
-    cout << "BinaryExpression(10 + 5) = " << binaryResult->toString() << endl;
+    delete doubleExpr;
+}
+
+TEST_F(ValueVisitorTest, BoolExpression) {
+    ConstantExpression* boolExpr = new ConstantExpression(true);
+    Value* boolResult = interpreter->visit(boolExpr);
     
-    cout << "Value类型表达式访问方法测试完成！" << endl;
-    return 0;
+    ASSERT_NE(boolResult, nullptr);
+    EXPECT_EQ(boolResult->toString(), "true");
+    
+    delete boolExpr;
+}
+
+TEST_F(ValueVisitorTest, BinaryExpression) {
+    ConstantExpression* left = new ConstantExpression(10);
+    ConstantExpression* right = new ConstantExpression(5);
+    Operator* plusToken = new Operator('+', "+", 1, true);
+    BinaryExpression* binaryExpr = new BinaryExpression(left, right, plusToken);
+    
+    Value* binaryResult = interpreter->visit(binaryExpr);
+    
+    ASSERT_NE(binaryResult, nullptr);
+    Integer* intVal = dynamic_cast<Integer*>(binaryResult);
+    ASSERT_NE(intVal, nullptr);
+    EXPECT_EQ(intVal->getValue(), 15);
+    
+    delete left;
+    delete right;
+    delete plusToken;
+    delete binaryExpr;
 }

@@ -5,6 +5,13 @@ set(PARSER_TEST_SOURCES
     test_leaf_expression.cpp
     test_assignment_binary.cpp
     test_expression_parsing.cpp
+    test_parser_comprehensive.cpp
+    test_parser_helpers.cpp
+    test_parser_simple.cpp
+    test_str_method.cpp
+    test_ast_only.cpp
+    test_str_simple.cpp
+    debug_let.cpp
 )
 
 # 创建统一的parser测试目标

@@ -9,7 +9,7 @@ using namespace std;
 class OperatorTypeTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        interpreter = new Interpreter();
+        interpreter = new Interpreter(false);
     }
     
     void TearDown() override {
@@ -101,18 +101,42 @@ TEST_F(OperatorTypeTest, ComparisonOperations) {
 
 // 测试Value类型的转换
 TEST_F(OperatorTypeTest, ValueTypeConversion) {
-    Integer* intVal = new Integer(42);
-    Double* doubleVal = new Double(3.14);
+    // 测试整型转布尔型
+    Integer* intVal1 = new Integer(42);
+    ConstantExpression* intExpr1 = new ConstantExpression(intVal1);
+    CastExpression<Bool>* intToBoolCast = new CastExpression<Bool>(intExpr1);
+    Value* boolResult = interpreter->visit(intToBoolCast);
+    ASSERT_NE(boolResult, nullptr);
+    Bool* boolVal = dynamic_cast<Bool*>(boolResult);
+    ASSERT_NE(boolVal, nullptr);
+    EXPECT_TRUE(boolVal->getValue());
     
-    // 测试类型转换
-    EXPECT_EQ(intVal->getTypeName(), "int");
-    EXPECT_EQ(doubleVal->getTypeName(), "double");
+    // 测试双精度转布尔型
+    Double* doubleVal1 = new Double(3.14);
+    ConstantExpression* doubleExpr1 = new ConstantExpression(doubleVal1);
+    CastExpression<Bool>* doubleToBoolCast = new CastExpression<Bool>(doubleExpr1);
+    Value* doubleBoolResult = interpreter->visit(doubleToBoolCast);
+    ASSERT_NE(doubleBoolResult, nullptr);
+    Bool* doubleBoolVal = dynamic_cast<Bool*>(doubleBoolResult);
+    ASSERT_NE(doubleBoolVal, nullptr);
+    EXPECT_TRUE(doubleBoolVal->getValue());
     
-    // 测试布尔转换
-    EXPECT_TRUE(intVal->toBool());
-    EXPECT_TRUE(doubleVal->toBool());
+    // 测试整型转双精度
+    Integer* intVal2 = new Integer(42);
+    ConstantExpression* intExpr2 = new ConstantExpression(intVal2);
+    CastExpression<Double>* intToDoubleCast = new CastExpression<Double>(intExpr2);
+    Value* doubleResult = interpreter->visit(intToDoubleCast);
+    ASSERT_NE(doubleResult, nullptr);
+    Double* convertedDouble = dynamic_cast<Double*>(doubleResult);
+    ASSERT_NE(convertedDouble, nullptr);
+    EXPECT_DOUBLE_EQ(convertedDouble->getValue(), 42.0);
     
-    delete intVal;
-    delete doubleVal;
+    // 清理内存
+    delete intToBoolCast;
+    delete doubleToBoolCast;
+    delete intToDoubleCast;
+    delete boolResult;
+    delete doubleBoolResult;
+    delete doubleResult;
 }
 

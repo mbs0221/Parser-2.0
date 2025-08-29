@@ -1,24 +1,33 @@
-#include <iostream>
+#include <gtest/gtest.h>
 #include <string>
 
-// 简单的测试，不依赖复杂的头文件
 using namespace std;
 
-int test_str_simple() {
-    cout << "=== 测试 str 方法的基本功能 ===" << endl;
+class StrSimpleTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // 测试前的设置
+    }
     
-    // 测试字符串字面量
+    void TearDown() override {
+        // 测试后的清理
+    }
+};
+
+TEST_F(StrSimpleTest, StringLiteral) {
     string testStr = "Hello World";
-    cout << "字符串字面量: " << testStr << endl;
-    
-    // 测试数字字面量
+    EXPECT_EQ(testStr, "Hello World");
+}
+
+TEST_F(StrSimpleTest, IntegerLiteral) {
     int testInt = 42;
-    cout << "整数字面量: " << to_string(testInt) << endl;
-    
-    // 测试布尔字面量
+    EXPECT_EQ(to_string(testInt), "42");
+}
+
+TEST_F(StrSimpleTest, BooleanLiteral) {
     bool testBool = true;
-    cout << "布尔字面量: " << (testBool ? "true" : "false") << endl;
+    EXPECT_EQ(testBool ? "true" : "false", "true");
     
-    cout << "\n=== 测试完成 ===" << endl;
-    return 0;
+    bool testBoolFalse = false;
+    EXPECT_EQ(testBoolFalse ? "true" : "false", "false");
 }

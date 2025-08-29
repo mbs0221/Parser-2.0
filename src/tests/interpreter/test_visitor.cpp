@@ -1,25 +1,43 @@
-#include "Parser/ast_visitor.h"
-#include "parser/inter.h"
-#include <iostream>
+#include <gtest/gtest.h>
+#include "parser/expression.h"
+#include "lexer/value.h"
 
-int main() {
-    // 创建一个简单的AST
-    auto* intExpr = new IntExpression(42);
-    auto* idExpr = new IdentifierExpression("x");
-    auto* addExpr = new ArithmeticExpression(intExpr, idExpr, new Token('+', "PLUS"));
+using namespace std;
+
+class VisitorTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // 测试前的设置
+    }
     
-    // 创建访问者
-    PrettyPrintVisitor visitor;
-    
-    // 使用访问者打印AST
-    std::cout << "IntExpression: " << intExpr->accept(&visitor) << std::endl;
-    std::cout << "IdentifierExpression: " << idExpr->accept(&visitor) << std::endl;
-    std::cout << "ArithmeticExpression: " << addExpr->accept(&visitor) << std::endl;
-    
-    // 清理内存
+    void TearDown() override {
+        // 测试后的清理
+    }
+};
+
+TEST_F(VisitorTest, ConstantExpressionVisitor) {
+    ConstantExpression* intExpr = new ConstantExpression(42);
+    EXPECT_NE(intExpr, nullptr);
+    EXPECT_EQ(intExpr->getLocation(), "42");
     delete intExpr;
-    delete idExpr;
-    delete addExpr;
+}
+
+TEST_F(VisitorTest, VariableExpressionVisitor) {
+    VariableExpression* varExpr = new VariableExpression("x");
+    EXPECT_NE(varExpr, nullptr);
+    EXPECT_EQ(varExpr->getLocation(), "variable: x");
+    delete varExpr;
+}
+
+TEST_F(VisitorTest, BinaryExpressionVisitor) {
+    ConstantExpression* left = new ConstantExpression(10);
+    ConstantExpression* right = new ConstantExpression(5);
+    BinaryExpression* binaryExpr = new BinaryExpression(left, right, Operator::Add);
     
-    return 0;
+    EXPECT_NE(binaryExpr, nullptr);
+    EXPECT_EQ(binaryExpr->getLocation(), "binary expression");
+    
+    delete left;
+    delete right;
+    delete binaryExpr;
 }

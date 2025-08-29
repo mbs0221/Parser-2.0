@@ -8,14 +8,16 @@ using namespace std;
 // Cast操作测试套件
 class CastOperationsTest : public ::testing::Test {
 protected:
-    Interpreter interpreter;
+    Interpreter* interpreter;
     
     void SetUp() override {
         // 测试前的设置
+        interpreter = new Interpreter(false);
     }
     
     void TearDown() override {
         // 测试后的清理
+        delete interpreter;
     }
     
     // 辅助函数：创建并测试cast表达式
@@ -23,15 +25,29 @@ protected:
         // 创建操作数的常量表达式
         ConstantExpression* operandExpr = new ConstantExpression(operand);
         
-        // 创建cast表达式
-        CastExpression* castExpr = new CastExpression(operandExpr, targetType);
-        
-        // 执行cast表达式
-        Value* result = interpreter.visit(castExpr);
-        
-        // 清理
-        delete operandExpr;
-        delete castExpr;
+        // 创建cast表达式并直接调用相应的visit方法
+        Value* result = nullptr;
+        if (targetType == "int") {
+            CastExpression<Integer>* castExpr = new CastExpression<Integer>(operandExpr);
+            result = interpreter->visit(castExpr);
+            delete castExpr;
+        } else if (targetType == "double") {
+            CastExpression<Double>* castExpr = new CastExpression<Double>(operandExpr);
+            result = interpreter->visit(castExpr);
+            delete castExpr;
+        } else if (targetType == "bool") {
+            CastExpression<Bool>* castExpr = new CastExpression<Bool>(operandExpr);
+            result = interpreter->visit(castExpr);
+            delete castExpr;
+        } else if (targetType == "char") {
+            CastExpression<Char>* castExpr = new CastExpression<Char>(operandExpr);
+            result = interpreter->visit(castExpr);
+            delete castExpr;
+        } else if (targetType == "string") {
+            CastExpression<String>* castExpr = new CastExpression<String>(operandExpr);
+            result = interpreter->visit(castExpr);
+            delete castExpr;
+        }
         
         return result;
     }
@@ -274,18 +290,13 @@ TEST_F(CastOperationsTest, EdgeCases) {
     delete emptyStr;
     delete result;
     
-    // 测试无效字符串转数字
+    // 测试无效字符串转数字 - 应该抛出异常
     String* invalidStr = new String("abc");
-    result = testCastExpression(invalidStr, "int");
-    EXPECT_NE(result, nullptr);
-    Integer* intResult = dynamic_cast<Integer*>(result);
-    EXPECT_NE(intResult, nullptr);
-    EXPECT_EQ(intResult->getValue(), 0);  // 无效字符串转int应该是0
+    EXPECT_THROW(testCastExpression(invalidStr, "int"), std::runtime_error);
     delete invalidStr;
-    delete result;
 }
 
-int main(int argc, char **argv) {
+int test_cast_operations_main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
