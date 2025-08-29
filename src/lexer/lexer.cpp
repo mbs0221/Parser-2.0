@@ -321,16 +321,22 @@ Token *Lexer::match_other(){
 			return Operator::Sub;  // 使用静态常量
 		}
 	} else if (peek == '*') {
+		inf.read(&peek, 1);  // 读取下一个字符
 		return Operator::Mul;  // 使用静态常量
 	} else if (peek == '/') {
+		inf.read(&peek, 1);  // 读取下一个字符
 		return Operator::Div;  // 使用静态常量
 	} else if (peek == '%') {
+		inf.read(&peek, 1);  // 读取下一个字符
 		return Operator::Mod;  // 使用静态常量
 	} else if (peek == '^') {
+		inf.read(&peek, 1);  // 读取下一个字符
 		return Operator::BitXor;  // 使用静态常量
 	} else if (peek == '~') {
+		inf.read(&peek, 1);  // 读取下一个字符
 		return Operator::BitNot;  // 使用静态常量
 	} else if (peek == '.') {
+		inf.read(&peek, 1);  // 读取下一个字符
 		return Operator::Dot;  // 使用静态常量
 	} else {
 		// 其他字符返回Token类型
@@ -459,11 +465,13 @@ bool Lexer::match(int Tag) {
         move();
         return true;
     }
+    // 保存当前token信息用于错误报告
+    int currentTag = look->Tag;
     move();
-    if (look->Tag > 255)
-        printf("SYNTAX ERROR line[%03d]: expected %d, got %d\n", line, Tag, look->Tag);
+    if (currentTag > 255)
+        printf("SYNTAX ERROR line[%03d]: expected %d, got %d\n", line, Tag, currentTag);
     else
-        printf("SYNTAX ERROR line[%03d]: expected '%c', got '%c'\n", line, (char)Tag, (char)look->Tag);
+        printf("SYNTAX ERROR line[%03d]: expected '%c', got '%c'\n", line, (char)Tag, (char)currentTag);
     exit(1);  // 强制退出
     return false;
 }

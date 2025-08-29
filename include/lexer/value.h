@@ -641,7 +641,25 @@ struct Double : public Value {
     string toString() const override {
         ostringstream oss;
         oss << std::fixed << std::setprecision(6) << value;
-        return oss.str();
+        string result = oss.str();
+        
+        // 去除末尾的0和小数点
+        size_t pos = result.find('.');
+        if (pos != string::npos) {
+            // 从末尾开始去除0
+            size_t end = result.length() - 1;
+            while (end > pos && result[end] == '0') {
+                end--;
+            }
+            // 如果最后一位是小数点，也去除
+            if (end == pos) {
+                result = result.substr(0, pos);
+            } else {
+                result = result.substr(0, end + 1);
+            }
+        }
+        
+        return result;
     }
     
     // 获取字面值的字符串表示
