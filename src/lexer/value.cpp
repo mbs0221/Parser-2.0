@@ -8,6 +8,10 @@ Type *Type::Float = new Type(REAL, "float", 8);
 Type *Type::Bool = new Type(BOOL, "bool", 1);
 Type *Type::String = new Type(STR, "string", 0);
 
+// 定义Array和Dict的静态Type成员
+Type* Array::ArrayType = new Type(STR, "array", 0);
+Type* Dict::DictType = new Type(STR, "dict", 0);
+
 // 赋值运算符
 Operator *Operator::Assign = new Operator('=', "=", 2, false);
 

@@ -165,7 +165,7 @@ public:
     function<Value*(vector<Variable*>&)> func;
     
     BuiltinFunction(const string& funcName, function<Value*(vector<Variable*>&)> funcPtr)
-        : FunctionDefinition(createBuiltinPrototype(funcName), nullptr), func(funcPtr) {
+        : FunctionDefinition(new FunctionPrototype(funcName, {}, nullptr), nullptr), func(funcPtr) {
         name = funcName; // 设置名称
     }
     
@@ -178,12 +178,6 @@ public:
     }
     
     void accept(ASTVisitor* visitor) override;
-
-private:
-    // 为内置函数创建简单的函数原型
-    static FunctionPrototype* createBuiltinPrototype(const string& funcName) {
-        return new FunctionPrototype(funcName, {}, nullptr); // 空参数列表，无返回类型
-    }
 };
 
 // 用户函数类型 - 继承自FunctionDefinition

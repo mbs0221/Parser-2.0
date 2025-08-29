@@ -692,7 +692,20 @@ struct CompositeValue : public Value {
 struct Array : public CompositeValue {
     vector<Value*> elements;
     
-    Array() : CompositeValue(STR, new Type(STR, "array", 0)) {}
+    // 静态定义的数组类型
+    static Type* ArrayType;
+    
+    Array() : CompositeValue(STR, ArrayType) {}
+    
+    ~Array() {
+        // 清理所有元素
+        for (Value* element : elements) {
+            if (element) {
+                delete element;
+            }
+        }
+        elements.clear();
+    }
     
     // 添加元素
     void addElement(Value* element) {
@@ -915,7 +928,20 @@ inline String operator+(bool b, const String& s) {
 struct Dict : public CompositeValue {
     map<string, Value*> entries;
     
-    Dict() : CompositeValue(STR, new Type(STR, "dict", 0)) {}
+    // 静态定义的字典类型
+    static Type* DictType;
+    
+    Dict() : CompositeValue(STR, DictType) {}
+    
+    ~Dict() {
+        // 清理所有值
+        for (auto& pair : entries) {
+            if (pair.second) {
+                delete pair.second;
+            }
+        }
+        entries.clear();
+    }
     
     // 设置键值对
     void setEntry(const string& key, Value* value) {
