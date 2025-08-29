@@ -126,6 +126,14 @@ struct FunctionDefinition : public Identifier {
     FunctionDefinition(FunctionPrototype* proto, BlockStatement* funcBody)
         : Identifier(proto ? proto->name : ""), prototype(proto), body(funcBody) {}
     
+    virtual ~FunctionDefinition() {
+        if (prototype) {
+            delete prototype;
+            prototype = nullptr;
+        }
+        // 注意：body 是 AST 的一部分，由 Parser 管理，这里不删除
+    }
+    
     // 获取标识符类型
     string getIdentifierType() const override {
         return "FunctionDefinition";
@@ -239,6 +247,15 @@ struct ClassDefinition : public Identifier {
     ClassDefinition(const string& className, const string& base, 
                    const vector<StructMember>& classMembers, const vector<ClassMethod*>& classMethods)
         : Identifier(className), baseClass(base), members(classMembers), methods(classMethods) {}
+    
+    ~ClassDefinition() {
+        for (ClassMethod* method : methods) {
+            if (method) {
+                delete method;
+            }
+        }
+        methods.clear();
+    }
     
     string getIdentifierType() const override {
         return "ClassDefinition";

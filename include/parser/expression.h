@@ -51,6 +51,10 @@ struct VariableExpression : public Expression {
     
     VariableExpression(const string& n) : name(n) {}
     
+    ~VariableExpression() {
+        // VariableExpression 没有需要清理的指针成员
+    }
+    
     string getLocation() const override {
         return "variable: " + name;
     }
@@ -68,6 +72,14 @@ struct UnaryExpression : public Expression {
     Operator* operator_;
     
     UnaryExpression(Expression* expr, Operator* op) : operand(expr), operator_(op) {}
+    
+    ~UnaryExpression() {
+        if (operand) {
+            delete operand;
+            operand = nullptr;
+        }
+        // 注意：operator_ 是静态分配的，不需要删除
+    }
     
     string getLocation() const override {
         return "unary expression";
@@ -88,6 +100,18 @@ struct BinaryExpression : public Expression {
     
     BinaryExpression(Expression* l, Expression* r, Operator* op) : left(l), right(r), operator_(op) {}
     
+    ~BinaryExpression() {
+        if (left) {
+            delete left;
+            left = nullptr;
+        }
+        if (right) {
+            delete right;
+            right = nullptr;
+        }
+        // 注意：operator_ 是静态分配的，不需要删除
+    }
+    
     string getLocation() const override {
         return "binary expression";
     }
@@ -103,7 +127,12 @@ struct BinaryExpression : public Expression {
 
 // 赋值表达式节点 - 继承自BinaryExpression
 struct AssignExpression : public BinaryExpression {
-    AssignExpression(Expression* l, Expression* r) : BinaryExpression(l, r, new Operator('=', "=", 2, false)) {}
+    AssignExpression(Expression* l, Expression* r) : BinaryExpression(l, r, Operator::Assign) {}
+    
+    ~AssignExpression() {
+        // 基类 BinaryExpression 的析构函数会处理 left 和 right
+        // 不需要删除 operator_，因为它是静态分配的
+    }
     
     string getLocation() const override {
         return "assignment expression";
@@ -123,6 +152,13 @@ struct CastExpression : public Expression {
     Expression* operand;     // 被转换的表达式
     
     CastExpression(Expression* expr) : operand(expr) {}
+    
+    ~CastExpression() {
+        if (operand) {
+            delete operand;
+            operand = nullptr;
+        }
+    }
     
     void accept(ASTVisitor* visitor) override;
     
@@ -176,6 +212,17 @@ struct AccessExpression : public Expression {
     AccessExpression(Expression* t, Expression* k) 
         : target(t), key(k) {}
     
+    ~AccessExpression() {
+        if (target) {
+            delete target;
+            target = nullptr;
+        }
+        if (key) {
+            delete key;
+            key = nullptr;
+        }
+    }
+    
     string getLocation() const override {
         return "access expression";
     }
@@ -194,6 +241,15 @@ struct CallExpression : public Expression {
     
     CallExpression(const string& name, const vector<Expression*>& args) 
         : functionName(name), arguments(args) {}
+    
+    ~CallExpression() {
+        for (Expression* arg : arguments) {
+            if (arg) {
+                delete arg;
+            }
+        }
+        arguments.clear();
+    }
     
     string getLocation() const override {
         return "function call: " + functionName;
@@ -214,6 +270,15 @@ struct BuiltinFunctionExpression : public Expression {
     
     BuiltinFunctionExpression(const string& name, const vector<Expression*>& args) 
         : functionName(name), arguments(args) {}
+    
+    ~BuiltinFunctionExpression() {
+        for (Expression* arg : arguments) {
+            if (arg) {
+                delete arg;
+            }
+        }
+        arguments.clear();
+    }
     
     string getLocation() const override {
         return "builtin function: " + functionName;
@@ -237,6 +302,19 @@ struct MethodCallExpression : public Expression {
     
     MethodCallExpression(Expression* obj, const string& method, const vector<Expression*>& args)
         : object(obj), methodName(method), arguments(args) {}
+    
+    ~MethodCallExpression() {
+        if (object) {
+            delete object;
+            object = nullptr;
+        }
+        for (Expression* arg : arguments) {
+            if (arg) {
+                delete arg;
+            }
+        }
+        arguments.clear();
+    }
     
     string getLocation() const override {
         return "method call: " + methodName;

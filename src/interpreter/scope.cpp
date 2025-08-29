@@ -33,7 +33,13 @@ void Scope::cleanup() {
     // 清理所有标识符
     for (auto& pair : identifiers) {
         if (pair.second) {
-            delete pair.second;
+            // 检查指针是否有效
+            try {
+                delete pair.second;
+            } catch (...) {
+                // 忽略删除时的异常
+            }
+            pair.second = nullptr;
         }
     }
     identifiers.clear();

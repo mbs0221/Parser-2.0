@@ -12,8 +12,15 @@ typedef void (*DestroyPluginFunc)(BuiltinPlugin*);
 
 PluginManager::~PluginManager() {
     // 卸载所有插件
+    // 创建插件名称的副本，避免在遍历时修改容器
+    vector<string> pluginNames;
     for (const auto& pair : plugins) {
-        unloadPlugin(pair.first);
+        pluginNames.push_back(pair.first);
+    }
+    
+    // 使用副本进行卸载
+    for (const string& pluginName : pluginNames) {
+        unloadPlugin(pluginName);
     }
 }
 
