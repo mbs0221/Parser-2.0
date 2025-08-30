@@ -2,7 +2,8 @@
 #define AST_VISITOR_H
 
 #include <string>
-#include "lexer/value.h"
+#include "parser/statement.h"
+#include "parser/expression.h"
 
 // 前向声明
 class AST;
@@ -12,6 +13,7 @@ class Program;
 class Value;
 
 // 表达式类型
+template<typename T>
 class ConstantExpression;
 class VariableExpression;
 class UnaryExpression;
@@ -22,7 +24,7 @@ class CallExpression;
 class MethodCallExpression;
 
 // 泛型CastExpression的前向声明
-template<typename T> class CastExpression;
+class CastExpression;
 
 // 语句类型
 class ImportStatement;
@@ -46,36 +48,15 @@ class FunctionPrototype;
 // function.h中定义的类
 class Identifier;
 class Variable;
-class BuiltinFunction;
-class UserFunction;
 class ClassMethod;
 
-// 通用AST访问者接口 - 表达式返回Value类型，语句保持void返回类型
-class ASTVisitor {
+// 语句访问者接口 - 不需要返回值
+class StatementVisitor {
 public:
-    virtual ~ASTVisitor() = default;
-    
+    virtual ~StatementVisitor() = default;
+
     // 语句访问方法 - 无返回值
     virtual void visit(Statement* stmt) = 0;
-    
-    // 表达式访问方法 - 返回Value类型
-    virtual Value* visit(Expression* expr) = 0;
-    virtual Value* visit(ConstantExpression* expr) = 0;
-    virtual Value* visit(VariableExpression* expr) = 0;
-    virtual Value* visit(UnaryExpression* expr) = 0;
-    virtual Value* visit(BinaryExpression* expr) = 0;
-    virtual Value* visit(AssignExpression* expr) = 0;
-    // 泛型CastExpression的访问方法
-    virtual Value* visit(CastExpression<Integer>* expr) = 0;
-    virtual Value* visit(CastExpression<Double>* expr) = 0;
-    virtual Value* visit(CastExpression<Bool>* expr) = 0;
-    virtual Value* visit(CastExpression<Char>* expr) = 0;
-    virtual Value* visit(CastExpression<String>* expr) = 0;
-    virtual Value* visit(AccessExpression* expr) = 0;
-    virtual Value* visit(CallExpression* expr) = 0;
-    virtual Value* visit(MethodCallExpression* expr) = 0;
-    
-    // 语句访问方法 - 标准访问者模式，void返回类型
     virtual void visit(ImportStatement* stmt) = 0;
     virtual void visit(ExpressionStatement* stmt) = 0;
     virtual void visit(VariableDeclaration* stmt) = 0;
@@ -90,17 +71,47 @@ public:
     virtual void visit(ContinueStatement* stmt) = 0;
     virtual void visit(ReturnStatement* stmt) = 0;
     virtual void visit(TryStatement* stmt) = 0;
-
     virtual void visit(SwitchStatement* stmt) = 0;
     virtual void visit(FunctionPrototype* stmt) = 0;
     
     // function.h中定义的类的访问方法
     virtual void visit(Identifier* id) = 0;
     virtual void visit(Variable* var) = 0;
-    virtual void visit(UserFunction* func) = 0;
+    virtual void visit(FunctionDefinition* func) = 0;
+    virtual void visit(ClassMethod* method) = 0;
     
-    // 程序访问方法
+    // 程序根节点访问方法
     virtual void visit(Program* program) = 0;
+};
+
+// 泛型表达式访问者接口 - 类似于Java的ExpressionVisitor<T>
+template<typename ReturnType>
+class ExpressionVisitor {
+public:
+    virtual ~ExpressionVisitor() = default;
+    
+    // 表达式访问方法 - 返回ReturnType
+    virtual ReturnType visit(Expression* expr) = 0;
+    virtual ReturnType visit(ConstantExpression<int>* expr) = 0;
+    virtual ReturnType visit(ConstantExpression<double>* expr) = 0;
+    virtual ReturnType visit(ConstantExpression<bool>* expr) = 0;
+    virtual ReturnType visit(ConstantExpression<char>* expr) = 0;
+    virtual ReturnType visit(ConstantExpression<std::string>* expr) = 0;
+    virtual ReturnType visit(VariableExpression* expr) = 0;
+    virtual ReturnType visit(UnaryExpression* expr) = 0;
+    virtual ReturnType visit(BinaryExpression* expr) = 0;
+    virtual ReturnType visit(AssignExpression* expr) = 0;
+    virtual ReturnType visit(CastExpression* expr) = 0;
+    virtual ReturnType visit(AccessExpression* expr) = 0;
+    virtual ReturnType visit(CallExpression* expr) = 0;
+    virtual ReturnType visit(MethodCallExpression* expr) = 0;
+};
+
+// 完整的AST访问者接口 - 继承自StatementVisitor和ExpressionVisitor
+template<typename ReturnType>
+class ASTVisitor : public StatementVisitor, public ExpressionVisitor<ReturnType> {
+public:
+    virtual ~ASTVisitor() = default;
 };
 
 #endif // AST_VISITOR_H

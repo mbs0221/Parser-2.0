@@ -49,7 +49,10 @@ protected:
     Expression* parsePrimary();
     Expression* parsePostfix(Expression* expr);
     bool isBinaryOperator(int tag);
+    // 解析常量 - 模板方法
+    template<typename T>
     Expression* parseConstant();
+    Expression* parseConstant();  // 通用版本
     Expression* parseVariable();
     Expression* parseCallExpression(Expression* calleeExpr);
 

@@ -1,55 +1,37 @@
 #include "parser/function.h"
 #include "parser/ast_visitor.h"
-#include "interpreter/interpreter.h"
-#include "interpreter/control_flow.h"
 
 // Identifier类的accept方法实现
-void Identifier::accept(ASTVisitor* visitor) {
+void Identifier::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
 // Variable类的accept方法实现
-void Variable::accept(ASTVisitor* visitor) {
+void Variable::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
 // FunctionPrototype类的accept方法实现
-void FunctionPrototype::accept(ASTVisitor* visitor) {
+void FunctionPrototype::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
 // FunctionDefinition类的accept方法实现
-void FunctionDefinition::accept(ASTVisitor* visitor) {
+void FunctionDefinition::accept(StatementVisitor* visitor) {
     visitor->visit(this);
-}
-
-// BuiltinFunction类的accept方法实现
-void BuiltinFunction::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
-// UserFunction类的accept方法实现
-void UserFunction::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
-}
-
-// UserFunction类的executeWithInterpreter方法实现
-Value* UserFunction::executeWithInterpreter(vector<Value*>& args, class Interpreter* interpreter) {
-    // 这个方法不会被调用，用户函数直接在解释器中处理
-    return nullptr;
 }
 
 // StructDefinition类的accept方法实现
-void StructDefinition::accept(ASTVisitor* visitor) {
+void StructDefinition::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
 // ClassMethod类的accept方法实现
-void ClassMethod::accept(ASTVisitor* visitor) {
+void ClassMethod::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
 // ClassDefinition类的accept方法实现
-void ClassDefinition::accept(ASTVisitor* visitor) {
+void ClassDefinition::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }

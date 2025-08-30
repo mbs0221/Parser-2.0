@@ -2,63 +2,63 @@
 #include "parser/ast_visitor.h"
 
 // ==================== 基本语句类型 ====================
-void ImportStatement::accept(ASTVisitor* visitor) {
+void ImportStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-void ExpressionStatement::accept(ASTVisitor* visitor) {
+void ExpressionStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-void VariableDeclaration::accept(ASTVisitor* visitor) {
+void VariableDeclaration::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
 // ==================== 控制流语句类型 ====================
-void IfStatement::accept(ASTVisitor* visitor) {
+void IfStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-void WhileStatement::accept(ASTVisitor* visitor) {
+void WhileStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-void ForStatement::accept(ASTVisitor* visitor) {
+void ForStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-void DoWhileStatement::accept(ASTVisitor* visitor) {
+void DoWhileStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-void BreakStatement::accept(ASTVisitor* visitor) {
+void BreakStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-void ContinueStatement::accept(ASTVisitor* visitor) {
+void ContinueStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-void ReturnStatement::accept(ASTVisitor* visitor) {
+void ReturnStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
 // ==================== 异常处理语句类型 ====================
-void TryStatement::accept(ASTVisitor* visitor) {
+void TryStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
 // ==================== Switch语句类型 ====================
-void SwitchStatement::accept(ASTVisitor* visitor) {
+void SwitchStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
 // ==================== 复合语句和函数相关语句类型 ====================
-void BlockStatement::accept(ASTVisitor* visitor) {
+void BlockStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
 // ==================== 程序根节点 ====================
-void Program::accept(ASTVisitor* visitor) {
+void Program::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }

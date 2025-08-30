@@ -1,58 +1,74 @@
 #include "parser/expression.h"
 #include "parser/ast_visitor.h"
 
-// ==================== ConstantExpression实现 ====================
-void ConstantExpression::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
+// ==================== Expression基类实现 ====================
+template<typename ReturnType>
+ReturnType Expression::accept(ExpressionVisitor<ReturnType>* visitor) {
+    return visitor->visit(this);
 }
 
+// ==================== ConstantExpression实现 ====================
+template<typename T>
+template<typename ReturnType>
+ReturnType ConstantExpression<T>::accept(ExpressionVisitor<ReturnType>* visitor) {
+    return visitor->visit(this);
+}
+
+// 模板特化实现
+template int ConstantExpression<int>::accept<int>(ExpressionVisitor<int>* visitor);
+template double ConstantExpression<double>::accept<double>(ExpressionVisitor<double>* visitor);
+template bool ConstantExpression<bool>::accept<bool>(ExpressionVisitor<bool>* visitor);
+template char ConstantExpression<char>::accept<char>(ExpressionVisitor<char>* visitor);
+template string ConstantExpression<string>::accept<string>(ExpressionVisitor<string>* visitor);
+
 // ==================== VariableExpression实现 ====================
-void VariableExpression::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
+template<typename ReturnType>
+ReturnType VariableExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
+    return visitor->visit(this);
 }
 
 // ==================== UnaryExpression实现 ====================
-void UnaryExpression::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
+template<typename ReturnType>
+ReturnType UnaryExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
+    return visitor->visit(this);
 }
 
 // ==================== BinaryExpression实现 ====================
-void BinaryExpression::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
+template<typename ReturnType>
+ReturnType BinaryExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
+    return visitor->visit(this);
 }
 
 // ==================== AssignExpression实现 ====================
-void AssignExpression::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
+template<typename ReturnType>
+ReturnType AssignExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
+    return visitor->visit(this);
 }
 
 // ==================== CastExpression实现 ====================
-template<typename T>
-void CastExpression<T>::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
+template<typename ReturnType>
+ReturnType CastExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
+    return visitor->visit(this);
 }
 
-// 显式实例化
-template void CastExpression<Integer>::accept(ASTVisitor* visitor);
-template void CastExpression<Double>::accept(ASTVisitor* visitor);
-template void CastExpression<Bool>::accept(ASTVisitor* visitor);
-template void CastExpression<Char>::accept(ASTVisitor* visitor);
-template void CastExpression<String>::accept(ASTVisitor* visitor);
-
 // ==================== AccessExpression实现 ====================
-void AccessExpression::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
+template<typename ReturnType>
+ReturnType AccessExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
+    return visitor->visit(this);
 }
 
 // ==================== CallExpression实现 ====================
-void CallExpression::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
+template<typename ReturnType>
+ReturnType CallExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
+    return visitor->visit(this);
 }
-
-// ==================== MemberAccessExpression实现 ====================
-// MemberAccessExpression已合并到AccessExpression中
 
 // ==================== MethodCallExpression实现 ====================
-void MethodCallExpression::accept(ASTVisitor* visitor) {
-    visitor->visit(this);
+template<typename ReturnType>
+ReturnType MethodCallExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
+    return visitor->visit(this);
 }
+
+
+
+

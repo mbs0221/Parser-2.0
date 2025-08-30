@@ -2,6 +2,7 @@
 #define STATEMENT_H
 
 #include "parser/inter.h"
+#include "parser/ast_visitor.h"
 #include <vector>
 #include <utility>
 #include <string>
@@ -14,19 +15,28 @@ using namespace std;
 class Expression;
 
 // ==================== 语句基类 ====================
-// 语句基类 - 继承自AST
+// 语句节点基类
 struct Statement : public AST {
-    virtual void accept(ASTVisitor* visitor) override = 0;
+    virtual ~Statement() = default;
+    
+    // 接受语句访问者 - 不需要返回值
+    virtual void accept(StatementVisitor* visitor) = 0;
 };
+
+
 
 // ==================== 基本语句 ====================
 // 导入语句
 struct ImportStatement : public Statement {
-    String *moduleName;
+    string moduleName;
     
-    ImportStatement(String *name) : moduleName(name) {}
+    ImportStatement(const string& name) : moduleName(name) {}
     
-    void accept(ASTVisitor* visitor) override;
+    ~ImportStatement() {
+        // 不需要手动清理，string会自动管理内存
+    }
+    
+    void accept(StatementVisitor* visitor) override;
 };
 
 // 表达式语句
@@ -35,7 +45,14 @@ struct ExpressionStatement : public Statement {
     
     ExpressionStatement(Expression* expr) : expression(expr) {}
     
-    void accept(ASTVisitor* visitor) override;
+    ~ExpressionStatement() {
+        if (expression) {
+            delete expression;
+            expression = nullptr;
+        }
+    }
+    
+    void accept(StatementVisitor* visitor) override;
 };
 
 // 变量声明语句
@@ -47,11 +64,21 @@ struct VariableDeclaration : public Statement {
         addVariable(name, value);
     }
     
+    ~VariableDeclaration() {
+        for (auto& pair : variables) {
+            if (pair.second) {
+                delete pair.second;
+                pair.second = nullptr;
+            }
+        }
+        variables.clear();
+    }
+    
     void addVariable(const string& name, Expression* value) {
         variables.push_back(make_pair(name, value));
     }
     
-    void accept(ASTVisitor* visitor) override;
+    void accept(StatementVisitor* visitor) override;
 };
 
 // ==================== 控制流语句 ====================
@@ -64,7 +91,22 @@ struct IfStatement : public Statement {
     IfStatement(Expression* cond, Statement* thenStmt, Statement* elseStmt = nullptr)
         : condition(cond), thenStatement(thenStmt), elseStatement(elseStmt) {}
     
-    void accept(ASTVisitor* visitor) override;
+    ~IfStatement() {
+        if (condition) {
+            delete condition;
+            condition = nullptr;
+        }
+        if (thenStatement) {
+            delete thenStatement;
+            thenStatement = nullptr;
+        }
+        if (elseStatement) {
+            delete elseStatement;
+            elseStatement = nullptr;
+        }
+    }
+    
+    void accept(StatementVisitor* visitor) override;
 };
 
 // 循环语句
@@ -74,7 +116,18 @@ struct WhileStatement : public Statement {
     
     WhileStatement(Expression* cond, Statement* stmt) : condition(cond), body(stmt) {}
     
-    void accept(ASTVisitor* visitor) override;
+    ~WhileStatement() {
+        if (condition) {
+            delete condition;
+            condition = nullptr;
+        }
+        if (body) {
+            delete body;
+            body = nullptr;
+        }
+    }
+    
+    void accept(StatementVisitor* visitor) override;
 };
 
 // For循环语句
@@ -87,7 +140,26 @@ struct ForStatement : public Statement {
     ForStatement(Statement* init, Expression* cond, Expression* inc, Statement* stmt)
         : initializer(init), condition(cond), increment(inc), body(stmt) {}
     
-    void accept(ASTVisitor* visitor) override;
+    ~ForStatement() {
+        if (initializer) {
+            delete initializer;
+            initializer = nullptr;
+        }
+        if (condition) {
+            delete condition;
+            condition = nullptr;
+        }
+        if (increment) {
+            delete increment;
+            increment = nullptr;
+        }
+        if (body) {
+            delete body;
+            body = nullptr;
+        }
+    }
+    
+    void accept(StatementVisitor* visitor) override;
 };
 
 // Do-While循环语句
@@ -97,20 +169,31 @@ struct DoWhileStatement : public Statement {
     
     DoWhileStatement(Statement* stmt, Expression* cond) : body(stmt), condition(cond) {}
     
-    void accept(ASTVisitor* visitor) override;
+    ~DoWhileStatement() {
+        if (body) {
+            delete body;
+            body = nullptr;
+        }
+        if (condition) {
+            delete condition;
+            condition = nullptr;
+        }
+    }
+    
+    void accept(StatementVisitor* visitor) override;
 };
 
 // 跳转语句
 struct BreakStatement : public Statement {
     BreakStatement() {}
     
-    void accept(ASTVisitor* visitor) override;
+    void accept(StatementVisitor* visitor) override;
 };
 
 struct ContinueStatement : public Statement {
     ContinueStatement() {}
     
-    void accept(ASTVisitor* visitor) override;
+    void accept(StatementVisitor* visitor) override;
 };
 
 // 返回语句
@@ -119,7 +202,14 @@ struct ReturnStatement : public Statement {
     
     ReturnStatement(Expression* value = nullptr) : returnValue(value) {}
     
-    void accept(ASTVisitor* visitor) override;
+    ~ReturnStatement() {
+        if (returnValue) {
+            delete returnValue;
+            returnValue = nullptr;
+        }
+    }
+    
+    void accept(StatementVisitor* visitor) override;
 };
 
 
@@ -145,7 +235,7 @@ struct TryStatement : public Statement {
     TryStatement(Statement* tryStmt, const vector<CatchBlock>& catchStmts, Statement* finallyStmt = nullptr)
         : tryBlock(tryStmt), catchBlocks(catchStmts), finallyBlock(finallyStmt) {}
     
-    void accept(ASTVisitor* visitor) override;
+    void accept(StatementVisitor* visitor) override;
 };
 
 // ==================== Switch语句 ====================
@@ -167,7 +257,7 @@ struct SwitchStatement : public Statement {
     SwitchStatement(Expression* expr, const vector<SwitchCase>& caseStmts)
         : expression(expr), cases(caseStmts) {}
     
-    void accept(ASTVisitor* visitor) override;
+    void accept(StatementVisitor* visitor) override;
 };
 
 // ==================== 复合语句 ====================
@@ -178,26 +268,44 @@ struct BlockStatement : public Statement {
     BlockStatement() : statements() {}
     BlockStatement(const vector<Statement*>& stmts) : statements(stmts) {}
     
+    ~BlockStatement() {
+        for (Statement* stmt : statements) {
+            if (stmt) {
+                delete stmt;
+            }
+        }
+        statements.clear();
+    }
+    
     void addStatement(Statement* stmt) {
         statements.push_back(stmt);
     }
     
-    void accept(ASTVisitor* visitor) override;
+    void accept(StatementVisitor* visitor) override;
 };
 
 // ==================== 程序根节点 ====================
-// 程序根节点
-struct Program : public AST {
+// 程序根节点 - 继承自Statement
+struct Program : public Statement {
     vector<Statement*> statements;
     
     Program() : statements() {}
     Program(const vector<Statement*>& stmts) : statements(stmts) {}
     
+    ~Program() {
+        for (Statement* stmt : statements) {
+            if (stmt) {
+                delete stmt;
+            }
+        }
+        statements.clear();
+    }
+    
     void addStatement(Statement* stmt) {
         statements.push_back(stmt);
     }
     
-    void accept(ASTVisitor* visitor) override;
+    void accept(StatementVisitor* visitor) override;
 };
 
 #endif // STATEMENT_H

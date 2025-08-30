@@ -1,3 +1,4 @@
+#include "lexer/value.h"
 #include "parser/parser.h"
 #include "parser/expression.h"
 #include "parser/inter.h"
@@ -106,7 +107,8 @@ ImportStatement* Parser::parseImportStatement() {
         exit(1);
     }
     
-    String *moduleName = dynamic_cast<String*>(lex.matchValue());
+    String* moduleNameToken = lex.match<String>();
+    string moduleName = moduleNameToken->getValue();
     lex.match(';');
 
     return new ImportStatement(moduleName);
@@ -409,11 +411,15 @@ Expression* Parser::parsePrimary() {
         case ID: // 标识符
             return parseVariable();
         case NUM: // 整数
+            return new ConstantExpression<int>(lex.match<Integer>()->getValue());
         case REAL: // 浮点数
+            return new ConstantExpression<double>(lex.match<Double>()->getValue());
         case BOOL: // 布尔值
+            return new ConstantExpression<bool>(lex.match<Bool>()->getValue());
         case STR: // 字符串
+            return new ConstantExpression<string>(lex.match<String>()->getValue());
         case CHAR: // 字符
-            return parseConstant();
+            return new ConstantExpression<char>(lex.match<Char>()->getValue());
         case '(': // 括号表达式
             {
                 lex.matchToken('(');
@@ -439,14 +445,16 @@ Expression* Parser::parsePostfix(Expression* expr) {
             case '.':
                 {
                     // 成员访问
+                    cout << "[PARSER DEBUG] Before match('.'), current token: " << lex.token()->Tag << endl;
                     lex.match('.');
+                    cout << "[PARSER DEBUG] After match('.'), current token: " << lex.token()->Tag << endl;
                     string memberName = lex.matchIdentifier();
+                    cout << "[PARSER DEBUG] Member name: '" << memberName << "'" << endl;
                     
                     if (lex.token()->Tag == '(') {
-                        // 方法调用：将对象作为第一个参数
+                        // 方法调用：创建 MethodCallExpression
                         lex.matchToken('(');
                         vector<Expression*> arguments;
-                        arguments.push_back(expr); // 将对象作为第一个参数
                         
                         if (lex.token()->Tag != ')') {
                             arguments.push_back(parseExpressionWithPrecedence(0));
@@ -457,10 +465,11 @@ Expression* Parser::parsePostfix(Expression* expr) {
                         }
                         
                         lex.matchToken(')');
-                        expr = new CallExpression(memberName, arguments);
+                        expr = new MethodCallExpression(expr, memberName, arguments);
                     } else {
                         // 成员访问
-                        expr = new AccessExpression(expr, new ConstantExpression(new String(memberName)));
+                        cout << "[PARSER DEBUG] Creating AccessExpression for member: '" << memberName << "'" << endl;
+                        expr = new AccessExpression(expr, new ConstantExpression<String>(memberName));
                     }
                 }
                 break;
@@ -527,21 +536,26 @@ Expression* Parser::parseVariable() {
     return idExpr;
 }
 
-// 解析常量
+// 解析常量 - 模板方法
+template<typename T>
 Expression* Parser::parseConstant() {
-    // 根据当前token类型直接调用相应的matchValue函数
-    // matchValue内部会处理类型检查和错误
+    T* token = lex.match<T>();
+    return new ConstantExpression<typename T::value_type>(token->getValue());
+}
+
+// 解析常量的通用方法 - 根据token类型调用对应的模板方法
+Expression* Parser::parseConstant() {
     switch (lex.token()->Tag) {
         case NUM:
-            return new ConstantExpression(dynamic_cast<Integer*>(lex.matchValue()));
+            return new ConstantExpression<int>(lex.match<Integer>()->getValue());
         case REAL:
-            return new ConstantExpression(dynamic_cast<Double*>(lex.matchValue()));
+            return new ConstantExpression<double>(lex.match<Double>()->getValue());
         case STR:
-            return new ConstantExpression(dynamic_cast<String*>(lex.matchValue()));
+            return new ConstantExpression<string>(lex.match<String>()->getValue());
         case CHAR:
-            return new ConstantExpression(dynamic_cast<Char*>(lex.matchValue()));
+            return new ConstantExpression<char>(lex.match<Char>()->getValue());
         case BOOL:
-            return new ConstantExpression(dynamic_cast<Bool*>(lex.matchValue()));
+            return new ConstantExpression<bool>(lex.match<Bool>()->getValue());
         default:
             printf("SYNTAX ERROR line[%03d]: unexpected token in constant\n", lex.line);
             lex.match(lex.token()->Tag);
@@ -549,78 +563,64 @@ Expression* Parser::parseConstant() {
     }
 }
 
-// 解析数组字面量
+// 解析数组字面量 - 作为array构造函数的调用
 Expression* Parser::parseArray() {
     lex.match('[');  // 匹配开始方括号
     
-    Array* array = new Array();
+    vector<Expression*> arguments;
     
     if (lex.token()->Tag != ']') {
         // 解析第一个元素
         Expression* element = parseExpression();
-        // 将Expression转换为Value
-        if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(element)) {
-            array->addElement(constExpr->value);
-        } else {
-            // 对于非常量表达式，暂时使用nullptr
-            array->addElement(nullptr);
-        }
+        arguments.push_back(element);
         
         // 解析后续元素
         while (lex.token()->Tag == ',') {
             lex.match(',');
             element = parseExpression();
-            if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(element)) {
-                array->addElement(constExpr->value);
-            } else {
-                array->addElement(nullptr);
-            }
+            arguments.push_back(element);
         }
     }
     
     lex.match(']');  // 匹配结束方括号
     
-    // 将Array包装在ConstantExpression中
-    return new ConstantExpression(array);
+    // 返回array构造函数的调用
+    return new CallExpression("array", arguments);
 }
 
-// 解析字典字面量
+// 解析字典字面量 - 作为dict构造函数的调用
 Expression* Parser::parseDict() {
     lex.match('{');  // 匹配开始大括号
     
-    Dict* dict = new Dict();
+    vector<Expression*> arguments;
     
     if (lex.token()->Tag != '}') {
         // 解析第一个键值对
-        String* key = dynamic_cast<String*>(lex.matchValue());
+        String* key = lex.match<String>();
         lex.match(':');
         Expression* valueExpr = parseExpression();
-        // 将Expression转换为Value
-        if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(valueExpr)) {
-            dict->setEntry(key->getValue(), constExpr->value);
-        } else {
-            // 对于非常量表达式，暂时使用nullptr
-            dict->setEntry(key->getValue(), nullptr);
-        }
+        
+        // 将键值对作为两个参数传递
+        arguments.push_back(new ConstantExpression<string>(key->getValue()));
+        arguments.push_back(valueExpr);
         
         // 解析后续键值对
         while (lex.token()->Tag == ',') {  
             lex.match(',');
-            key = dynamic_cast<String*>(lex.matchValue());
+            key = lex.match<String>();
             lex.match(':');
             valueExpr = parseExpression();
-            if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(valueExpr)) {
-                dict->setEntry(key->getValue(), constExpr->value);
-            } else {
-                dict->setEntry(key->getValue(), nullptr);
-            }
+            
+            // 将键值对作为两个参数传递
+            arguments.push_back(new ConstantExpression<string>(key->getValue()));
+            arguments.push_back(valueExpr);
         }
     }
     
     lex.match('}');  // 匹配结束大括号
     
-    // 将Dict包装在ConstantExpression中
-    return new ConstantExpression(dict);
+    // 返回dict构造函数的调用
+    return new CallExpression("dict", arguments);
 }
 
 // 解析结构体实例化
@@ -654,17 +654,10 @@ Expression* Parser::parseStructInstantiation(const string& structName) {
     vector<Expression*> arguments;
     
     // 将成员按照结构体定义的顺序转换为参数列表
-    // 注意：这里我们暂时保持字典形式，但在instantiateStruct中会按照定义顺序处理
-    Dict* dict = new Dict();
+    // 直接传递成员表达式作为参数
     for (const auto& member : members) {
-        if (ConstantExpression* constExpr = dynamic_cast<ConstantExpression*>(member.second)) {
-            dict->setEntry(member.first, constExpr->value);
-        } else {
-            // 对于非常量表达式，暂时使用nullptr
-            dict->setEntry(member.first, nullptr);
-        }
+        arguments.push_back(member.second);
     }
-    arguments.push_back(new ConstantExpression(dict));
     
     // 返回结构体实例化调用表达式
     return new CallExpression(structName, arguments);
@@ -694,22 +687,11 @@ Expression* Parser::parseCallExpression(Expression* calleeExpr) {
     if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(calleeExpr)) {
         // 变量表达式调用 - 可能是函数调用或类实例化
         return new CallExpression(varExpr->name, arguments);
-    } else if (AccessExpression* memberExpr = dynamic_cast<AccessExpression*>(calleeExpr)) {
-        // 成员访问表达式调用 - 方法调用
-        // 从AccessExpression中提取对象和成员名
-        Expression* object = memberExpr->target;
-        // 成员名现在是字符串常量，需要提取其值
-        if (ConstantExpression* memberNameExpr = dynamic_cast<ConstantExpression*>(memberExpr->key)) {
-            if (String* strVal = dynamic_cast<String*>(memberNameExpr->value)) {
-                string memberName = strVal->getValue();
-                return new MethodCallExpression(object, memberName, arguments);
-            }
-        }
-        // 如果无法提取成员名，返回错误
-        return nullptr;
+
     } else {
-        // 其他类型的表达式调用 - 使用通用调用表达式
-        return new CallExpression("", arguments);
+        // 其他类型的表达式调用 - 报告错误
+        cout << "[PARSER ERROR] Cannot call expression of this type" << endl;
+        return nullptr;
     }
 }
 
@@ -732,7 +714,7 @@ FunctionPrototype* Parser::parsePrototype() {
 FunctionDefinition* Parser::parseFunction() {
     FunctionPrototype* proto = parsePrototype();
     BlockStatement* body = parseBlock();
-    return new UserFunction(proto, body);
+    return new FunctionDefinition(proto, body);
 }
 
 // 解析结构体定义

@@ -1,55 +1,105 @@
 #ifndef EXPRESSION_H
 #define EXPRESSION_H
 
-#include "parser/statement.h"
-#include "lexer/value.h"
+#include "lexer/token.h"
+#include "parser/inter.h"
+#include "parser/ast_visitor.h"
 
 using namespace std;
 
 // ==================== 表达式基类 ====================
-// 表达式基类 - 继承自Statement，这样表达式可以作为语句使用
-struct Expression : public Statement {
-    // 访问者模式：接受AST访问者
-    virtual void accept(ASTVisitor* visitor) override = 0;
+// 表达式基类 - 继承自AST，支持泛型访问者
+struct Expression : public AST {
     virtual int getTypePriority() const = 0;
+    
+    // 泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
 };
 
 // ==================== 常量表达式 ====================
-// 常量表达式节点 - 直接使用Value类型（Value现在是Token的子类）
+// 常量表达式节点 - 存储原始数据，不直接使用Value类型
+template<typename T>
 struct ConstantExpression : public Expression {
-    Value* value;
+    T value;
     
-    ConstantExpression(Value* val) : value(val) {}
-    ConstantExpression(int val) : value(new Integer(val)) {}
-    ConstantExpression(double val) : value(new Double(val)) {}
-    ConstantExpression(bool val) : value(new Bool(val)) {}
-    ConstantExpression(char val) : value(new Char(val)) {}
-    ConstantExpression(const string& val) : value(new String(val)) {}
+    // 构造函数 - 直接存储原始数据
+    ConstantExpression(const T& val) : value(val) {}
     
-    ~ConstantExpression() { 
-        if (value) {
-            // 只有Char类型通过享元模式管理，不删除
-            // Integer和Double可能是作用域中的常量，需要正常删除
-            if (dynamic_cast<Char*>(value)) {
-                // Char对象通过享元模式管理，不删除
-                value = nullptr;
-            } else {
-                delete value;
-                value = nullptr;
-            }
-        }
+    ~ConstantExpression() {
+        // 没有动态分配的内存需要清理
     }
     
-    void accept(ASTVisitor* visitor) override;
+    // 重写泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
     
     int getTypePriority() const override {
         return 0;  // 常量优先级最高
     }
     
-    string getLocation() const override {
-        return value ? value->toString() : "null";
-    }
+    string getLocation() const override;
+    
+    // 获取类型名称
+    string getTypeName() const;
+    
+    // 获取原始值的方法
+    const T& getValue() const { return value; }
 };
+
+// 特化实现
+template<>
+string ConstantExpression<int>::getLocation() const {
+    return to_string(value);
+}
+
+template<>
+string ConstantExpression<double>::getLocation() const {
+    return to_string(value);
+}
+
+template<>
+string ConstantExpression<bool>::getLocation() const {
+    return value ? "true" : "false";
+}
+
+template<>
+string ConstantExpression<char>::getLocation() const {
+    return string(1, value);
+}
+
+template<>
+string ConstantExpression<string>::getLocation() const {
+    return "\"" + value + "\"";
+}
+
+// 类型名称特化
+template<>
+string ConstantExpression<int>::getTypeName() const {
+    return "int";
+}
+
+template<>
+string ConstantExpression<double>::getTypeName() const {
+    return "double";
+}
+
+template<>
+string ConstantExpression<bool>::getTypeName() const {
+    return "bool";
+}
+
+template<>
+string ConstantExpression<char>::getTypeName() const {
+    return "char";
+}
+
+template<>
+string ConstantExpression<string>::getTypeName() const {
+    return "string";
+}
+
+
 
 // ==================== 复合表达式 ====================
 // 变量引用表达式节点
@@ -66,7 +116,9 @@ struct VariableExpression : public Expression {
         return "variable: " + name;
     }
     
-    void accept(ASTVisitor* visitor) override;
+    // 重写泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
     
     int getTypePriority() const override {
         return 0;
@@ -92,7 +144,9 @@ struct UnaryExpression : public Expression {
         return "unary expression";
     }
     
-    void accept(ASTVisitor* visitor) override;
+    // 重写泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
     
     int getTypePriority() const override {
         return operand ? operand->getTypePriority() : 0;
@@ -123,7 +177,9 @@ struct BinaryExpression : public Expression {
         return "binary expression";
     }
     
-    void accept(ASTVisitor* visitor) override;
+    // 重写泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
     
     int getTypePriority() const override {
         int leftPriority = left ? left->getTypePriority() : 0;
@@ -145,20 +201,22 @@ struct AssignExpression : public BinaryExpression {
         return "assignment expression";
     }
     
-    void accept(ASTVisitor* visitor) override;
+    // 重写泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
     
     int getTypePriority() const override {
         return 1;  // 赋值操作优先级最低
     }
 };
 
-// 类型转换表达式 - 支持Value类型转换
-// 类型转换表达式 - 支持Value类型转换
-template<typename T>
+// 类型转换表达式 - 使用类型系统进行转换
 struct CastExpression : public Expression {
     Expression* operand;     // 被转换的表达式
+    string targetTypeName;   // 目标类型名称
     
-    CastExpression(Expression* expr) : operand(expr) {}
+    CastExpression(Expression* expr, const string& targetType) 
+        : operand(expr), targetTypeName(targetType) {}
     
     ~CastExpression() {
         if (operand) {
@@ -167,35 +225,22 @@ struct CastExpression : public Expression {
         }
     }
     
-    void accept(ASTVisitor* visitor) override;
+    // 重写泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
     
     // 获取目标类型名称
     string getTargetTypeName() const {
-        if (std::is_same<T, Integer>::value) return "int";
-        else if (std::is_same<T, Double>::value) return "double";
-        else if (std::is_same<T, Bool>::value) return "bool";
-        else if (std::is_same<T, Char>::value) return "char";
-        else if (std::is_same<T, String>::value) return "string";
-        else return "unknown";
-    }
-    
-    // 获取目标类型对象
-    Type* getTargetType() const {
-        if (std::is_same<T, Integer>::value) return Type::Int;
-        else if (std::is_same<T, Double>::value) return Type::Double;
-        else if (std::is_same<T, Bool>::value) return Type::Bool;
-        else if (std::is_same<T, Char>::value) return Type::Char;
-        else if (std::is_same<T, String>::value) return Type::String;
-        else return nullptr;
+        return targetTypeName;
     }
     
     // 获取目标类型优先级
     int getTargetTypePriority() const {
-        if (std::is_same<T, Integer>::value) return 2;
-        else if (std::is_same<T, Double>::value) return 3;
-        else if (std::is_same<T, Bool>::value) return 0;
-        else if (std::is_same<T, Char>::value) return 1;
-        else if (std::is_same<T, String>::value) return 4;
+        if (targetTypeName == "int") return 2;
+        else if (targetTypeName == "double") return 3;
+        else if (targetTypeName == "bool") return 0;
+        else if (targetTypeName == "char") return 1;
+        else if (targetTypeName == "string") return 4;
         else return 0;
     }
     
@@ -204,7 +249,7 @@ struct CastExpression : public Expression {
     }
     
     string getLocation() const override {
-        return "cast to " + getTargetTypeName();
+        return "cast to " + targetTypeName;
     }
 };
 
@@ -234,7 +279,9 @@ struct AccessExpression : public Expression {
         return "access expression";
     }
     
-    void accept(ASTVisitor* visitor) override;
+    // 重写泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
     
     int getTypePriority() const override {
         return target ? target->getTypePriority() : 0;
@@ -262,77 +309,48 @@ struct CallExpression : public Expression {
         return "function call: " + functionName;
     }
     
-    void accept(ASTVisitor* visitor) override;
+    // 重写泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
     
     int getTypePriority() const override {
         return 0;
     }
 };
 
-// ==================== 内置函数表达式 ====================
-// 内置函数表达式
-struct BuiltinFunctionExpression : public Expression {
-    string functionName;
-    vector<Expression*> arguments;
+// 方法调用表达式节点 - 继承自CallExpression
+struct MethodCallExpression : public CallExpression {
+    Expression* object;  // 调用方法的对象
     
-    BuiltinFunctionExpression(const string& name, const vector<Expression*>& args) 
-        : functionName(name), arguments(args) {}
-    
-    ~BuiltinFunctionExpression() {
-        for (Expression* arg : arguments) {
-            if (arg) {
-                delete arg;
-            }
-        }
-        arguments.clear();
-    }
-    
-    string getLocation() const override {
-        return "builtin function: " + functionName;
-    }
-    
-    void accept(ASTVisitor* visitor) override;
-    
-    int getTypePriority() const override {
-        return 0;
-    }
-};
-
-// ==================== 结构体和类相关表达式 ====================
-// MemberAccessExpression已合并到AccessExpression中
-
-// 方法调用表达式
-struct MethodCallExpression : public Expression {
-    Expression* object;
-    string methodName;
-    vector<Expression*> arguments;
-    
-    MethodCallExpression(Expression* obj, const string& method, const vector<Expression*>& args)
-        : object(obj), methodName(method), arguments(args) {}
+    MethodCallExpression(Expression* obj, const string& methodName, const vector<Expression*>& args) 
+        : CallExpression(methodName, args), object(obj) {}
     
     ~MethodCallExpression() {
         if (object) {
             delete object;
             object = nullptr;
         }
-        for (Expression* arg : arguments) {
-            if (arg) {
-                delete arg;
-            }
-        }
-        arguments.clear();
     }
     
     string getLocation() const override {
-        return "method call: " + methodName;
+        return "method call: " + functionName;
     }
     
-    void accept(ASTVisitor* visitor) override;
+    // 重写泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
     
     int getTypePriority() const override {
         return 0;
     }
 };
+
+
+
+// ==================== 结构体和类相关表达式 ====================
+// MemberAccessExpression已合并到AccessExpression中
+
+
 
 // 类型转换模板特化已删除，使用Value类型的运算符重载替代
 
