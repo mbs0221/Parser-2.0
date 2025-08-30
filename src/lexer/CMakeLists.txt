@@ -11,7 +11,7 @@ set(LEXER_SOURCES
 set(LEXER_HEADERS
     ${CMAKE_SOURCE_DIR}/include/lexer/lexer.h
     ${CMAKE_SOURCE_DIR}/include/lexer/value.h
-    ${CMAKE_SOURCE_DIR}/include/parser/inter.h
+    ${CMAKE_SOURCE_DIR}/include/lexer/token.h
 )
 
 # 创建lexer静态库

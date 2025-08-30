@@ -1,5 +1,5 @@
 #include "lexer/lexer.h"
-#include "lexer/value.h"
+#include "lexer/token.h"
 
 // 词法分析器实现
 Lexer::Lexer(){
@@ -70,6 +70,8 @@ Token *Lexer::scan(){//LL(1)
 		else break;
 	}
 	
+	cout << "[LEXER DEBUG] scan() - peek char: '" << peek << "' (ASCII: " << (int)peek << ")" << endl;
+	
 	// 检查是否到达文件末尾
 	if (inf.eof()){
 		return Token::END_OF_FILE;
@@ -88,7 +90,7 @@ Token *Lexer::scan(){//LL(1)
 	}
 }// a, b, c, int;
 
-Value *Lexer::match_char(){
+Token *Lexer::match_char(){
 	char c; // '
 	inf.read(&peek, 1);
 	if (peek == '\\'){// '\a
@@ -122,7 +124,7 @@ Value *Lexer::match_char(){
 		exit(1);  // 强制退出
 	}
 	
-	// 使用TokenFlyweight管理Char对象
+	// 直接创建Char对象
 	return factory->getChar(c).get();
 }
 
@@ -133,6 +135,11 @@ Token *Lexer::match_id(){
 		inf.read(&peek, 1);
 	} while (isalnum(peek) || peek == '_');
 	inf.seekg(-1, ios_base::cur);
+	// 重新读取peek字符，确保peek变量与文件指针同步
+	inf.read(&peek, 1);
+	inf.seekg(-1, ios_base::cur);
+	
+	cout << "[LEXER DEBUG] Identified identifier: '" << str << "'" << endl;
 	
 	if (words.find(str) != words.end()){
 		return words[str];
@@ -143,7 +150,7 @@ Token *Lexer::match_id(){
 	return w;
 }
 
-Value *Lexer::match_number(){
+Token *Lexer::match_number(){
 	if (peek == '0'){
 		inf.read(&peek, 1);
 		if (peek == 'x'){
@@ -161,7 +168,7 @@ Value *Lexer::match_number(){
 		// 单独的0 - 使用TokenFactory管理
 		inf.seekg(-1, ios_base::cur);
 		peek = '0';
-		// 0在256以内，使用TokenFactory
+		// 直接创建Integer对象
 		return factory->getInteger(0).get();
 	}
 	else{
@@ -169,7 +176,7 @@ Value *Lexer::match_number(){
 	}
 }
 
-Value *Lexer::match_decimal(){
+Token *Lexer::match_decimal(){
 	int val = 0;
 	bool isFloat = false;
 	double floatVal = 0.0;
@@ -202,12 +209,12 @@ Value *Lexer::match_decimal(){
 	if (isFloat){
 		return factory->getDouble(floatVal).get();
 	} else {
-		// 使用享元模式管理Integer对象
+		// 直接创建Integer对象
 		return factory->getInteger(val).get();
 	}
 }
 
-Value *Lexer::match_hex(){
+Token *Lexer::match_hex(){
 	int val = 0;
 	inf.read(&peek, 1);
 	do{
@@ -227,7 +234,7 @@ Value *Lexer::match_hex(){
 	return factory->getInteger(val).get();
 }
 
-Value *Lexer::match_oct(){
+Token *Lexer::match_oct(){
 	int val = 0;
 	do{
 		val = val * 8 + peek - '0';
@@ -342,7 +349,8 @@ Token *Lexer::match_other(){
 		inf.read(&peek, 1);  // 读取下一个字符
 		return Operator::BitNot;  // 使用静态常量
 	} else if (peek == '.') {
-		inf.read(&peek, 1);  // 读取下一个字符
+		// inf.read(&peek, 1);  // 读取下一个字符
+		// 不需要回退文件指针，因为peek已经指向下一个字符
 		return Operator::Dot;  // 使用静态常量
 	} else {
 		// 其他字符返回Token类型
@@ -438,7 +446,7 @@ Token *Lexer::skip_comment(){
 	return nullptr;
 }
 
-Value *Lexer::match_string(){
+Token *Lexer::match_string(){
 	string str;
 	inf.read(&peek, 1); // 跳过开始的引号
 	
@@ -583,33 +591,54 @@ Word* Lexer::matchWord() {
     return nullptr;
 }
 
-// 通用值匹配方法
-Value* Lexer::matchValue() {
-    Value* value = nullptr;
-    switch (look->Tag) {
-        case NUM:
-            value = static_cast<Value*>(look);
+
+
+// 泛型匹配方法实现 - 返回Token类型
+template<typename T>
+T* Lexer::match() {
+    // 根据期望的类型和当前token的Tag进行类型检查
+    if constexpr (std::is_same<T, Integer>::value) {
+        if (look->Tag == NUM) {
+            T* result = static_cast<T*>(look);
             move();
-            break;
-        case REAL:
-            value = static_cast<Value*>(look);
+            return result;
+        }
+    } else if constexpr (std::is_same<T, Double>::value) {
+        if (look->Tag == REAL) {
+            T* result = static_cast<T*>(look);
             move();
-            break;
-        case STR:
-            value = static_cast<Value*>(look);
+            return result;
+        }
+    } else if constexpr (std::is_same<T, Bool>::value) {
+        if (look->Tag == BOOL) {
+            T* result = static_cast<T*>(look);
             move();
-            break;
-        case CHAR:
-            value = static_cast<Value*>(look);
+            return result;
+        }
+    } else if constexpr (std::is_same<T, Char>::value) {
+        if (look->Tag == CHAR) {
+            T* result = static_cast<T*>(look);
             move();
-            break;
-        case BOOL:
-            value = static_cast<Value*>(look);
+            return result;
+        }
+    } else if constexpr (std::is_same<T, String>::value) {
+        if (look->Tag == STR) {
+            T* result = static_cast<T*>(look);
             move();
-            break;
-        default:
-            printf("SYNTAX ERROR line[%03d]: expected value, got %d\n", line, look->Tag);
-            exit(1);
+            return result;
+        }
     }
-    return value;
+    
+    // 类型不匹配，报告错误
+    printf("SYNTAX ERROR line[%03d]: expected %s, got tag %d\n", line, typeid(T).name(), look->Tag);
+    exit(1);
+    return nullptr;
 }
+
+// 模板特化实现 - 返回Token类型
+template Integer* Lexer::match<Integer>();
+template Double* Lexer::match<Double>();
+template Bool* Lexer::match<Bool>();
+template Char* Lexer::match<Char>();
+template String* Lexer::match<String>();
+

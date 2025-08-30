@@ -1,10 +1,16 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "lexer/value.h"
+#include <string>
+#include <map>
+#include <fstream>
+#include <memory>
 #include <mutex>
+#include <mutex>
+#include "lexer/value.h"
 
 using namespace std;
+
 
 // TokenFlyweight单例类 - 实现享元模式来缓存和复用Token对象
 class TokenFlyweight {
@@ -13,9 +19,9 @@ private:
 	static std::mutex mutex;
 	std::map<std::string, std::shared_ptr<Token>> tokenCache;
 	std::map<std::string, std::shared_ptr<Integer>> intCache;
+	std::map<std::string, std::shared_ptr<Word>> wordCache;
 	std::map<std::string, std::shared_ptr<Double>> doubleCache;
 	std::map<std::string, std::shared_ptr<Char>> charCache;
-	std::map<std::string, std::shared_ptr<Word>> wordCache;
 	
 	TokenFlyweight() = default; // 私有构造函数
 	~TokenFlyweight();
@@ -24,13 +30,13 @@ public:
 	static TokenFlyweight* getInstance(); // 获取单例实例
 	
 	std::shared_ptr<Token> getToken(int tag);
-	std::shared_ptr<Word> getWord(int tag, const string& lexeme);
 	std::shared_ptr<Integer> getInteger(int val);
 	std::shared_ptr<Double> getDouble(double val);
 	std::shared_ptr<Char> getChar(char val);
+	std::shared_ptr<Word> getWord(int tag, const string& lexeme);
 	
 	// 获取缓存大小（用于测试）
-	size_t getCharCacheSize() const { return charCache.size(); }
+	size_t getTokenCacheSize() const { return tokenCache.size(); }
 	
 	// 禁用拷贝构造和赋值
 	TokenFlyweight(const TokenFlyweight&) = delete;
@@ -39,6 +45,13 @@ public:
 
 // 全局TokenFlyweight获取函数声明
 extern TokenFlyweight* factory;
+
+// 前向声明
+class Token;
+class Word;
+class Operator;
+class Type;
+
 
 // 词法分析器
 class Lexer{
@@ -66,10 +79,11 @@ public:
 	Type* matchType();
 	void matchToken(int tag);
 	
-	// matchValue方法 - 从Parser移动过来
+
+	
+	// 泛型匹配方法 - 返回Token类型
 	template<typename T>
-	T* matchValue();
-	Value* matchValue();  // 通用版本，根据token类型自动返回正确的值
+	T* match();
 	
 	// Token管理方法
 	void move(); // 移动到下一个token
@@ -82,15 +96,15 @@ public:
 	Word* matchWord();
 	
 protected:
-	Value *match_char();
-	Value *match_string();
 	Token *match_id();
-	Value *match_number();
-	Value *match_decimal();
-	Value *match_hex();
-	Value *match_oct();
 	Token *match_other();
 	Token *skip_comment();
+	Token *match_number();
+	Token *match_char();
+	Token *match_decimal();
+	Token *match_oct();
+	Token *match_hex();
+	Token *match_string();
 };
 
 #endif // LEXER_H

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "lexer/lexer.h"
-#include "lexer/value.h"
+#include "lexer/token.h"
 
 using namespace std;
 
