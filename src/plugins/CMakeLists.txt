@@ -60,8 +60,20 @@ target_include_directories(type_plugin PRIVATE
 
 target_link_libraries(type_plugin parser interpreter)
 
+# IO插件
+add_library(io_plugin SHARED
+    io_plugin.cpp
+)
+
+target_include_directories(io_plugin PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/Parser
+)
+
+target_link_libraries(io_plugin parser interpreter)
+
 # 设置插件输出目录
-set_target_properties(core_plugin math_enhanced_plugin string_plugin array_plugin type_plugin PROPERTIES
+set_target_properties(core_plugin math_enhanced_plugin string_plugin array_plugin type_plugin io_plugin PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins
     CXX_STANDARD 11
     CXX_STANDARD_REQUIRED ON

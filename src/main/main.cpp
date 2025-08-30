@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 			}
 		}
 		
-		interpreter.execute(program);
+		interpreter.visit(program);  // 直接调用visit方法，消除execute函数依赖
 		LOG_INFO("Program execution completed");
 	} else {
 		LOG_ERROR("Parsing failed");

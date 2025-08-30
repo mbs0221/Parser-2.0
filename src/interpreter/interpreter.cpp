@@ -2,9 +2,10 @@
 #include "parser/expression.h"
 #include "parser/function.h"
 #include "parser/inter.h"
-#include "lexer/lexer.h"
 #include "interpreter/logger.h"
-#include "lexer/value.h"
+#include "interpreter/value.h"
+#include "interpreter/builtin_type.h"
+#include "interpreter/type_registry.h"
 
 #include <iostream>
 #include <sstream>
@@ -18,6 +19,19 @@ using namespace std;
 
 // 解释器构造函数
 Interpreter::Interpreter() {
+    // 初始化类型系统
+    typeRegistry = TypeRegistry::getInstance();
+    
+    // 初始化对象工厂
+    objectFactory = getObjectFactory();
+    
+    // 初始化类型转换器
+    typeConverter = new TypeConverter(typeRegistry, this);
+    
+    // 设置ObjectFactory的依赖注入
+    objectFactory->setTypeRegistry(typeRegistry);
+    objectFactory->setInterpreter(this);
+    
     // ScopeManager在构造函数中自动初始化
     
     // 自动加载插件目录中的插件
@@ -29,6 +43,19 @@ Interpreter::Interpreter() {
 
 // 解释器构造函数（可选择是否加载插件）
 Interpreter::Interpreter(bool loadPlugins) {
+    // 初始化类型系统
+    typeRegistry = TypeRegistry::getInstance();
+    
+    // 初始化对象工厂
+    objectFactory = getObjectFactory();
+    
+    // 初始化类型转换器
+    typeConverter = new TypeConverter(typeRegistry, this);
+    
+    // 设置ObjectFactory的依赖注入
+    objectFactory->setTypeRegistry(typeRegistry);
+    objectFactory->setInterpreter(this);
+    
     // ScopeManager在构造函数中自动初始化
     
     if (loadPlugins) {
@@ -42,19 +69,13 @@ Interpreter::Interpreter(bool loadPlugins) {
 
 // 解释器析构函数
 Interpreter::~Interpreter() {
+    // 清理类型转换器
+    if (typeConverter) {
+        delete typeConverter;
+        typeConverter = nullptr;
+    }
+    
     // ScopeManager在析构函数中自动清理
-}
-
-// 执行语句
-void Interpreter::execute(Statement* stmt) {
-    if (!stmt) return;
-    stmt->accept(this);
-}
-
-// 执行程序
-void Interpreter::execute(Program* program) {
-    if (!program) return;
-    program->accept(this);
 }
 
 // 程序执行
@@ -62,152 +83,93 @@ void Interpreter::visit(Program* program) {
     if (!program) return;
     
     for (Statement* stmt : program->statements) {
-        execute(stmt);
+        visit(stmt);  // 直接调用visit方法，消除execute函数依赖
     }
 }
 
 void Interpreter::visit(FunctionPrototype* funcProto) {
     if (!funcProto) return;
-    // 函数原型不需要执行，只是声明
-    LOG_DEBUG("Function prototype: " + funcProto->name);
+    // 函数原型在运行时不需要执行，实际执行的是FunctionDefinition
+    // 这里可以留空，或者用于调试目的
 }
 
 void Interpreter::visit(StructDefinition* structDef) {
     if (!structDef) return;
     
-    // 将结构体定义注册到作用域中
-    scopeManager.defineStruct(structDef->name, structDef);
-    
-    LOG_DEBUG("Registered struct '" + structDef->name + "' with " + to_string(structDef->members.size()) + " members");
+    // 使用TypeConverter注册结构体定义
+    StructType* structType = typeConverter->convertStructDefinition(structDef);
+    if (structType) {
+            LOG_DEBUG("Successfully registered struct '" + structDef->name + "' with " + 
+              to_string(structDef->members.size()) + " members");
+    } else {
+        LOG_ERROR("Failed to register struct '" + structDef->name + "'");
+    }
 }
 
 void Interpreter::visit(ClassDefinition* classDef) {
     if (!classDef) return;
     
-    // 将类定义注册到作用域中
-    scopeManager.defineClass(classDef->name, classDef);
-    
-    LOG_DEBUG("Registered class '" + classDef->name + "' with " + to_string(classDef->members.size()) + " members and " + to_string(classDef->methods.size()) + " methods");
+    // 使用TypeConverter注册类定义
+    ClassType* classType = typeConverter->convertClassDefinition(classDef);
+    if (classType) {
+        LOG_DEBUG("Successfully registered class '" + classDef->name + "' with " + 
+                 to_string(classDef->members.size()) + " members and " + 
+                 to_string(classDef->methods.size()) + " methods");
+    } else {
+        LOG_ERROR("Failed to register class '" + classDef->name + "'");
+    }
 }
 
-// Identifier访问方法
+// Identifier访问方法 - 使用类型注册系统
 void Interpreter::visit(Identifier* id) {
     if (!id) return;
-    // Identifier主要用于类型检查，不需要执行
-    LOG_DEBUG("Visiting identifier: " + id->name);
+    
+    string identifierType = id->getIdentifierType();
+    LOG_DEBUG("Visiting parser identifier: " + id->name + " (type: " + identifierType + ")");
+    
+    // 根据标识符类型进行不同的处理
+    if (identifierType == "Variable") {
+        // Variable类型 - 使用类型注册系统
+        Variable* var = dynamic_cast<Variable*>(id);
+        if (var) {
+            // TODO: 使用TypeConverter注册变量定义
+            // VariableDeclaration* varDecl = new VariableDeclaration(var->name, var->getType(), nullptr);
+            // typeRegistry->registerVariableDeclaration(varDecl, this);
+            // delete varDecl; // 清理临时对象
+            
+            LOG_DEBUG("Registered Variable: " + var->name);
+        }
+    } else if (identifierType == "FunctionDefinition") {
+        // FunctionDefinition类型 - 使用现有的函数注册逻辑
+        FunctionDefinition* funcDef = dynamic_cast<FunctionDefinition*>(id);
+        if (funcDef) {
+            // 使用现有的函数注册逻辑
+            int paramCount = funcDef->prototype ? funcDef->prototype->parameters.size() : 0;
+            scopeManager.defineUserFunction(funcDef->name, funcDef, paramCount, this, [](ScopeManagerPtr scopeMgr, FunctionDefinition* funcDef, vector<Value*>& args) -> Value* {
+                // 创建UserFunctionWrapper并执行
+                UserFunctionWrapper* userFunc = new UserFunctionWrapper(funcDef->name, funcDef, funcDef->prototype ? funcDef->prototype->parameters.size() : 0, scopeMgr, nullptr);
+                // 注意：这里无法直接调用executeUserFunction，因为lambda不能捕获this
+                // 需要修改设计或使用其他方法
+                return nullptr; // 临时返回nullptr
+            });
+            
+            LOG_DEBUG("Registered FunctionDefinition: " + funcDef->name);
+        }
+    }
 }
 
-// Variable访问方法
+// Variable访问方法 - 已合并到Identifier访问方法中
 void Interpreter::visit(Variable* var) {
     if (!var) return;
-    // Variable主要用于类型检查，不需要执行
-    LOG_DEBUG("Visiting variable: " + var->name);
+    // 直接调用Identifier的访问方法
+    visit(static_cast<Identifier*>(var));
 }
 
-// 类实例化
-Value* Interpreter::instantiateClass(ClassDefinition* classDef, vector<Value*>& args) {
-    if (!classDef) return nullptr;
-    
-    // 创建字典来存储实例的成员
-    Dict* instance = new Dict();
-    
-    // 根据参数顺序初始化成员
-    const vector<StructMember>& members = classDef->members;
-    for (size_t i = 0; i < members.size() && i < args.size(); ++i) {
-        const StructMember& member = members[i];
-        instance->setEntry(member.name, args[i]);
-    }
-    
-    // 为未初始化的成员设置默认值
-    for (size_t i = args.size(); i < members.size(); ++i) {
-        const StructMember& member = members[i];
-        if (member.defaultValue) {
-            // 如果有默认值表达式，求值它
-            Value* defaultVal = visit(member.defaultValue);
-            instance->setEntry(member.name, defaultVal);
-        } else {
-            // 否则使用类型的默认值
-            Value* defaultVal = createDefaultValue(member.type);
-            instance->setEntry(member.name, defaultVal);
-        }
-    }
-    
-    return instance;
-}
 
-// 结构体实例化
-Value* Interpreter::instantiateStruct(StructDefinition* structDef, vector<Value*>& args) {
-    if (!structDef) return nullptr;
-    
-    // 创建字典来存储实例的成员
-    Dict* instance = new Dict();
-    
-    // 检查是否是通过结构体实例化语法传递的参数（第一个参数是Dict）
-    if (!args.empty() && dynamic_cast<Dict*>(args[0])) {
-        // 结构体实例化语法：Person {name: "Alice", age: 25}
-        Dict* memberDict = dynamic_cast<Dict*>(args[0]);
-        const vector<StructMember>& members = structDef->members;
-        
-        // 按照结构体定义的成员顺序初始化
-        for (const StructMember& member : members) {
-            Value* memberValue = memberDict->getEntry(member.name);
-            if (memberValue) {
-                // 如果提供了该成员的值，使用提供的值
-                instance->setEntry(member.name, memberValue);
-            } else if (member.defaultValue) {
-                // 如果有默认值表达式，求值它
-                Value* defaultVal = visit(member.defaultValue);
-                instance->setEntry(member.name, defaultVal);
-            } else {
-                // 否则使用类型的默认值
-                Value* defaultVal = createDefaultValue(member.type);
-                instance->setEntry(member.name, defaultVal);
-            }
-        }
-    } else {
-        // 构造函数语法：Person("Alice", 25) - 按参数顺序初始化
-        const vector<StructMember>& members = structDef->members;
-        for (size_t i = 0; i < members.size() && i < args.size(); ++i) {
-            const StructMember& member = members[i];
-            instance->setEntry(member.name, args[i]);
-        }
-        
-        // 为未初始化的成员设置默认值
-        for (size_t i = args.size(); i < members.size(); ++i) {
-            const StructMember& member = members[i];
-            if (member.defaultValue) {
-                // 如果有默认值表达式，求值它
-                Value* defaultVal = visit(member.defaultValue);
-                instance->setEntry(member.name, defaultVal);
-            } else {
-                // 否则使用类型的默认值
-                Value* defaultVal = createDefaultValue(member.type);
-                instance->setEntry(member.name, defaultVal);
-            }
-        }
-    }
-    
-    return instance;
-}
 
-// 创建默认值
-Value* Interpreter::createDefaultValue(Type* type) {
-    if (!type) return new Integer(0);
-    
-    if (type == Type::Int) {
-        return new Integer(0);
-    } else if (type == Type::Double) {
-        return new Double(0.0);
-    } else if (type == Type::Char) {
-        return new Char('\0');
-    } else if (type == Type::Bool) {
-        return new Bool(false);
-    } else if (type == Type::String) {
-        return new String("");
-    } else {
-            return new Integer(0); // 默认返回整数0
-    }
-}
+
+
+
 
 // 错误处理
 void Interpreter::reportError(const string& message) {
@@ -330,4 +292,60 @@ string Interpreter::join(const vector<string>& vec, const string& delimiter) {
         result += delimiter + vec[i];
     }
     return result;
+}
+
+// ==================== 类型系统相关方法 ====================
+
+// 获取值的类型名称 - 直接使用运行时类型系统
+string Interpreter::getValueTypeName(Value* value) {
+    if (!value) return "unknown";
+    
+    // 直接使用Value的valueType指针获取类型名称
+    ObjectType* valueType = value->getValueType();
+    if (valueType) {
+        return valueType->getTypeName();
+    }
+    
+    // 如果valueType为空，返回unknown（这种情况不应该发生）
+    return "unknown";
+}
+
+
+
+// 调用类型方法
+Value* Interpreter::callTypeMethod(Value* instance, const string& methodName, vector<Value*>& args) {
+    if (!instance) return nullptr;
+    
+    // 获取类型名称并调用类型方法
+    string typeName = getValueTypeName(instance);
+    ObjectType* type = typeRegistry->getType(typeName);
+    if (type) {
+        // 直接调用类型方法
+        return type->callMethod(instance, methodName, args);
+    }
+    throw runtime_error("Type '" + typeName + "' not found");
+}
+
+// ==================== 函数调用辅助方法 ====================
+
+// 执行内置函数
+Value* Interpreter::executeBuiltinFunction(BuiltinFunctionWrapper* builtinFunc, vector<Value*>& evaluatedArgs) {
+    if (!builtinFunc) {
+        reportError("Builtin function is null");
+        return nullptr;
+    }
+    
+    // 直接调用内置函数包装器
+    return builtinFunc->call(evaluatedArgs);
+}
+
+// 执行用户函数
+Value* Interpreter::executeUserFunction(UserFunctionWrapper* userFunc, vector<Value*>& evaluatedArgs) {
+    if (!userFunc) {
+        reportError("User function is null");
+        return nullptr;
+    }
+    
+    // 直接调用用户函数包装器
+    return userFunc->call(evaluatedArgs);
 }

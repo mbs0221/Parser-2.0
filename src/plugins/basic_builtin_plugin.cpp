@@ -1,5 +1,5 @@
 #include "interpreter/builtin_plugin.h"
-#include "lexer/value.h"
+#include "interpreter/value.h"
 #include "parser/function.h"
 
 #include <iostream>
@@ -13,27 +13,36 @@ using namespace std;
 
 // ==================== 基础函数实现 ====================
 
-Value* builtin_print(vector<Variable*>& args) {
+Value* builtin_print(vector<Value*>& args) {
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i]) {
-            Value* value = args[i]->getValue();
-            if (value) {
-                cout << value->str();  // 使用str()方法，不添加引号
-                if (i < args.size() - 1) {
-                    cout << " ";
-                }
+            cout << args[i]->str();  // 使用str()方法，不添加引号
+            if (i < args.size() - 1) {
+                cout << " ";
             }
         }
     }
-    cout << endl;
+    // print不换行
     return nullptr;
 }
 
-Value* builtin_count(vector<Variable*>& args) {
+Value* builtin_println(vector<Value*>& args) {
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i]) {
+            cout << args[i]->str();  // 使用str()方法，不添加引号
+            if (i < args.size() - 1) {
+                cout << " ";
+            }
+        }
+    }
+    cout << endl;  // println换行
+    return nullptr;
+}
+
+Value* builtin_count(vector<Value*>& args) {
     if (args.size() == 1) {
-        Variable* value = args[0];
-        if (value) {
-            Value* val = value->getValue();
+        Value* val = args[0];
+        if (val) {
             if (Array* array = dynamic_cast<Array*>(val)) {
                 return new Integer(array->size());
             } else if (String* str = dynamic_cast<String*>(val)) {
@@ -73,12 +82,12 @@ Value* builtin_cin(vector<Variable*>& args) {
 
 // ==================== 数学函数实现 ====================
 
-Value* builtin_abs(vector<Variable*>& args) {
+Value* builtin_abs(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) {
         return nullptr;
     }
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Integer(abs(intVal->getValue()));
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -87,15 +96,15 @@ Value* builtin_abs(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* builtin_max(vector<Variable*>& args) {
+Value* builtin_max(vector<Value*>& args) {
     if (args.empty()) return nullptr;
     
-    Value* maxVal = args[0]->getValue();
+    Value* maxVal = args[0];
     if (!maxVal) return nullptr;
     
     for (size_t i = 1; i < args.size(); ++i) {
         if (!args[i]) continue;
-        Value* val = args[i]->getValue();
+        Value* val = args[i];
         if (!val) continue;
         
         if (Integer* int1 = dynamic_cast<Integer*>(maxVal)) {
@@ -124,15 +133,15 @@ Value* builtin_max(vector<Variable*>& args) {
     return maxVal;
 }
 
-Value* builtin_min(vector<Variable*>& args) {
+Value* builtin_min(vector<Value*>& args) {
     if (args.empty()) return nullptr;
     
-    Value* minVal = args[0]->getValue();
+    Value* minVal = args[0];
     if (!minVal) return nullptr;
     
     for (size_t i = 1; i < args.size(); ++i) {
         if (!args[i]) continue;
-        Value* val = args[i]->getValue();
+        Value* val = args[i];
         if (!val) continue;
         
         if (Integer* int1 = dynamic_cast<Integer*>(minVal)) {
@@ -417,8 +426,8 @@ public:
         return PluginInfo{
             "core",
             "1.0.0",
-            "核心基础函数插件，包含print、count、cin、exit等基础功能",
-            {"print", "count", "cin", "exit"}
+            "核心基础函数插件，包含print、println、count、cin、exit等基础功能",
+            {"print", "println", "count", "cin", "exit"}
         };
     }
     
@@ -430,6 +439,7 @@ public:
     map<string, BuiltinFunctionPtr> getFunctionMap() const override {
         return {
             {"print", builtin_print},
+            {"println", builtin_println},
             {"count", builtin_count},
             {"cin", builtin_cin},
             {"exit", builtin_exit}

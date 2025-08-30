@@ -1,5 +1,5 @@
-#include "interpreter/builtin_plugin.h"
-#include "lexer/value.h"
+#include "interpreter/builtin_plugin.h" 
+#include "interpreter/value.h"
 #include "parser/function.h"
 #include "interpreter/scope.h"
 #include "interpreter/interpreter.h"
@@ -10,10 +10,10 @@
 using namespace std;
 
 // 数学函数实现
-Value* math_sin(vector<Variable*>& args) {
+Value* math_sin(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Double(sin(intVal->getValue()));
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -22,10 +22,10 @@ Value* math_sin(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* math_cos(vector<Variable*>& args) {
+Value* math_cos(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Double(cos(intVal->getValue()));
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {

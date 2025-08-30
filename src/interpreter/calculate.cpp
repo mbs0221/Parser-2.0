@@ -1,5 +1,5 @@
 #include "interpreter/interpreter.h"
-#include "lexer/value.h"
+#include "interpreter/value.h"
 #include "parser/expression.h"
 
 using namespace std;
@@ -255,13 +255,39 @@ Value* Interpreter::calculate<String>(Value* operand, int op) {
 // 辅助方法：计算并转换为指定类型
 template<typename T>
 Value* Interpreter::calculate_binary_casted(Value* left, Value* right, int opTag) {
-    ConstantExpression* left_constant = new ConstantExpression(left);
-    ConstantExpression* right_constant = new ConstantExpression(right);
-    Value* left_casted = visit(new CastExpression<T>(left_constant));
-    Value* right_casted = visit(new CastExpression<T>(right_constant));
-    // 不删除 ConstantExpression 对象，让它们自然销毁
-    // delete left_constant;
-    // delete right_constant;
+    // 创建常量表达式 - 需要根据实际类型创建
+    // 这里简化处理，直接进行类型转换
+    Value* left_casted = nullptr;
+    Value* right_casted = nullptr;
+    
+    // 根据类型T确定目标类型名称
+    string targetTypeName;
+    if (std::is_same<T, Integer>::value) targetTypeName = "int";
+    else if (std::is_same<T, Double>::value) targetTypeName = "double";
+    else if (std::is_same<T, Bool>::value) targetTypeName = "bool";
+    else if (std::is_same<T, Char>::value) targetTypeName = "char";
+    else if (std::is_same<T, String>::value) targetTypeName = "string";
+    else targetTypeName = "unknown";
+    
+    // 使用CastExpression进行类型转换，实现计算逻辑与类型转换逻辑的解耦
+    if (left) {
+        // 创建一个包装表达式，将Value包装成Expression
+        Expression* leftExpr = createExpressionFromValueImpl(left);
+        CastExpression* left_cast = new CastExpression(leftExpr, targetTypeName);
+        left_casted = visit(left_cast);
+        delete left_cast;
+        delete leftExpr;
+    }
+    
+    if (right) {
+        // 创建一个包装表达式，将Value包装成Expression
+        Expression* rightExpr = createExpressionFromValueImpl(right);
+        CastExpression* right_cast = new CastExpression(rightExpr, targetTypeName);
+        right_casted = visit(right_cast);
+        delete right_cast;
+        delete rightExpr;
+    }
+    
     return calculate<T>(left_casted, right_casted, opTag);
 }
 
@@ -304,10 +330,29 @@ Value* Interpreter::calculate_binary_compatible(Value* left, Value* right, int o
 // 辅助方法：计算并转换为指定类型（一元操作）
 template<typename T>
 Value* Interpreter::calculate_unary_casted(Value* value, int opTag) {
-    ConstantExpression* constant_operand = new ConstantExpression(value);
-    Value* operand_casted = visit(new CastExpression<T>(constant_operand));
-    // 不删除 ConstantExpression 对象，让它们自然销毁
-    // delete constant_operand; 
+    // 创建常量表达式 - 需要根据实际类型创建
+    // 这里简化处理，直接进行类型转换
+    Value* operand_casted = nullptr;
+    
+    // 根据类型T确定目标类型名称
+    string targetTypeName;
+    if (std::is_same<T, Integer>::value) targetTypeName = "int";
+    else if (std::is_same<T, Double>::value) targetTypeName = "double";
+    else if (std::is_same<T, Bool>::value) targetTypeName = "bool";
+    else if (std::is_same<T, Char>::value) targetTypeName = "char";
+    else if (std::is_same<T, String>::value) targetTypeName = "string";
+    else targetTypeName = "unknown";
+    
+    // 使用CastExpression进行类型转换，实现计算逻辑与类型转换逻辑的解耦
+    Expression* operandExpr = createExpressionFromValueImpl(value);
+    if (operandExpr) {
+        CastExpression* operand_cast = new CastExpression(operandExpr, targetTypeName);
+        operand_casted = visit(operand_cast);
+        delete operand_cast;
+        delete operandExpr;
+    } else {
+        operand_casted = value; // 如果无法创建表达式，保持原值
+    }
     return calculate<T>(operand_casted, opTag);
 }
 
@@ -345,10 +390,29 @@ Value* Interpreter::calculate_unary_compatible(Value* value, int opTag) {
 template<typename T>
 Value* Interpreter::calculate_assign_casted(Value* left, Value* right, int opTag) {
     // 对于赋值操作，我们需要将右操作数转换为左操作数的类型
-    ConstantExpression* right_constant = new ConstantExpression(right);
-    Value* right_casted = visit(new CastExpression<T>(right_constant));
-    // 不删除 ConstantExpression 对象，让它们自然销毁
-    // delete right_constant;
+    // 创建常量表达式 - 需要根据实际类型创建
+    // 这里简化处理，直接进行类型转换
+    Value* right_casted = nullptr;
+    
+    // 根据类型T确定目标类型名称
+    string targetTypeName;
+    if (std::is_same<T, Integer>::value) targetTypeName = "int";
+    else if (std::is_same<T, Double>::value) targetTypeName = "double";
+    else if (std::is_same<T, Bool>::value) targetTypeName = "bool";
+    else if (std::is_same<T, Char>::value) targetTypeName = "char";
+    else if (std::is_same<T, String>::value) targetTypeName = "string";
+    else targetTypeName = "unknown";
+    
+    // 使用CastExpression进行类型转换，实现计算逻辑与类型转换逻辑的解耦
+    Expression* rightExpr = createExpressionFromValueImpl(right);
+    if (rightExpr) {
+        CastExpression* right_cast = new CastExpression(rightExpr, targetTypeName);
+        right_casted = visit(right_cast);
+        delete right_cast;
+        delete rightExpr;
+    } else {
+        right_casted = right; // 如果无法创建表达式，保持原值
+    }
     return right_casted;
 }
 
@@ -370,89 +434,124 @@ Value* Interpreter::calculate_assign_compatible(Value* left, Value* right, int o
     return nullptr;
 }
 
+// ==================== 辅助方法 ====================
+
+// 将Value包装成Expression的非模板接口方法
+Expression* Interpreter::createExpressionFromValueImpl(Value* value) {
+    if (!value) return nullptr;
+    
+    // 根据Value的类型创建对应的ConstantExpression
+    if (Integer* intVal = dynamic_cast<Integer*>(value)) {
+        return new ConstantExpression<int>(intVal->getValue());
+    } else if (Double* doubleVal = dynamic_cast<Double*>(value)) {
+        return new ConstantExpression<double>(doubleVal->getValue());
+    } else if (Bool* boolVal = dynamic_cast<Bool*>(value)) {
+        return new ConstantExpression<bool>(boolVal->getValue());
+    } else if (Char* charVal = dynamic_cast<Char*>(value)) {
+        return new ConstantExpression<char>(charVal->getValue());
+    } else if (String* stringVal = dynamic_cast<String*>(value)) {
+        return new ConstantExpression<string>(stringVal->getValue());
+    }
+    
+    // 如果无法识别类型，返回nullptr
+    return nullptr;
+}
+
+// 将Value包装成Expression的模板辅助方法（内部实现）
+template<typename T>
+Expression* Interpreter::createExpressionFromValue(Value* value) {
+    if (!value) return nullptr;
+    
+    // 尝试动态转换为目标类型
+    T* typedValue = dynamic_cast<T*>(value);
+    if (typedValue) {
+        return new ConstantExpression<typename T::value_type>(typedValue->getValue());
+    }
+    
+    return nullptr;
+}
+
+// 特化版本：处理不同类型的Value
+template<>
+Expression* Interpreter::createExpressionFromValue<Integer>(Value* value) {
+    if (!value) return nullptr;
+    
+    Integer* intVal = dynamic_cast<Integer*>(value);
+    if (intVal) {
+        return new ConstantExpression<int>(intVal->getValue());
+    }
+    return nullptr;
+}
+
+template<>
+Expression* Interpreter::createExpressionFromValue<Double>(Value* value) {
+    if (!value) return nullptr;
+    
+    Double* doubleVal = dynamic_cast<Double*>(value);
+    if (doubleVal) {
+        return new ConstantExpression<double>(doubleVal->getValue());
+    }
+    return nullptr;
+}
+
+template<>
+Expression* Interpreter::createExpressionFromValue<Bool>(Value* value) {
+    if (!value) return nullptr;
+    
+    Bool* boolVal = dynamic_cast<Bool*>(value);
+    if (boolVal) {
+        return new ConstantExpression<bool>(boolVal->getValue());
+    }
+    return nullptr;
+}
+
+template<>
+Expression* Interpreter::createExpressionFromValue<Char>(Value* value) {
+    if (!value) return nullptr;
+    
+    Char* charVal = dynamic_cast<Char*>(value);
+    if (charVal) {
+        return new ConstantExpression<char>(charVal->getValue());
+    }
+    return nullptr;
+}
+
+template<>
+Expression* Interpreter::createExpressionFromValue<String>(Value* value) {
+    if (!value) return nullptr;
+    
+    String* stringVal = dynamic_cast<String*>(value);
+    if (stringVal) {
+        return new ConstantExpression<string>(stringVal->getValue());
+    }
+    return nullptr;
+}
+
 // ==================== CastExpression访问方法 ====================
 
-// CastExpression<Integer>访问方法
-Value* Interpreter::visit(CastExpression<Integer>* castExpr) {
+// CastExpression访问方法 - 完全使用类型系统进行转换
+Value* Interpreter::visit(CastExpression* castExpr) {
     if (!castExpr) return nullptr;
     
     // 求值操作数
     Value* operandValue = visit(castExpr->operand);
     if (!operandValue) return nullptr;
     
-    // 转换为Integer类型
-    Value* result = operandValue->convert<Integer>();
+    // 获取目标类型
+    ObjectType* targetType = getTypeRegistry()->getType(castExpr->getTargetTypeName());
+    if (!targetType) {
+        reportError("Unknown target type: " + castExpr->getTargetTypeName());
+        return nullptr;
+    }
     
-    // 不删除操作数值，因为它可能还在其他地方被使用
-    // delete operandValue;
+    // 使用类型系统进行转换
+    Value* result = targetType->convertTo(targetType, operandValue);
     
-    return result;
-}
-
-// CastExpression<Double>访问方法
-Value* Interpreter::visit(CastExpression<Double>* castExpr) {
-    if (!castExpr) return nullptr;
-    
-    // 求值操作数
-    Value* operandValue = visit(castExpr->operand);
-    if (!operandValue) return nullptr;
-    
-    // 转换为Double类型
-    Value* result = operandValue->convert<Double>();
-    
-    // 不删除操作数值，因为它可能还在其他地方被使用
-    // delete operandValue;
-    
-    return result;
-}
-
-// CastExpression<Bool>访问方法
-Value* Interpreter::visit(CastExpression<Bool>* castExpr) {
-    if (!castExpr) return nullptr;
-    
-    // 求值操作数
-    Value* operandValue = visit(castExpr->operand);
-    if (!operandValue) return nullptr;
-    
-    // 转换为Bool类型
-    Value* result = operandValue->convert<Bool>();
-    
-    // 不删除操作数值，因为它可能还在其他地方被使用
-    // delete operandValue;
-    
-    return result;
-}
-
-// CastExpression<Char>访问方法
-Value* Interpreter::visit(CastExpression<Char>* castExpr) {
-    if (!castExpr) return nullptr;
-    
-    // 求值操作数
-    Value* operandValue = visit(castExpr->operand);
-    if (!operandValue) return nullptr;
-    
-    // 转换为Char类型
-    Value* result = operandValue->convert<Char>();
-    
-    // 不删除操作数值，因为它可能还在其他地方被使用
-    // delete operandValue;
-    
-    return result;
-}
-
-// CastExpression<String>访问方法
-Value* Interpreter::visit(CastExpression<String>* castExpr) {
-    if (!castExpr) return nullptr;
-    
-    // 求值操作数
-    Value* operandValue = visit(castExpr->operand);
-    if (!operandValue) return nullptr;
-    
-    // 转换为String类型
-    Value* result = operandValue->convert<String>();
-    
-    // 不删除操作数值，因为它可能还在其他地方被使用
-    // delete operandValue;
+    if (!result) {
+        reportError("Type conversion failed from " + getValueTypeName(operandValue) + 
+                   " to " + castExpr->getTargetTypeName());
+        return nullptr;
+    }
     
     return result;
 }

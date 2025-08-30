@@ -1,7 +1,7 @@
 #ifndef BUILTIN_PLUGIN_H
 #define BUILTIN_PLUGIN_H
 
-#include "lexer/value.h"
+#include "interpreter/value.h"
 #include "parser/function.h"
 #include "interpreter/scope.h"
 #include <vector>
@@ -11,8 +11,8 @@
 
 using namespace std;
 
-// 插件函数类型定义
-typedef Value* (*BuiltinFunctionPtr)(vector<Variable*>&);
+// 插件函数类型定义 - 与scope.h保持一致
+// 注意：这里不再重复定义，使用scope.h中的定义
 
 // 插件信息结构
 struct PluginInfo {
@@ -27,7 +27,7 @@ class BuiltinPlugin {
 protected:
     // 辅助方法：注册内置函数到作用域
     void defineBuiltinFunction(ScopeManager& scopeManager, const string& name, BuiltinFunctionPtr func) {
-        scopeManager.defineIdentifier(name, new BuiltinFunction(name, func));
+        scopeManager.defineFunction(name, new BuiltinFunction(name, func));
     }
     
     // 辅助方法：批量注册函数
@@ -71,13 +71,13 @@ public:
 
 // 简化插件开发的宏
 #define REGISTER_BUILTIN_FUNCTION(scopeManager, funcName, funcPtr) \
-    scopeManager.defineIdentifier(funcName, new BuiltinFunction(funcName, funcPtr))
+    scopeManager.defineFunction(funcName, new BuiltinFunction(funcName, funcPtr))
 
 #define REGISTER_BUILTIN_FUNCTIONS(scopeManager, ...) \
     do { \
         std::map<std::string, BuiltinFunctionPtr> funcMap = {__VA_ARGS__}; \
         for (const auto& pair : funcMap) { \
-            scopeManager.defineIdentifier(pair.first, new BuiltinFunction(pair.first, pair.second)); \
+            scopeManager.defineFunction(pair.first, new BuiltinFunction(pair.first, pair.second)); \
         } \
     } while(0)
 

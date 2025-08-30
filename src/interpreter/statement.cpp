@@ -2,9 +2,10 @@
 #include "parser/expression.h"
 #include "parser/function.h"
 #include "parser/inter.h"
+#include "parser/parser.h"
 #include "lexer/lexer.h"
 #include "interpreter/logger.h"
-#include "lexer/value.h"
+#include "interpreter/value.h"
 
 #include <iostream>
 #include <sstream>
@@ -45,6 +46,8 @@ void Interpreter::visit(Statement* stmt) {
         visit(tryStmt);
     } else if (SwitchStatement* switchStmt = dynamic_cast<SwitchStatement*>(stmt)) {
         visit(switchStmt);
+    } else if (FunctionDefinition* funcDef = dynamic_cast<FunctionDefinition*>(stmt)) {
+        visit(funcDef);
     } else {
         reportError("Unknown statement type");
     }
@@ -65,22 +68,13 @@ void Interpreter::visit(ReturnStatement* returnStmt) {
     throw ReturnException(result);
 }
 
-// 执行函数定义
-void Interpreter::visit(UserFunction* userFunc) {
-    if (!userFunc || !userFunc->prototype) return;
-    
-    string funcName = userFunc->prototype->name;
-    
-    scopeManager.defineFunction(funcName, userFunc);
-    
-    LOG_DEBUG("Registered function '" + funcName + "'");
-}
+
 
 // 导入语句执行
 void Interpreter::visit(ImportStatement* importStmt) {
-    if (!importStmt || !importStmt->moduleName) return;
+    if (!importStmt) return;
     
-    string moduleName = importStmt->moduleName->getValue();
+    string moduleName = importStmt->moduleName;
     LOG_DEBUG("Importing module: " + moduleName);
     
     // 检查文件是否存在
@@ -102,7 +96,7 @@ void Interpreter::visit(ImportStatement* importStmt) {
     
     // 执行导入的模块（在当前作用域中）
     LOG_DEBUG("Executing imported module: " + moduleName);
-    execute(importedProgram);
+    visit(importedProgram);  // 直接调用visit方法，消除execute函数依赖
     
     // 清理导入的程序
     delete importedProgram;
@@ -137,13 +131,13 @@ void Interpreter::visit(IfStatement* ifStmt) {
         LOG_DEBUG("Executing then branch");
         // 为then分支创建独立作用域
         withScopeVoid([&]() {
-            execute(ifStmt->thenStatement);
+            visit(ifStmt->thenStatement);  // 直接调用visit方法，消除execute函数依赖
         });
     } else if (!conditionBool && ifStmt->elseStatement) {
         LOG_DEBUG("Executing else branch");
         // 为else分支创建独立作用域
         withScopeVoid([&]() {
-            execute(ifStmt->elseStatement);
+            visit(ifStmt->elseStatement);  // 直接调用visit方法，消除execute函数依赖
         });
     }
 }
@@ -176,13 +170,13 @@ void Interpreter::visit(WhileStatement* whileStmt) {
         // 注意：不创建新作用域，让循环体内的变量赋值影响外层作用域
         try {
             if (BlockStatement* block = dynamic_cast<BlockStatement*>(whileStmt->body)) {
-                // 如果是块语句，直接执行其中的语句而不创建新作用域
-                for (Statement* stmt : block->statements) {
-                    execute(stmt);
-                }
+            // 如果是块语句，直接执行其中的语句而不创建新作用域
+            for (Statement* stmt : block->statements) {
+                visit(stmt);  // 直接调用visit方法，消除execute函数依赖
+            }
             } else {
                 // 如果是单个语句，正常执行
-                execute(whileStmt->body);
+                visit(whileStmt->body);  // 直接调用visit方法，消除execute函数依赖
             }
         } catch (const BreakException&) {
             return;  // 退出循环
@@ -226,7 +220,7 @@ void Interpreter::visit(ForStatement* forStmt) {
         // 执行循环体
         LOG_DEBUG("Executing for loop body");
         try {
-            execute(forStmt->body);
+            visit(forStmt->body);  // 直接调用visit方法，消除execute函数依赖
         } catch (const BreakException&) {
             return;  // 退出循环
         } catch (const ContinueException&) {
@@ -254,7 +248,7 @@ void Interpreter::visit(DoWhileStatement* doWhileStmt) {
         // 执行循环体
         LOG_DEBUG("Executing do-while loop body");
         try {
-            execute(doWhileStmt->body);
+            visit(doWhileStmt->body);  // 直接调用visit方法，消除execute函数依赖
         } catch (const BreakException&) {
             return;  // 退出循环
         } catch (const ContinueException&) {
@@ -312,7 +306,7 @@ void Interpreter::visit(SwitchStatement* switchStmt) {
                 // 执行default分支的语句
                 for (Statement* stmt : switchCase.statements) {
                     try {
-                        execute(stmt);
+                        visit(stmt);  // 直接调用visit方法，消除execute函数依赖
                     } catch (const BreakException&) {
                         return;  // 退出switch语句
                     } catch (const ContinueException&) {
@@ -340,7 +334,7 @@ void Interpreter::visit(SwitchStatement* switchStmt) {
                 // 执行匹配的case分支的语句
                 for (Statement* stmt : switchCase.statements) {
                     try {
-                        execute(stmt);
+                        visit(stmt);  // 直接调用visit方法，消除execute函数依赖
                     } catch (const BreakException&) {
                         return;  // 退出switch语句
                     } catch (const ContinueException&) {
@@ -360,7 +354,7 @@ void Interpreter::visit(SwitchStatement* switchStmt) {
                 // 执行当前case分支的语句
                 for (Statement* stmt : switchCase.statements) {
                     try {
-                        execute(stmt);
+                        visit(stmt);  // 直接调用visit方法，消除execute函数依赖
                     } catch (const BreakException&) {
                         return;  // 退出switch语句
                     } catch (const ContinueException&) {
@@ -385,7 +379,7 @@ void Interpreter::visit(TryStatement* tryStmt) {
     try {
         // 执行try块
         if (tryStmt->tryBlock) {
-            execute(tryStmt->tryBlock);
+            visit(tryStmt->tryBlock);  // 直接调用visit方法，消除execute函数依赖
         }
     } catch (...) {
         LOG_DEBUG("Exception caught");
@@ -402,7 +396,7 @@ void Interpreter::visit(TryStatement* tryStmt) {
             
             // 执行catch块
             if (catchBlock.catchBlock) {
-                execute(catchBlock.catchBlock);
+                visit(catchBlock.catchBlock);  // 直接调用visit方法，消除execute函数依赖
             }
             
             caught = true;
@@ -416,12 +410,12 @@ void Interpreter::visit(TryStatement* tryStmt) {
         }
     }
     
-    // 执行finally块（无论是否发生异常）
-    if (tryStmt->finallyBlock) {
-        LOG_DEBUG("Executing finally block");
-        try {
-            execute(tryStmt->finallyBlock);
-        } catch (...) {
+            // 执行finally块（无论是否发生异常）
+        if (tryStmt->finallyBlock) {
+            LOG_DEBUG("Executing finally block");
+            try {
+                visit(tryStmt->finallyBlock);  // 直接调用visit方法，消除execute函数依赖
+            } catch (...) {
             // finally块中的异常不应该被try-catch捕获
             LOG_DEBUG("Exception in finally block, re-throwing");
             throw;
@@ -451,7 +445,109 @@ void Interpreter::visit(BlockStatement* block) {
     
     withScopeVoid([&]() {
         for (Statement* stmt : block->statements) {
-            execute(stmt);
+            visit(stmt);  // 直接调用visit方法，消除execute函数依赖
         }
     });
+}
+
+// 执行用户函数的回调函数 - 避免循环依赖
+Value* executeUserFunctionCallback(void* scopeManagerPtr, FunctionDefinition* funcDef, vector<Value*>& args) {
+    Interpreter* interpreter = static_cast<Interpreter*>(scopeManagerPtr);
+    if (!interpreter || !funcDef) {
+        return nullptr;
+    }
+    
+    return interpreter->withScope([&]() -> Value* {
+        // 绑定参数到局部变量，将AST类型名称转换为运行时类型
+        vector<string> paramNames = funcDef->getParameterNames();
+        vector<string> typeNames = funcDef->getParameterTypeNames();
+        vector<int> paramSizes = funcDef->getParameterSizes();
+        
+        LOG_DEBUG("Function call: " + to_string(paramNames.size()) + " parameters, total size: " + 
+                 to_string(funcDef->getTotalParameterSize()) + " bytes");
+        
+        for (size_t i = 0; i < paramNames.size() && i < args.size(); ++i) {
+            // 获取参数名称、类型名称和大小
+            string paramName = paramNames[i];
+            string typeName = typeNames[i];
+            int paramSize = paramSizes[i];
+            
+            LOG_DEBUG("Parameter " + to_string(i) + ": " + paramName + " (" + typeName + 
+                     ", " + to_string(paramSize) + " bytes)");
+            
+            // 将类型名称转换为运行时类型
+            ObjectType* runtimeType = nullptr;
+            if (!typeName.empty() && typeName != "auto") {
+                if (typeName == "null") {
+                    runtimeType = TypeRegistry::getInstance()->getType("null");
+                } else {
+                    runtimeType = TypeRegistry::getInstance()->getType(typeName);
+                }
+            }
+            
+            // 如果找不到运行时类型，使用默认类型
+            if (!runtimeType) {
+                runtimeType = TypeRegistry::getInstance()->getType("Int");
+            }
+            
+            // 使用运行时类型定义变量
+            // 如果参数为null，使用ObjectFactory创建对应类型的null值
+            Value* paramValue = args[i];
+            if (!paramValue && runtimeType) {
+                paramValue = ObjectFactory::createNullForTypeStatic(runtimeType);
+            }
+            interpreter->scopeManager.defineVariable(paramName, runtimeType, paramValue);
+        }
+        
+        // 执行函数体
+        Value* result = nullptr;
+        try {
+            interpreter->visit(funcDef->body);  // 直接调用visit方法
+        } catch (const ReturnException& e) {
+            result = static_cast<Value*>(e.getValue());
+        }
+        
+        return result;
+    });
+}
+
+// 函数定义执行 - 将语法类型转换为运行时类型并注册到作用域
+void Interpreter::visit(FunctionDefinition* funcDef) {
+    if (!funcDef) return;
+    
+    string functionName = funcDef->prototype->name;
+    LOG_DEBUG("FunctionDefinition: processing function '" + functionName + "'");
+    
+    // 计算参数数量
+    int paramCount = funcDef->prototype->parameters.size();
+    
+    // 将语法函数定义转换为运行时函数并注册到作用域
+    LOG_DEBUG("FunctionDefinition: defining runtime function '" + functionName + "' with " + to_string(paramCount) + " parameters");
+    scopeManager.defineUserFunction(functionName, funcDef, paramCount, this, executeUserFunctionCallback);
+    
+    LOG_DEBUG("FunctionDefinition: function '" + functionName + "' registered in scope");
+}
+
+// 类方法执行 - 类似于函数定义，但需要考虑可见性和静态性
+void Interpreter::visit(ClassMethod* method) {
+    if (!method) return;
+    
+    string methodName = method->name;
+    string visibility = method->visibility;
+    bool isStatic = method->isStatic;
+    
+    LOG_DEBUG("ClassMethod: processing method '" + methodName + "' (visibility: " + visibility + 
+             ", static: " + (isStatic ? "true" : "false") + ")");
+    
+    // 计算参数数量
+    int paramCount = method->prototype ? method->prototype->parameters.size() : 0;
+    
+    // 类方法的处理逻辑与普通函数类似，但需要考虑可见性
+    // 在当前的实现中，我们暂时将类方法作为普通函数处理
+    // 后续可以在TypeConverter中处理类方法的绑定
+    LOG_DEBUG("ClassMethod: defining method '" + methodName + "' with " + to_string(paramCount) + " parameters");
+    
+    // 注意：类方法通常不应该直接注册到全局作用域
+    // 这里只是记录日志，实际的类方法绑定应该在TypeConverter中处理
+    LOG_DEBUG("ClassMethod: method '" + methodName + "' processed (will be bound to class in TypeConverter)");
 }

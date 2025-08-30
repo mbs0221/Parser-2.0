@@ -1,44 +1,41 @@
 #include "interpreter/scope.h"
-#include "parser/function.h"
-#include "parser/inter.h"
-#include "lexer/value.h"
+#include "interpreter/value.h"
+#include "interpreter/builtin_type.h"
+#include "interpreter/type_registry.h"
 #include <iostream>
 
 using namespace std;
 
-// 辅助函数：从字符串创建Type*对象
-Type* createTypeFromString(const string& typeName) {
+// 辅助函数：从字符串创建ObjectType*对象
+ObjectType* createTypeFromString(const string& typeName) {
+    TypeRegistry* registry = TypeRegistry::getInstance();
+    
     if (typeName == "int" || typeName == "integer") {
-        return Type::Int;
+        return registry->getType("Int");
     } else if (typeName == "double" || typeName == "float") {
-        return Type::Double;
+        return registry->getType("Double");
     } else if (typeName == "char") {
-        return Type::Char;
+        return registry->getType("Char");
     } else if (typeName == "bool" || typeName == "boolean") {
-        return Type::Bool;
+        return registry->getType("Bool");
     } else if (typeName == "string") {
-        return Type::String;
+        return registry->getType("String");
     } else if (typeName == "auto") {
         // 对于auto类型，暂时返回Int作为默认值
-        return Type::Int;
+        return registry->getType("Int");
     } else {
         // 未知类型，返回Int作为默认值
-        return Type::Int;
+        return registry->getType("Int");
     }
 }
 
 // ==================== Scope实现 ====================
 
 void Scope::cleanup() {
-    // 清理所有标识符
+    // 清理所有运行时标识符
     for (auto& pair : identifiers) {
         if (pair.second) {
-            // 检查指针是否有效
-            try {
-                delete pair.second;
-            } catch (...) {
-                // 忽略删除时的异常
-            }
+            delete pair.second;
             pair.second = nullptr;
         }
     }
@@ -46,9 +43,13 @@ void Scope::cleanup() {
 }
 
 void Scope::print() const {
-    cout << "Identifiers:" << endl;
+    cout << "Runtime Identifiers:" << endl;
     for (const auto& pair : identifiers) {
-        cout << "  " << pair.first << " (" << pair.second->getIdentifierType() << ")" << endl;
+        if (pair.second) {
+            cout << "  " << pair.first << " (" << pair.second->getIdentifierType() << ")" << endl;
+        } else {
+            cout << "  " << pair.first << " (null)" << endl;
+        }
     }
 }
 
@@ -92,7 +93,7 @@ void ScopeManager::exitScope() {
     }
 }
 
-void ScopeManager::defineIdentifier(const string& name, Identifier* identifier) {
+void ScopeManager::defineIdentifier(const string& name, RuntimeIdentifier* identifier) {
     if (currentScope) {
         // 如果标识符已存在，先删除旧值
         auto it = currentScope->identifiers.find(name);
@@ -104,7 +105,7 @@ void ScopeManager::defineIdentifier(const string& name, Identifier* identifier) 
     }
 }
 
-Identifier* ScopeManager::lookupIdentifier(const string& name) {
+RuntimeIdentifier* ScopeManager::lookupIdentifier(const string& name) {
     // 从当前作用域开始，向上查找
     for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
         Scope* scope = *it;
@@ -128,27 +129,32 @@ bool ScopeManager::isIdentifier(const string& name) const {
 }
 
 void ScopeManager::defineVariable(const string& name, const string& type, Value* value) {
-    Type* typeObj = createTypeFromString(type);
-    Variable* varDef = new Variable(name, typeObj, value);
+    ObjectType* typeObj = createTypeFromString(type);
+    RuntimeVariable* varDef = new RuntimeVariable(name, value, typeObj);
     defineIdentifier(name, varDef);
 }
 
 void ScopeManager::defineVariable(const string& name, Value* value) {
-    Type* typeObj = createTypeFromString("auto");
-    Variable* varDef = new Variable(name, typeObj, value);
+    ObjectType* typeObj = createTypeFromString("auto");
+    RuntimeVariable* varDef = new RuntimeVariable(name, value, typeObj);
     defineIdentifier(name, varDef);
 }
 
-Variable* ScopeManager::lookupVariable(const string& name) {
-    Identifier* identifier = lookupIdentifier(name);
-    if (identifier && identifier->getIdentifierType() == "Variable") {
-        return dynamic_cast<Variable*>(identifier);
+void ScopeManager::defineVariable(const string& name, ObjectType* type, Value* value) {
+    RuntimeVariable* varDef = new RuntimeVariable(name, value, type);
+    defineIdentifier(name, varDef);
+}
+
+RuntimeVariable* ScopeManager::lookupVariable(const string& name) {
+    RuntimeIdentifier* identifier = lookupIdentifier(name);
+    if (identifier && identifier->getIdentifierType() == "RuntimeVariable") {
+        return dynamic_cast<RuntimeVariable*>(identifier);
     }
     return nullptr;
 }
 
 void ScopeManager::updateVariable(const string& name, Value* value) {
-    Variable* variable = lookupVariable(name);
+    RuntimeVariable* variable = lookupVariable(name);
     if (variable) {
         variable->setValue(value);
     } else {
@@ -178,7 +184,7 @@ bool ScopeManager::isVariableDefinedInCurrentScope(const string& name) const {
     if (currentScope) {
         auto it = currentScope->identifiers.find(name);
         if (it != currentScope->identifiers.end()) {
-            return it->second->getIdentifierType() == "Variable";
+            return it->second->getIdentifierType() == "RuntimeVariable";
         }
     }
     return false;
@@ -189,39 +195,35 @@ bool ScopeManager::isFunctionDefinedInCurrentScope(const string& name) const {
         auto it = currentScope->identifiers.find(name);
         if (it != currentScope->identifiers.end()) {
             string type = it->second->getIdentifierType();
-            return type == "UserFunction" || type == "BuiltinFunction";
+            return type == "RuntimeFunction";
         }
     }
     return false;
 }
 
-void ScopeManager::defineFunction(const string& name, UserFunction* func) {
-    defineIdentifier(name, func);
+// 函数管理方法
+void ScopeManager::defineFunction(const string& name, BuiltinFunction* function) {
+    BuiltinFunctionWrapper* funcDef = new BuiltinFunctionWrapper(name, function);
+    defineIdentifier(name, funcDef);
 }
 
-void ScopeManager::defineStruct(const string& name, StructDefinition* structDef) {
-    defineIdentifier(name, structDef);
+void ScopeManager::defineUserFunction(const string& name, FunctionDefinition* funcDef, int paramCount, 
+                                     ScopeManagerPtr scopeMgr, ExecuteFunctionPtr execFunc) {
+    // 创建用户函数包装器
+    UserFunctionWrapper* wrapper = new UserFunctionWrapper(name, funcDef, paramCount, scopeMgr, execFunc);
+    defineIdentifier(name, wrapper);
 }
 
-void ScopeManager::defineClass(const string& name, ClassDefinition* classDef) {
-    defineIdentifier(name, classDef);
-}
-
-StructDefinition* ScopeManager::lookupStruct(const string& name) {
-    Identifier* identifier = lookupIdentifier(name);
-    if (identifier && identifier->getIdentifierType() == "StructDefinition") {
-        return dynamic_cast<StructDefinition*>(identifier);
+RuntimeFunction* ScopeManager::lookupFunction(const string& name) {
+    RuntimeIdentifier* identifier = lookupIdentifier(name);
+    if (identifier && identifier->getIdentifierType() == "RuntimeFunction") {
+        return dynamic_cast<RuntimeFunction*>(identifier);
     }
     return nullptr;
 }
 
-ClassDefinition* ScopeManager::lookupClass(const string& name) {
-    Identifier* identifier = lookupIdentifier(name);
-    if (identifier && identifier->getIdentifierType() == "ClassDefinition") {
-        return dynamic_cast<ClassDefinition*>(identifier);
-    }
-    return nullptr;
-}
+// 类型管理方法已移除 - 类型管理由TypeRegistry统一负责
+
 
 
 

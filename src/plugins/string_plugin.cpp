@@ -1,5 +1,5 @@
 #include "interpreter/builtin_plugin.h"
-#include "lexer/value.h"
+#include "interpreter/value.h"
 #include "parser/function.h"
 #include "interpreter/scope.h"
 #include <iostream>
@@ -10,10 +10,10 @@
 using namespace std;
 
 // 字符串函数实现
-Value* string_trim(vector<Variable*>& args) {
+Value* string_trim(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (String* str = dynamic_cast<String*>(val)) {
         string s = str->getValue();
         s.erase(0, s.find_first_not_of(" \t\n\r"));
@@ -23,12 +23,12 @@ Value* string_trim(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* string_replace(vector<Variable*>& args) {
+Value* string_replace(vector<Value*>& args) {
     if (args.size() != 3 || !args[0] || !args[1] || !args[2]) return nullptr;
     
-    Value* strVal = args[0]->getValue();
-    Value* oldVal = args[1]->getValue();
-    Value* newVal = args[2]->getValue();
+    Value* strVal = args[0];
+    Value* oldVal = args[1];
+    Value* newVal = args[2];
     
     if (String* str = dynamic_cast<String*>(strVal)) {
         if (String* oldStr = dynamic_cast<String*>(oldVal)) {
@@ -49,11 +49,11 @@ Value* string_replace(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* string_split(vector<Variable*>& args) {
+Value* string_split(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
-    Value* strVal = args[0]->getValue();
-    Value* delimVal = args[1]->getValue();
+    Value* strVal = args[0];
+    Value* delimVal = args[1];
     
     if (String* str = dynamic_cast<String*>(strVal)) {
         if (String* delim = dynamic_cast<String*>(delimVal)) {
@@ -77,11 +77,11 @@ Value* string_split(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* string_join(vector<Variable*>& args) {
+Value* string_join(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
-    Value* arrVal = args[0]->getValue();
-    Value* delimVal = args[1]->getValue();
+    Value* arrVal = args[0];
+    Value* delimVal = args[1];
     
     if (Array* arr = dynamic_cast<Array*>(arrVal)) {
         if (String* delim = dynamic_cast<String*>(delimVal)) {
@@ -102,11 +102,11 @@ Value* string_join(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* string_starts_with(vector<Variable*>& args) {
+Value* string_starts_with(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
-    Value* strVal = args[0]->getValue();
-    Value* prefixVal = args[1]->getValue();
+    Value* strVal = args[0];
+    Value* prefixVal = args[1];
     
     if (String* str = dynamic_cast<String*>(strVal)) {
         if (String* prefix = dynamic_cast<String*>(prefixVal)) {
@@ -119,11 +119,11 @@ Value* string_starts_with(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* string_ends_with(vector<Variable*>& args) {
+Value* string_ends_with(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
-    Value* strVal = args[0]->getValue();
-    Value* suffixVal = args[1]->getValue();
+    Value* strVal = args[0];
+    Value* suffixVal = args[1];
     
     if (String* str = dynamic_cast<String*>(strVal)) {
         if (String* suffix = dynamic_cast<String*>(suffixVal)) {
@@ -137,11 +137,11 @@ Value* string_ends_with(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* string_contains(vector<Variable*>& args) {
+Value* string_contains(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
-    Value* strVal = args[0]->getValue();
-    Value* substrVal = args[1]->getValue();
+    Value* strVal = args[0];
+    Value* substrVal = args[1];
     
     if (String* str = dynamic_cast<String*>(strVal)) {
         if (String* substr = dynamic_cast<String*>(substrVal)) {
