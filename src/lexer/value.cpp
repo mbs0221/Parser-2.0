@@ -1,60 +1,11 @@
-#include "lexer/token.h"
-#include "lexer/lexer.h"
+#include "lexer/value.h"
 #include <map>
 #include <mutex>
 
 // 声明外部factory变量
 extern TokenFlyweight* factory;
 
-// Token静态成员定义 - 直接初始化
-Token* Token::END_OF_FILE = new Token(::END_OF_FILE);
 
-// 静态成员定义 - 直接初始化
-Type *Type::Int = new Type(NUM, "int", 4);
-Type *Type::Double = new Type(REAL, "double", 8);
-Type *Type::Char = new Type(CHAR, "char", 1);
-Type *Type::Float = new Type(REAL, "float", 8);
-Type *Type::Bool = new Type(BOOL, "bool", 1);
-Type *Type::String = new Type(STR, "string", 0);
-
-// 赋值运算符
-Operator *Operator::Assign = new Operator('=', "=", 2, false);
-
-// 算术运算符
-Operator *Operator::Add = new Operator('+', "+", 4, true);
-Operator *Operator::Sub = new Operator('-', "-", 4, true);
-Operator *Operator::Mul = new Operator('*', "*", 5, true);
-Operator *Operator::Div = new Operator('/', "/", 5, true);
-Operator *Operator::Mod = new Operator('%', "%", 5, true);
-
-// 比较运算符
-Operator *Operator::LT = new Operator('<', "<", 3, true);
-Operator *Operator::GT = new Operator('>', ">", 3, true);
-Operator *Operator::LE = new Operator(Tag::LE, "<=", 3, true);
-Operator *Operator::GE = new Operator(Tag::GE, ">=", 3, true);
-Operator *Operator::EQ = new Operator(Tag::EQ_EQ, "==", 3, true);
-Operator *Operator::NE = new Operator(Tag::NE_EQ, "!=", 3, true);
-
-// 逻辑运算符
-Operator *Operator::AND = new Operator(AND_AND, "&&", 2, true);
-Operator *Operator::OR = new Operator(OR_OR, "||", 1, true);
-Operator *Operator::Not = new Operator('!', "!", 6, false);
-
-// 位运算符
-Operator *Operator::BitAnd = new Operator('&', "&", 4, true);
-Operator *Operator::BitOr = new Operator('|', "|", 2, true);
-Operator *Operator::BitXor = new Operator('^', "^", 3, true);
-Operator *Operator::BitNot = new Operator('~', "~", 6, false);
-Operator *Operator::LeftShift = new Operator(LEFT_SHIFT, "<<", 5, true);
-Operator *Operator::RightShift = new Operator(RIGHT_SHIFT, ">>", 5, true);
-
-// 其他运算符
-Operator *Operator::Increment = new Operator(INCREMENT, "++", 6, false);
-Operator *Operator::Decrement = new Operator(DECREMENT, "--", 6, false);
-Operator *Operator::Dot = new Operator('.', ".", 7, true);
-Operator *Operator::Arrow = new Operator(ARROW, "->", 7, true);
-Operator *Operator::Question = new Operator('?', "?", 1, false);
-Operator *Operator::Colon = new Operator(':', ":", 1, false);
 
 // Bool静态成员定义 - 直接初始化
 Bool *Bool::True = new Bool(true);
@@ -64,3 +15,100 @@ Bool *Bool::False = new Bool(false);
 Visibility *Visibility::Public = new Visibility(PUBLIC, VIS_PUBLIC);
 Visibility *Visibility::Private = new Visibility(PRIVATE, VIS_PRIVATE);
 Visibility *Visibility::Protected = new Visibility(PROTECTED, VIS_PROTECTED);
+
+TokenFlyweight* TokenFlyweight::instance = nullptr;
+std::mutex TokenFlyweight::mutex;
+
+// 获取单例实例
+TokenFlyweight* TokenFlyweight::getInstance() {
+    if (instance == nullptr) {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (instance == nullptr) {
+            instance = new TokenFlyweight();
+        }
+    }
+    return instance;
+}
+
+// 析构函数
+TokenFlyweight::~TokenFlyweight() {
+    	// 使用智能指针后，不需要手动删除，shared_ptr会自动管理内存
+	tokenCache.clear();
+	intCache.clear();
+	doubleCache.clear();
+	charCache.clear();
+	wordCache.clear();
+}
+
+// 获取Token对象
+std::shared_ptr<Token> TokenFlyweight::getToken(int type) {
+    std::string key = "token:" + std::to_string(type);
+    auto it = tokenCache.find(key);
+    if (it != tokenCache.end()) {
+        return it->second;
+    }
+    
+    auto token = std::make_shared<Token>(type);
+    tokenCache[key] = token;
+    return token;
+}
+
+// 获取Integer对象
+std::shared_ptr<Integer> TokenFlyweight::getInteger(int val) {
+    std::string key = "int:" + std::to_string(val);
+    auto it = intCache.find(key);
+    if (it != intCache.end()) {
+        return it->second;
+    }
+
+    auto i = std::make_shared<Integer>(val);
+    intCache[key] = i;
+    return i;
+}
+
+// 获取Double对象
+std::shared_ptr<Double> TokenFlyweight::getDouble(double val) {
+    std::string key = "double:" + std::to_string(val);
+    auto it = doubleCache.find(key);
+    if (it != doubleCache.end()) {
+        return it->second;
+    }
+
+    auto d = std::make_shared<Double>(val);
+    doubleCache[key] = d;
+    return d;
+}
+
+// 获取Char对象
+std::shared_ptr<Char> TokenFlyweight::getChar(char val) {
+    std::string key = "char:" + std::to_string(static_cast<int>(val));
+    auto it = charCache.find(key);
+    if (it != charCache.end()) {
+        return it->second;
+    }
+
+    auto c = std::make_shared<Char>(val);
+    charCache[key] = c;
+    return c;
+}
+
+// 获取Word对象（关键字）
+std::shared_ptr<Word> TokenFlyweight::getWord(int tag, const std::string& lexeme) {
+    std::string key = "word:" + std::to_string(tag) + ":" + lexeme;
+    auto it = wordCache.find(key);
+    if (it != wordCache.end()) {
+        return it->second;
+    }
+    
+    auto word = std::make_shared<Word>(tag, lexeme);
+    wordCache[key] = word;
+    return word;
+}
+
+// 全局函数获取TokenFlyweight实例
+TokenFlyweight* getTokenFlyweight() {
+    return TokenFlyweight::getInstance();
+}
+
+// 使用统一Token享元工厂创建实例
+TokenFlyweight* factory = TokenFlyweight::getInstance();

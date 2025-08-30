@@ -7,51 +7,9 @@
 #include <memory>
 #include <mutex>
 #include <mutex>
-#include "lexer/value.h"
+#include "lexer/token.h"
 
 using namespace std;
-
-
-// TokenFlyweight单例类 - 实现享元模式来缓存和复用Token对象
-class TokenFlyweight {
-private:
-	static TokenFlyweight* instance;
-	static std::mutex mutex;
-	std::map<std::string, std::shared_ptr<Token>> tokenCache;
-	std::map<std::string, std::shared_ptr<Integer>> intCache;
-	std::map<std::string, std::shared_ptr<Word>> wordCache;
-	std::map<std::string, std::shared_ptr<Double>> doubleCache;
-	std::map<std::string, std::shared_ptr<Char>> charCache;
-	
-	TokenFlyweight() = default; // 私有构造函数
-	~TokenFlyweight();
-	
-public:
-	static TokenFlyweight* getInstance(); // 获取单例实例
-	
-	std::shared_ptr<Token> getToken(int tag);
-	std::shared_ptr<Integer> getInteger(int val);
-	std::shared_ptr<Double> getDouble(double val);
-	std::shared_ptr<Char> getChar(char val);
-	std::shared_ptr<Word> getWord(int tag, const string& lexeme);
-	
-	// 获取缓存大小（用于测试）
-	size_t getTokenCacheSize() const { return tokenCache.size(); }
-	
-	// 禁用拷贝构造和赋值
-	TokenFlyweight(const TokenFlyweight&) = delete;
-	TokenFlyweight& operator=(const TokenFlyweight&) = delete;
-};
-
-// 全局TokenFlyweight获取函数声明
-extern TokenFlyweight* factory;
-
-// 前向声明
-class Token;
-class Word;
-class Operator;
-class Type;
-
 
 // 词法分析器
 class Lexer{
@@ -78,8 +36,6 @@ public:
 	string matchIdentifier();
 	Type* matchType();
 	void matchToken(int tag);
-	
-
 	
 	// 泛型匹配方法 - 返回Token类型
 	template<typename T>

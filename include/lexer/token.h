@@ -1,9 +1,6 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-// 前向声明
-struct Token;
-struct Type;
 
 // 包含必要的头文件
 #include <string>
@@ -61,13 +58,6 @@ enum Tag{
 	
 	// 特殊值
 	NULL_VALUE
-};
-
-// 访问修饰符枚举类型
-enum VisibilityType {
-    VIS_PUBLIC,
-    VIS_PRIVATE,
-    VIS_PROTECTED
 };
 
 //词法单元
@@ -129,12 +119,17 @@ struct Comment :Token{
 
 struct Type :Word{
 	int width;
-	static Type *Int, *Char, *Double, *Float, *Bool, *String;
+	static Type *Int, *Char, *Double, *Float, *Bool, *String, *Null;
 	Type(){ Tag = BASIC; word = "type", width = 0; }
 	Type(Word word, int width) :Word(word), width(width){}
 	Type(int Tag, string word, int width) :Word(Tag, word), width(width){}
 	static Type *max(Type *T1, Type *T2){
 		return T1->width > T2->width ? T1 : T2;
+	}
+	
+	// 创建null类型
+	static Type* createNullType() {
+		return new Type(NULL_VALUE, "null", 0);
 	}
 	virtual Type *eval(){
 		return this;
@@ -143,6 +138,21 @@ struct Type :Word{
 	// 获取字面值的字符串表示
 	string str() const override {
 		return word;
+	}
+	
+	// 转换为字符串（用于类型名称获取）
+	string toString() const {
+		return word;
+	}
+	
+	// 获取类型大小（字节数）
+	int getSize() const {
+		return width;
+	}
+	
+	// 获取类型大小的字符串表示
+	string getSizeString() const {
+		return to_string(width) + " bytes";
 	}
 };
 
@@ -179,49 +189,6 @@ struct Operator :Token {
 	string str() const override {
 		return symbol;
 	}
-};
-
-// 访问修饰符
-struct Visibility : public Token {
-    VisibilityType visibilityType;  // 访问修饰符枚举类型
-    
-    static Visibility *Public, *Private, *Protected;
-    
-    Visibility() : Token(0), visibilityType(VIS_PUBLIC) {}
-    Visibility(int tag, VisibilityType type) : Token(tag), visibilityType(type) {}
-    
-    // 根据Tag创建Visibility对象
-    static Visibility* createFromTag(int tag) {
-        switch(tag) {
-            case Tag::PUBLIC: return Public;
-            case Tag::PRIVATE: return Private;
-            case Tag::PROTECTED: return Protected;
-            default: return nullptr;
-        }
-    }
-    
-    // 获取访问修饰符类型
-    VisibilityType getVisibilityType() const { return visibilityType; }
-    
-    // 转换为字符串
-    string toString() const { 
-        switch(visibilityType) {
-            case VIS_PUBLIC: return "public";
-            case VIS_PRIVATE: return "private";
-            case VIS_PROTECTED: return "protected";
-            default: return "unknown";
-        }
-    }
-    
-    // 获取字面值的字符串表示
-    string str() const override {
-        return toString();
-    }
-    
-    // 判断是否为特定类型
-    bool isPublic() const { return visibilityType == VIS_PUBLIC; }
-    bool isPrivate() const { return visibilityType == VIS_PRIVATE; }
-    bool isProtected() const { return visibilityType == VIS_PROTECTED; }
 };
 
 #endif // TOKEN_H

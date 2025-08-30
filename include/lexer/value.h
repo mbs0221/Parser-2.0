@@ -83,4 +83,88 @@ struct String : public Token {
     }
 };
 
+// 访问修饰符枚举类型
+enum VisibilityType {
+    VIS_PUBLIC,
+    VIS_PRIVATE,
+    VIS_PROTECTED
+};
+
+// 访问修饰符
+struct Visibility : public Token {
+    VisibilityType visibilityType;  // 访问修饰符枚举类型
+    
+    static Visibility *Public, *Private, *Protected;
+    
+    Visibility() : Token(0), visibilityType(VIS_PUBLIC) {}
+    Visibility(int tag, VisibilityType type) : Token(tag), visibilityType(type) {}
+    
+    // 根据Tag创建Visibility对象
+    static Visibility* createFromTag(int tag) {
+        switch(tag) {
+            case Tag::PUBLIC: return Public;
+            case Tag::PRIVATE: return Private;
+            case Tag::PROTECTED: return Protected;
+            default: return nullptr;
+        }
+    }
+    
+    // 获取访问修饰符类型
+    VisibilityType getVisibilityType() const { return visibilityType; }
+    
+    // 转换为字符串
+    string toString() const { 
+        switch(visibilityType) {
+            case VIS_PUBLIC: return "public";
+            case VIS_PRIVATE: return "private";
+            case VIS_PROTECTED: return "protected";
+            default: return "unknown";
+        }
+    }
+    
+    // 获取字面值的字符串表示
+    string str() const override {
+        return toString();
+    }
+    
+    // 判断是否为特定类型
+    bool isPublic() const { return visibilityType == VIS_PUBLIC; }
+    bool isPrivate() const { return visibilityType == VIS_PRIVATE; }
+    bool isProtected() const { return visibilityType == VIS_PROTECTED; }
+};
+
+// TokenFlyweight单例类 - 实现享元模式来缓存和复用Token对象
+class TokenFlyweight {
+private:
+    static TokenFlyweight* instance;
+    static std::mutex mutex;
+    std::map<std::string, std::shared_ptr<Token>> tokenCache;
+    std::map<std::string, std::shared_ptr<Integer>> intCache;
+    std::map<std::string, std::shared_ptr<Word>> wordCache;
+    std::map<std::string, std::shared_ptr<Double>> doubleCache;
+    std::map<std::string, std::shared_ptr<Char>> charCache;
+    
+    TokenFlyweight() = default; // 私有构造函数
+    ~TokenFlyweight();
+    
+public:
+    static TokenFlyweight* getInstance(); // 获取单例实例
+    
+    std::shared_ptr<Token> getToken(int tag);
+    std::shared_ptr<Integer> getInteger(int val);
+    std::shared_ptr<Double> getDouble(double val);
+    std::shared_ptr<Char> getChar(char val);
+    std::shared_ptr<Word> getWord(int tag, const string& lexeme);
+    
+    // 获取缓存大小（用于测试）
+    size_t getTokenCacheSize() const { return tokenCache.size(); }
+    
+    // 禁用拷贝构造和赋值
+    TokenFlyweight(const TokenFlyweight&) = delete;
+    TokenFlyweight& operator=(const TokenFlyweight&) = delete;
+};
+
+// 全局TokenFlyweight获取函数声明
+extern TokenFlyweight* factory;
+
 #endif

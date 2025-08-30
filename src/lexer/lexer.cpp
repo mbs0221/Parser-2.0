@@ -1,5 +1,5 @@
+#include "lexer/value.h"
 #include "lexer/lexer.h"
-#include "lexer/token.h"
 
 // 词法分析器实现
 Lexer::Lexer(){
@@ -35,6 +35,7 @@ Lexer::Lexer(){
 	words["private"] = Visibility::Private;
 	words["protected"] = Visibility::Protected;
 	words["import"] = new Word(IMPORT, "import");
+	words["null"] = new Word(NULL_VALUE, "null");
 }
 
 Lexer::~Lexer(){
