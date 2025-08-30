@@ -11,6 +11,8 @@
 
 using namespace std;
 
+namespace lexer {
+
 // 词法分析器
 class Lexer{
 private:
@@ -62,5 +64,7 @@ protected:
 	Token *match_hex();
 	Token *match_string();
 };
+
+} // namespace lexer
 
 #endif // LEXER_H

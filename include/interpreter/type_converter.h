@@ -21,7 +21,7 @@ private:
     mutable std::mutex converterMutex; // 线程安全锁
     
     // 辅助方法
-    ObjectType* convertASTTypeToRuntimeType(Type* astType);
+    ObjectType* convertASTTypeToRuntimeType(lexer::Type* astType);
 
 public:
     // 构造函数

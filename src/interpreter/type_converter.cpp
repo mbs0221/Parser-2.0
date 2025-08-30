@@ -29,7 +29,7 @@ void TypeConverter::setInterpreter(Interpreter* interp) {
 }
 
 // 转换AST类型到运行时类型
-ObjectType* TypeConverter::convertASTTypeToRuntimeType(Type* astType) {
+ObjectType* TypeConverter::convertASTTypeToRuntimeType(lexer::Type* astType) {
     if (!astType) return nullptr;
     
     std::lock_guard<std::mutex> lock(converterMutex);

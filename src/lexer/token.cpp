@@ -1,9 +1,11 @@
 #include "lexer/token.h"
 #include <mutex>
 
+namespace lexer {
+
 // 静态成员初始化
 // Token静态成员定义 - 直接初始化
-Token* Token::END_OF_FILE = new Token(::END_OF_FILE);
+Token* Token::END_OF_FILE = new Token(lexer::END_OF_FILE);
 
 // 静态成员定义 - 直接初始化
 Type *Type::Int = new Type(NUM, "int", 4);
@@ -51,3 +53,5 @@ Operator *Operator::Dot = new Operator('.', ".", 7, true);
 Operator *Operator::Arrow = new Operator(ARROW, "->", 7, true);
 Operator *Operator::Question = new Operator('?', "?", 1, false);
 Operator *Operator::Colon = new Operator(':', ":", 1, false);
+
+} // namespace lexer

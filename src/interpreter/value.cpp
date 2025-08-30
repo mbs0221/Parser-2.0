@@ -11,32 +11,32 @@ Bool* FalseValue = new Bool(false);
 
 // ==================== ValueFactory实现 ====================
 
-Value* ValueFactory::createFromToken(const Token* token) {
+Value* ValueFactory::createFromToken(const lexer::Token* token) {
     if (!token) return nullptr;
     
     switch (token->Tag) {
-        case NUM:
+        case lexer::NUM:
             if (const Integer* intToken = dynamic_cast<const Integer*>(token)) {
                 return new Integer(intToken->getValue());
             }
             break;
-        case REAL:
-        case DOUBLE:
+        case lexer::REAL:
+        case lexer::DOUBLE:
             if (const Double* doubleToken = dynamic_cast<const Double*>(token)) {
                 return new Double(doubleToken->getValue());
             }
             break;
-        case BOOL:
+        case lexer::BOOL:
             if (const Bool* boolToken = dynamic_cast<const Bool*>(token)) {
                 return new Bool(boolToken->getValue());
             }
             break;
-        case CHAR:
+        case lexer::CHAR:
             if (const Char* charToken = dynamic_cast<const Char*>(token)) {
                 return new Char(charToken->getValue());
             }
             break;
-        case STR:
+        case lexer::STR:
             if (const String* stringToken = dynamic_cast<const String*>(token)) {
                 return new String(stringToken->getValue());
             }

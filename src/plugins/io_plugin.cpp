@@ -1,5 +1,5 @@
 #include "interpreter/builtin_plugin.h"
-#include "lexer/value.h"
+#include "interpreter/value.h"
 #include "parser/function.h"
 
 #include <iostream>

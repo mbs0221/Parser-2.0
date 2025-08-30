@@ -23,6 +23,8 @@
 
 using namespace std;
 
+namespace lexer {
+
 //词法分析器标记
 enum Tag{
 	// 基本类型
@@ -190,5 +192,7 @@ struct Operator :Token {
 		return symbol;
 	}
 };
+
+} // namespace lexer
 
 #endif // TOKEN_H

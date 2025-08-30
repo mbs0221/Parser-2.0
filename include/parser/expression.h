@@ -6,6 +6,7 @@
 #include "parser/ast_visitor.h"
 
 using namespace std;
+using namespace lexer;
 
 // ==================== 表达式基类 ====================
 // 表达式基类 - 继承自AST，支持泛型访问者

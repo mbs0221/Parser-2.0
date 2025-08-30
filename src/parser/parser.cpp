@@ -4,6 +4,7 @@
 #include "parser/inter.h"
 
 using namespace std;
+using namespace lexer;
 
 // Parser构造函数和析构函数
 Parser::Parser() {

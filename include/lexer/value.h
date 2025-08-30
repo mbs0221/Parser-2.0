@@ -7,6 +7,8 @@
 
 using namespace std;
 
+namespace lexer {
+
 struct Integer : public Token {
     using value_type = int;
     int value;
@@ -166,5 +168,8 @@ public:
 
 // 全局TokenFlyweight获取函数声明
 extern TokenFlyweight* factory;
+TokenFlyweight* getFactory();
+void initializeBoolStatics();
+} // namespace lexer
 
-#endif
+#endif // VALUE_H

@@ -432,7 +432,7 @@ public:
     static Value* createNull() { return new Null(); }
     
     // 从Token创建值 - 已移除以避免lexer依赖
-    Value* createFromToken(const Token* token);
+    Value* createFromToken(const lexer::Token* token);
     
     // 类型转换 - 委托给类型系统
     static Value* convertValue(Value* value, class ObjectType* targetType) {

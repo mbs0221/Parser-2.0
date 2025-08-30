@@ -73,7 +73,7 @@ private:
     Lexer lex;
     int depth = 0;
     // 参数解析
-    vector<pair<string, Type*>> parseParameterList();
+    vector<pair<string, lexer::Type*>> parseParameterList();
 };
 
 

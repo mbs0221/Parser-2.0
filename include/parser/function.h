@@ -9,6 +9,7 @@
 #include <functional>
 
 using namespace std;
+using namespace lexer;
 
 // 前向声明
 class BlockStatement;

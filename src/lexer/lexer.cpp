@@ -1,9 +1,12 @@
 #include "lexer/value.h"
 #include "lexer/lexer.h"
 
+namespace lexer {
+
 // 词法分析器实现
 Lexer::Lexer(){
 	look = nullptr; // 初始化当前token
+	
 	words["int"] = Type::Int;// new Word(INT, "int");
 	words["double"] = Type::Double;// new Word(INT, "int");
 	words["if"] = new Word(IF, "if");
@@ -126,7 +129,7 @@ Token *Lexer::match_char(){
 	}
 	
 	// 直接创建Char对象
-	return factory->getChar(c).get();
+	return getFactory()->getChar(c).get();
 }
 
 Token *Lexer::match_id(){
@@ -146,7 +149,7 @@ Token *Lexer::match_id(){
 		return words[str];
 	}
 	// 使用TokenFlyweight管理Word对象
-	Word *w = factory->getWord(ID, str).get();
+	Word *w = getFactory()->getWord(ID, str).get();
 	words[str] = w;
 	return w;
 }
@@ -170,7 +173,7 @@ Token *Lexer::match_number(){
 		inf.seekg(-1, ios_base::cur);
 		peek = '0';
 		// 直接创建Integer对象
-		return factory->getInteger(0).get();
+		return getFactory()->getInteger(0).get();
 	}
 	else{
 		return match_decimal();
@@ -208,10 +211,10 @@ Token *Lexer::match_decimal(){
 	
 	// 根据是否为浮点数返回相应的Token
 	if (isFloat){
-		return factory->getDouble(floatVal).get();
+		return getFactory()->getDouble(floatVal).get();
 	} else {
 		// 直接创建Integer对象
-		return factory->getInteger(val).get();
+		return getFactory()->getInteger(val).get();
 	}
 }
 
@@ -232,7 +235,7 @@ Token *Lexer::match_hex(){
 	} while (isxdigit(peek));
 	inf.seekg(-1, ios_base::cur);
 	// 使用享元模式管理Integer对象
-	return factory->getInteger(val).get();
+	return getFactory()->getInteger(val).get();
 }
 
 Token *Lexer::match_oct(){
@@ -643,3 +646,4 @@ template Bool* Lexer::match<Bool>();
 template Char* Lexer::match<Char>();
 template String* Lexer::match<String>();
 
+} // namespace lexer

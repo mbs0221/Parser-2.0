@@ -2,10 +2,13 @@
 #include <map>
 #include <mutex>
 
+namespace lexer {
+
+// 使用类型别名来避免与interpreter模块的Bool类型冲突
+using LexerBool = struct Bool;
+
 // 声明外部factory变量
 extern TokenFlyweight* factory;
-
-
 
 // Bool静态成员定义 - 直接初始化
 Bool *Bool::True = new Bool(true);
@@ -110,5 +113,15 @@ TokenFlyweight* getTokenFlyweight() {
     return TokenFlyweight::getInstance();
 }
 
+// 安全获取factory实例的函数
+TokenFlyweight* getFactory() {
+    if (factory == nullptr) {
+        factory = TokenFlyweight::getInstance();
+    }
+    return factory;
+}
+
 // 使用统一Token享元工厂创建实例
-TokenFlyweight* factory = TokenFlyweight::getInstance();
+TokenFlyweight* factory = nullptr;
+
+}
