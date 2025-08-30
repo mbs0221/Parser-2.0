@@ -7,12 +7,13 @@
 #include <cstdlib>
 #include <ctime>
 
+using namespace std;
+
 // 如果builtin_sort函数未定义，提供一个简单的实现
-#ifndef BUILTIN_SORT_DEFINED
-Value* builtin_sort(vector<Variable*>& args) {
+Value* builtin_sort(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* arrVal = args[0]->getValue();
+    Value* arrVal = args[0];
     if (Array* arr = dynamic_cast<Array*>(arrVal)) {
         // 简单的排序实现
         // 这里可以添加实际的排序逻辑
@@ -21,10 +22,6 @@ Value* builtin_sort(vector<Variable*>& args) {
     
     return nullptr;
 }
-#define BUILTIN_SORT_DEFINED
-#endif
-
-using namespace std;
 
 // 基础内置函数插件类
 class BasicBuiltinPlugin : public BuiltinPlugin {

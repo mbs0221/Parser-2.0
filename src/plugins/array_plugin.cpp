@@ -1,5 +1,4 @@
 #include "interpreter/builtin_plugin.h"
-#include "lexer/value.h"
 #include "parser/function.h"
 
 #include <iostream>
@@ -9,15 +8,15 @@ using namespace std;
 
 // ==================== 数组操作函数 ====================
 
-Value* array_push(vector<Variable*>& args) {
+Value* array_push(vector<Value*>& args) {
     if (args.size() < 2 || !args[0]) return nullptr;
     
-    Value* arrVal = args[0]->getValue();
+    Value* arrVal = args[0];
     if (Array* arr = dynamic_cast<Array*>(arrVal)) {
         for (size_t i = 1; i < args.size(); ++i) {
             if (args[i]) {
                 // 使用Array的addElement方法
-                arr->addElement(args[i]->getValue());
+                arr->addElement(args[i]);
             }
         }
         return arr;
@@ -25,10 +24,10 @@ Value* array_push(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* array_pop(vector<Variable*>& args) {
+Value* array_pop(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* arrVal = args[0]->getValue();
+    Value* arrVal = args[0];
     if (Array* arr = dynamic_cast<Array*>(arrVal)) {
         if (arr->size() > 0) {
             // 获取最后一个元素并移除
@@ -41,10 +40,10 @@ Value* array_pop(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* array_sort(vector<Variable*>& args) {
+Value* array_sort(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* arrVal = args[0]->getValue();
+    Value* arrVal = args[0];
     if (Array* arr = dynamic_cast<Array*>(arrVal)) {
         // 简单的排序实现
         // 这里可以添加实际的排序逻辑
@@ -54,10 +53,10 @@ Value* array_sort(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* array_length(vector<Variable*>& args) {
+Value* array_length(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Array* arr = dynamic_cast<Array*>(val)) {
         return new Integer(arr->size());
     }

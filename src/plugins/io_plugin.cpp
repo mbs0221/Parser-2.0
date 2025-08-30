@@ -31,13 +31,13 @@ bool isValidFileHandle(int handle) {
 
 // ==================== IO函数实现 ====================
 
-Value* builtin_open(vector<Variable*>& args) {
+Value* builtin_open(vector<Value*>& args) {
     if (args.size() < 1 || !args[0]) {
         return nullptr;
     }
     
     // 获取文件名
-    Value* fileNameVal = args[0]->getValue();
+    Value* fileNameVal = args[0];
     if (!fileNameVal) {
         return nullptr;
     }
@@ -52,7 +52,7 @@ Value* builtin_open(vector<Variable*>& args) {
     // 确定打开模式
     string mode = "r";  // 默认只读模式
     if (args.size() >= 2 && args[1]) {
-        Value* modeVal = args[1]->getValue();
+        Value* modeVal = args[1];
         if (String* modeStr = dynamic_cast<String*>(modeVal)) {
             mode = modeStr->getValue();
         }
@@ -85,13 +85,13 @@ Value* builtin_open(vector<Variable*>& args) {
     return new Integer(fileHandle);
 }
 
-Value* builtin_close(vector<Variable*>& args) {
+Value* builtin_close(vector<Value*>& args) {
     if (args.size() < 1 || !args[0]) {
         return nullptr;
     }
     
     // 获取文件句柄
-    Value* handleVal = args[0]->getValue();
+    Value* handleVal = args[0];
     if (!handleVal) {
         return nullptr;
     }
@@ -118,13 +118,13 @@ Value* builtin_close(vector<Variable*>& args) {
     return new Integer(0);  // 成功返回0
 }
 
-Value* builtin_read(vector<Variable*>& args) {
+Value* builtin_read(vector<Value*>& args) {
     if (args.size() < 3 || !args[0] || !args[1] || !args[2]) {
         return nullptr;
     }
     
     // 获取文件句柄
-    Value* handleVal = args[0]->getValue();
+    Value* handleVal = args[0];
     if (!handleVal) {
         return nullptr;
     }
@@ -147,7 +147,7 @@ Value* builtin_read(vector<Variable*>& args) {
     }
     
     // 获取缓冲区（可以是任何类型，我们将其转换为字符串）
-    Value* bufferVal = args[1]->getValue();
+    Value* bufferVal = args[1];
     if (!bufferVal) {
         return nullptr;
     }
@@ -163,7 +163,7 @@ Value* builtin_read(vector<Variable*>& args) {
     }
     
     // 获取读取大小
-    Value* sizeVal = args[2]->getValue();
+    Value* sizeVal = args[2];
     if (!sizeVal) {
         return nullptr;
     }
@@ -198,13 +198,13 @@ Value* builtin_read(vector<Variable*>& args) {
     return new Integer(bytesRead);
 }
 
-Value* builtin_write(vector<Variable*>& args) {
+Value* builtin_write(vector<Value*>& args) {
     if (args.size() < 2 || !args[0] || !args[1]) {
         return nullptr;
     }
     
     // 获取文件句柄
-    Value* handleVal = args[0]->getValue();
+    Value* handleVal = args[0];
     if (!handleVal) {
         return nullptr;
     }
@@ -227,18 +227,24 @@ Value* builtin_write(vector<Variable*>& args) {
     }
     
     // 获取要写入的内容
-    Value* contentVal = args[1]->getValue();
+    Value* contentVal = args[1];
     if (!contentVal) {
         return nullptr;
     }
     
     // 将内容转换为字符串并写入文件
-    string content = contentVal->str();
+    string content;
+    if (String* strVal = dynamic_cast<String*>(contentVal)) {
+        content = strVal->getValue();
+    } else {
+        // 如果不是字符串，尝试转换为字符串
+        content = contentVal->getTypeName();
+    }
     size_t bytesWritten = fputs(content.c_str(), file);
     
     // 如果指定了换行，则添加换行符
     if (args.size() >= 3 && args[2]) {
-        Value* newlineVal = args[2]->getValue();
+        Value* newlineVal = args[2];
         if (newlineVal) {
             // 检查是否为true或非零值
             bool addNewline = false;

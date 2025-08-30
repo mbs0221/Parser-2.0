@@ -1,5 +1,4 @@
 #include "interpreter/builtin_plugin.h"
-#include "lexer/value.h"
 #include "parser/function.h"
 
 #include <iostream>
@@ -9,20 +8,20 @@ using namespace std;
 
 // ==================== 类型转换函数 ====================
 
-Value* type_to_string(vector<Variable*>& args) {
+Value* type_to_string(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (val) {
-        return new String(val->str());
+        return new String(val->getTypeName());
     }
     return nullptr;
 }
 
-Value* type_to_int(vector<Variable*>& args) {
+Value* type_to_int(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Integer(intVal->getValue());
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -37,10 +36,10 @@ Value* type_to_int(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* type_to_double(vector<Variable*>& args) {
+Value* type_to_double(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Double(static_cast<double>(intVal->getValue()));
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -55,24 +54,24 @@ Value* type_to_double(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* type_cast(vector<Variable*>& args) {
+Value* type_cast(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
-    Value* val = args[0]->getValue();
-    Value* typeVal = args[1]->getValue();
+    Value* val = args[0];
+    Value* typeVal = args[1];
     
     if (!val || !typeVal) return nullptr;
     
     if (String* typeStr = dynamic_cast<String*>(typeVal)) {
         string type = typeStr->getValue();
         if (type == "int" || type == "integer") {
-            vector<Variable*> tempArgs = {args[0]};
+            vector<Value*> tempArgs = {args[0]};
             return type_to_int(tempArgs);
         } else if (type == "double" || type == "float") {
-            vector<Variable*> tempArgs = {args[0]};
+            vector<Value*> tempArgs = {args[0]};
             return type_to_double(tempArgs);
         } else if (type == "string") {
-            vector<Variable*> tempArgs = {args[0]};
+            vector<Value*> tempArgs = {args[0]};
             return type_to_string(tempArgs);
         }
     }

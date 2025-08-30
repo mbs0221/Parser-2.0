@@ -1,5 +1,4 @@
 #include "interpreter/builtin_plugin.h"
-#include "lexer/value.h"
 #include "parser/function.h"
 
 #include <iostream>
@@ -11,10 +10,10 @@ using namespace std;
 
 // ==================== 基础数学函数 ====================
 
-Value* math_abs(vector<Variable*>& args) {
+Value* math_abs(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Integer(abs(intVal->getValue()));
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -23,15 +22,15 @@ Value* math_abs(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* math_max(vector<Variable*>& args) {
+Value* math_max(vector<Value*>& args) {
     if (args.empty()) return nullptr;
     
-    Value* maxVal = args[0]->getValue();
+    Value* maxVal = args[0];
     if (!maxVal) return nullptr;
     
     for (size_t i = 1; i < args.size(); ++i) {
         if (!args[i]) continue;
-        Value* val = args[i]->getValue();
+        Value* val = args[i];
         if (!val) continue;
         
         if (Integer* int1 = dynamic_cast<Integer*>(maxVal)) {
@@ -60,15 +59,15 @@ Value* math_max(vector<Variable*>& args) {
     return maxVal;
 }
 
-Value* math_min(vector<Variable*>& args) {
+Value* math_min(vector<Value*>& args) {
     if (args.empty()) return nullptr;
     
-    Value* minVal = args[0]->getValue();
+    Value* minVal = args[0];
     if (!minVal) return nullptr;
     
     for (size_t i = 1; i < args.size(); ++i) {
         if (!args[i]) continue;
-        Value* val = args[i]->getValue();
+        Value* val = args[i];
         if (!val) continue;
         
         if (Integer* int1 = dynamic_cast<Integer*>(minVal)) {
@@ -97,11 +96,11 @@ Value* math_min(vector<Variable*>& args) {
     return minVal;
 }
 
-Value* math_pow(vector<Variable*>& args) {
+Value* math_pow(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
-    Value* base = args[0]->getValue();
-    Value* exponent = args[1]->getValue();
+    Value* base = args[0];
+    Value* exponent = args[1];
     
     if (!base || !exponent) return nullptr;
     
@@ -126,7 +125,7 @@ Value* math_pow(vector<Variable*>& args) {
     return new Double(pow(baseVal, expVal));
 }
 
-Value* math_random(vector<Variable*>& args) {
+Value* math_random(vector<Value*>& args) {
     static bool initialized = false;
     if (!initialized) {
         srand(time(nullptr));
@@ -136,7 +135,7 @@ Value* math_random(vector<Variable*>& args) {
     if (args.empty()) {
         return new Integer(rand());
     } else if (args.size() == 1) {
-        Value* val = args[0]->getValue();
+        Value* val = args[0];
         if (Integer* max = dynamic_cast<Integer*>(val)) {
             return new Integer(rand() % max->getValue());
         }
@@ -146,10 +145,10 @@ Value* math_random(vector<Variable*>& args) {
 
 // ==================== 高级数学函数 ====================
 
-Value* math_sin(vector<Variable*>& args) {
+Value* math_sin(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Double(sin(intVal->getValue()));
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -158,10 +157,10 @@ Value* math_sin(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* math_cos(vector<Variable*>& args) {
+Value* math_cos(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Double(cos(intVal->getValue()));
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -170,10 +169,10 @@ Value* math_cos(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* math_tan(vector<Variable*>& args) {
+Value* math_tan(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Double(tan(intVal->getValue()));
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -182,10 +181,10 @@ Value* math_tan(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* math_sqrt(vector<Variable*>& args) {
+Value* math_sqrt(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         if (intVal->getValue() < 0) return nullptr;
         return new Double(sqrt(intVal->getValue()));
@@ -196,10 +195,10 @@ Value* math_sqrt(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* math_log(vector<Variable*>& args) {
+Value* math_log(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         if (intVal->getValue() <= 0) return nullptr;
         return new Double(log(intVal->getValue()));
@@ -210,10 +209,10 @@ Value* math_log(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* math_floor(vector<Variable*>& args) {
+Value* math_floor(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Integer(intVal->getValue());
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -222,10 +221,10 @@ Value* math_floor(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* math_ceil(vector<Variable*>& args) {
+Value* math_ceil(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Integer(intVal->getValue());
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {

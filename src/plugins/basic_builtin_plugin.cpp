@@ -16,7 +16,7 @@ using namespace std;
 Value* builtin_print(vector<Value*>& args) {
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i]) {
-            cout << args[i]->str();  // 使用str()方法，不添加引号
+            cout << args[i]->toString();  // 使用toString()方法，不添加引号
             if (i < args.size() - 1) {
                 cout << " ";
             }
@@ -29,7 +29,7 @@ Value* builtin_print(vector<Value*>& args) {
 Value* builtin_println(vector<Value*>& args) {
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i]) {
-            cout << args[i]->str();  // 使用str()方法，不添加引号
+            cout << args[i]->toString();  // 使用toString()方法，不添加引号
             if (i < args.size() - 1) {
                 cout << " ";
             }
@@ -48,23 +48,23 @@ Value* builtin_count(vector<Value*>& args) {
             } else if (String* str = dynamic_cast<String*>(val)) {
                 return new Integer(str->length());
             } else if (Dict* dict = dynamic_cast<Dict*>(val)) {
-                return new Integer(dict->getEntryCount());
+                return new Integer(dict->size());
             }
         }
     }
     return nullptr;
 }
 
-Value* builtin_cin(vector<Variable*>& args) {
+Value* builtin_cin(vector<Value*>& args) {
     String* lastInputValue = nullptr;
     
     // 处理所有参数，为每个参数读取一个值
-    for (Variable* arg : args) {
+    for (Value* arg : args) {
         if (arg) {
             string input;
             cin >> input;
             String* inputValue = new String(input);
-            arg->setValue(inputValue);
+            arg = inputValue;
             lastInputValue = inputValue;
         }
     }
@@ -170,11 +170,11 @@ Value* builtin_min(vector<Value*>& args) {
     return minVal;
 }
 
-Value* builtin_pow(vector<Variable*>& args) {
+Value* builtin_pow(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
-    Value* base = args[0]->getValue();
-    Value* exponent = args[1]->getValue();
+    Value* base = args[0];
+    Value* exponent = args[1];
     
     if (!base || !exponent) return nullptr;
     
@@ -201,10 +201,10 @@ Value* builtin_pow(vector<Variable*>& args) {
 
 // ==================== 字符串函数实现 ====================
 
-Value* builtin_length(vector<Variable*>& args) {
+Value* builtin_length(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (String* str = dynamic_cast<String*>(val)) {
         return new Integer(str->length());
     } else if (Array* arr = dynamic_cast<Array*>(val)) {
@@ -213,16 +213,16 @@ Value* builtin_length(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* builtin_substring(vector<Variable*>& args) {
+Value* builtin_substring(vector<Value*>& args) {
     if (args.size() < 2 || args.size() > 3 || !args[0]) return nullptr;
     
-    Value* strVal = args[0]->getValue();
+    Value* strVal = args[0];
     if (String* str = dynamic_cast<String*>(strVal)) {
         string s = str->getValue();
         
         if (args.size() == 2) {
             // substring(str, start)
-            if (Integer* start = dynamic_cast<Integer*>(args[1]->getValue())) {
+            if (Integer* start = dynamic_cast<Integer*>(args[1])) {
                 int startPos = start->getValue();
                 if (startPos >= 0 && startPos < s.length()) {
                     return new String(s.substr(startPos));
@@ -230,8 +230,8 @@ Value* builtin_substring(vector<Variable*>& args) {
             }
         } else if (args.size() == 3) {
             // substring(str, start, length)
-            if (Integer* start = dynamic_cast<Integer*>(args[1]->getValue())) {
-                if (Integer* length = dynamic_cast<Integer*>(args[2]->getValue())) {
+            if (Integer* start = dynamic_cast<Integer*>(args[1])) {
+                if (Integer* length = dynamic_cast<Integer*>(args[2])) {
                     int startPos = start->getValue();
                     int len = length->getValue();
                     if (startPos >= 0 && len >= 0 && startPos + len <= s.length()) {
@@ -244,10 +244,10 @@ Value* builtin_substring(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* builtin_upper(vector<Variable*>& args) {
+Value* builtin_upper(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (String* str = dynamic_cast<String*>(val)) {
         string s = str->getValue();
         transform(s.begin(), s.end(), s.begin(), ::toupper);
@@ -256,10 +256,10 @@ Value* builtin_upper(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* builtin_lower(vector<Variable*>& args) {
+Value* builtin_lower(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (String* str = dynamic_cast<String*>(val)) {
         string s = str->getValue();
         transform(s.begin(), s.end(), s.begin(), ::tolower);
@@ -270,15 +270,15 @@ Value* builtin_lower(vector<Variable*>& args) {
 
 // ==================== 数组函数实现 ====================
 
-Value* builtin_push(vector<Variable*>& args) {
+Value* builtin_push(vector<Value*>& args) {
     if (args.size() < 2 || !args[0]) return nullptr;
     
-    Value* arrVal = args[0]->getValue();
+    Value* arrVal = args[0];
     if (Array* arr = dynamic_cast<Array*>(arrVal)) {
         for (size_t i = 1; i < args.size(); ++i) {
             if (args[i]) {
                 // 使用Array的addElement方法
-                arr->addElement(args[i]->getValue());
+                arr->addElement(args[i]);
             }
         }
         return arr;
@@ -286,10 +286,10 @@ Value* builtin_push(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* builtin_pop(vector<Variable*>& args) {
+Value* builtin_pop(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* arrVal = args[0]->getValue();
+    Value* arrVal = args[0];
     if (Array* arr = dynamic_cast<Array*>(arrVal)) {
         if (arr->size() > 0) {
             // 获取最后一个元素并移除
@@ -302,10 +302,10 @@ Value* builtin_pop(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* builtin_sort(vector<Variable*>& args) {
+Value* builtin_sort(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* arrVal = args[0]->getValue();
+    Value* arrVal = args[0];
     if (Array* arr = dynamic_cast<Array*>(arrVal)) {
         // 简单的排序实现
         // 这里可以添加实际的排序逻辑
@@ -317,20 +317,20 @@ Value* builtin_sort(vector<Variable*>& args) {
 
 // ==================== 类型转换函数实现 ====================
 
-Value* builtin_to_string(vector<Variable*>& args) {
+Value* builtin_to_string(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (val) {
-        return new String(val->str());
+        return new String(val->toString());
     }
     return nullptr;
 }
 
-Value* builtin_to_int(vector<Variable*>& args) {
+Value* builtin_to_int(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Integer(intVal->getValue());
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -345,10 +345,10 @@ Value* builtin_to_int(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* builtin_to_double(vector<Variable*>& args) {
+Value* builtin_to_double(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
-    Value* val = args[0]->getValue();
+    Value* val = args[0];
     if (Integer* intVal = dynamic_cast<Integer*>(val)) {
         return new Double(static_cast<double>(intVal->getValue()));
     } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
@@ -363,24 +363,24 @@ Value* builtin_to_double(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* builtin_cast(vector<Variable*>& args) {
+Value* builtin_cast(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
-    Value* val = args[0]->getValue();
-    Value* typeVal = args[1]->getValue();
+    Value* val = args[0];
+    Value* typeVal = args[1];
     
     if (!val || !typeVal) return nullptr;
     
     if (String* typeStr = dynamic_cast<String*>(typeVal)) {
         string type = typeStr->getValue();
         if (type == "int" || type == "integer") {
-            vector<Variable*> tempArgs = {args[0]};
+            vector<Value*> tempArgs = {args[0]};
             return builtin_to_int(tempArgs);
         } else if (type == "double" || type == "float") {
-            vector<Variable*> tempArgs = {args[0]};
+            vector<Value*> tempArgs = {args[0]};
             return builtin_to_double(tempArgs);
         } else if (type == "string") {
-            vector<Variable*> tempArgs = {args[0]};
+            vector<Value*> tempArgs = {args[0]};
             return builtin_to_string(tempArgs);
         }
     }
@@ -389,7 +389,7 @@ Value* builtin_cast(vector<Variable*>& args) {
 
 // ==================== 系统函数实现 ====================
 
-Value* builtin_random(vector<Variable*>& args) {
+Value* builtin_random(vector<Value*>& args) {
     static bool initialized = false;
     if (!initialized) {
         srand(time(nullptr));
@@ -399,7 +399,7 @@ Value* builtin_random(vector<Variable*>& args) {
     if (args.empty()) {
         return new Integer(rand());
     } else if (args.size() == 1) {
-        Value* val = args[0]->getValue();
+        Value* val = args[0];
         if (Integer* max = dynamic_cast<Integer*>(val)) {
             return new Integer(rand() % max->getValue());
         }
@@ -407,10 +407,10 @@ Value* builtin_random(vector<Variable*>& args) {
     return nullptr;
 }
 
-Value* builtin_exit(vector<Variable*>& args) {
+Value* builtin_exit(vector<Value*>& args) {
     int exitCode = 0;
     if (args.size() == 1 && args[0]) {
-        Value* val = args[0]->getValue();
+        Value* val = args[0];
         if (Integer* code = dynamic_cast<Integer*>(val)) {
             exitCode = code->getValue();
         }
