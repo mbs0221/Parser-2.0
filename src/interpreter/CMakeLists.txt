@@ -1,34 +1,32 @@
 # Interpreter库的CMakeLists.txt
 
-# 设置源文件
-set(INTERPRETER_SOURCES
-    ${CMAKE_SOURCE_DIR}/src/interpreter/interpreter.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/statement.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/expression.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/calculate.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/logger.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/type_registry.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/builtin_types.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/type_converter.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/value.cpp
+# 子目录用于组织文件，不需要单独的CMakeLists.txt
 
-    ${CMAKE_SOURCE_DIR}/src/interpreter/scope.cpp
-    ${CMAKE_SOURCE_DIR}/src/interpreter/plugin_manager.cpp
-)
-
-# 设置头文件
-set(INTERPRETER_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/interpreter/interpreter.h
-    ${CMAKE_SOURCE_DIR}/include/interpreter/logger.h
-    ${CMAKE_SOURCE_DIR}/include/interpreter/type_registry.h
-    ${CMAKE_SOURCE_DIR}/include/interpreter/builtin_type.h
-    ${CMAKE_SOURCE_DIR}/include/interpreter/type_converter.h
-    ${CMAKE_SOURCE_DIR}/include/interpreter/logger.h
-
-    ${CMAKE_SOURCE_DIR}/include/interpreter/builtin_plugin.h
-    ${CMAKE_SOURCE_DIR}/include/interpreter/control_flow.h
-    ${CMAKE_SOURCE_DIR}/include/interpreter/scope.h
-    ${CMAKE_SOURCE_DIR}/include/interpreter/value.h
+# 创建interpreter静态库
+add_library(interpreter STATIC
+    # 核心执行引擎
+    core/interpreter.cpp
+    core/statement.cpp
+    core/expression.cpp
+    
+    # 类型系统
+    types/type_registry.cpp
+    types/builtin_types.cpp
+    types/type_converter.cpp
+    
+    # 值系统
+    values/value.cpp
+    values/calculate.cpp
+    
+    # 作用域管理
+    scope/scope.cpp
+    scope/object_factory.cpp
+    
+    # 插件系统
+    plugins/plugin_manager.cpp
+    
+    # 工具和日志
+    utils/logger.cpp
 )
 
 # 创建interpreter静态库
