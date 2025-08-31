@@ -11,12 +11,160 @@
 
 using namespace std;
 
+// ==================== 辅助函数 ====================
+
+// 通过类型系统将值转换为字符串
+string convertToString(Value* value) {
+    if (!value) return "null";
+    
+    // 通过类型系统调用toString方法
+    if (value->getValueType()) {
+        vector<Value*> toStringArgs;
+        Value* toStringResult = value->getValueType()->callMethod(value, "toString", toStringArgs);
+        if (toStringResult) {
+            string result;
+            if (String* strResult = dynamic_cast<String*>(toStringResult)) {
+                result = strResult->getValue();
+            } else {
+                result = toStringResult->toString();
+            }
+            delete toStringResult;
+            return result;
+        }
+    }
+    
+    // 如果类型系统没有toString方法，使用默认的toString
+    return value->toString();
+}
+
+// 通过类型系统将值转换为指定类型
+Value* convertToType(Value* value, const string& targetTypeName) {
+    if (!value) return nullptr;
+    
+    // 通过类型系统调用convertTo方法
+    if (value->getValueType()) {
+        vector<Value*> convertArgs;
+        // 创建目标类型名称的字符串值作为参数
+        convertArgs.push_back(new String(targetTypeName));
+        Value* convertResult = value->getValueType()->callMethod(value, "convertTo", convertArgs);
+        if (convertResult) {
+            return convertResult;
+        }
+    }
+    
+    // 如果类型系统没有convertTo方法，尝试直接转换
+    TypeRegistry* registry = TypeRegistry::getInstance();
+    if (registry) {
+        ObjectType* targetType = registry->getType(targetTypeName);
+        if (targetType) {
+            return targetType->convertTo(targetType, value);
+        }
+    }
+    
+    return nullptr;
+}
+
+// 通过类型系统调用方法
+Value* callMethodOnValue(Value* value, const string& methodName, vector<Value*>& args) {
+    if (!value || !value->getValueType()) return nullptr;
+    
+    // 通过类型系统调用方法
+    return value->getValueType()->callMethod(value, methodName, args);
+}
+
 // ==================== 基础函数实现 ====================
+
+// 通用的push函数 - 通过类型系统调用
+Value* builtin_push(vector<Value*>& args) {
+    if (args.size() >= 2) {
+        Value* target = args[0];
+        if (target && target->getValueType()) {
+            vector<Value*> pushArgs(args.begin() + 1, args.end());
+            return callMethodOnValue(target, "push", pushArgs);
+        }
+    }
+    return nullptr;
+}
+
+// 通用的pop函数 - 通过类型系统调用
+Value* builtin_pop(vector<Value*>& args) {
+    if (args.size() == 1) {
+        Value* target = args[0];
+        if (target && target->getValueType()) {
+            vector<Value*> popArgs;
+            return callMethodOnValue(target, "pop", popArgs);
+        }
+    }
+    return nullptr;
+}
+
+// 通用的to_upper函数 - 通过类型系统调用
+Value* builtin_to_upper(vector<Value*>& args) {
+    if (args.size() == 1) {
+        Value* target = args[0];
+        if (target && target->getValueType()) {
+            vector<Value*> upperArgs;
+            Value* result = callMethodOnValue(target, "to_upper", upperArgs);
+            if (!result) {
+                // 尝试其他可能的方法名
+                result = callMethodOnValue(target, "toUpper", upperArgs);
+            }
+            return result;
+        }
+    }
+    return nullptr;
+}
+
+// 通用的to_lower函数 - 通过类型系统调用
+Value* builtin_to_lower(vector<Value*>& args) {
+    if (args.size() == 1) {
+        Value* target = args[0];
+        if (target && target->getValueType()) {
+            vector<Value*> lowerArgs;
+            Value* result = callMethodOnValue(target, "to_lower", lowerArgs);
+            if (!result) {
+                // 尝试其他可能的方法名
+                result = callMethodOnValue(target, "toLower", lowerArgs);
+            }
+            return result;
+        }
+    }
+    return nullptr;
+}
+
+// 通用的substring函数 - 通过类型系统调用
+Value* builtin_substring(vector<Value*>& args) {
+    if (args.size() >= 3) {
+        Value* target = args[0];
+        if (target && target->getValueType()) {
+            vector<Value*> substrArgs(args.begin() + 1, args.end());
+            return callMethodOnValue(target, "substring", substrArgs);
+        }
+    }
+    return nullptr;
+}
+
+// 通用的length函数 - 通过类型系统调用
+Value* builtin_length(vector<Value*>& args) {
+    if (args.size() == 1) {
+        Value* target = args[0];
+        if (target && target->getValueType()) {
+            vector<Value*> lengthArgs;
+            Value* result = callMethodOnValue(target, "length", lengthArgs);
+            if (!result) {
+                // 尝试其他可能的方法名
+                result = callMethodOnValue(target, "size", lengthArgs);
+            }
+            return result;
+        }
+    }
+    return nullptr;
+}
 
 Value* builtin_print(vector<Value*>& args) {
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i]) {
-            cout << args[i]->toString();  // 使用toString()方法，不添加引号
+            cout << convertToString(args[i]);
             if (i < args.size() - 1) {
                 cout << " ";
             }
@@ -29,7 +177,7 @@ Value* builtin_print(vector<Value*>& args) {
 Value* builtin_println(vector<Value*>& args) {
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i]) {
-            cout << args[i]->toString();  // 使用toString()方法，不添加引号
+            cout << convertToString(args[i]);
             if (i < args.size() - 1) {
                 cout << " ";
             }
@@ -42,14 +190,15 @@ Value* builtin_println(vector<Value*>& args) {
 Value* builtin_count(vector<Value*>& args) {
     if (args.size() == 1) {
         Value* val = args[0];
-        if (val) {
-            if (Array* array = dynamic_cast<Array*>(val)) {
-                return new Integer(array->size());
-            } else if (String* str = dynamic_cast<String*>(val)) {
-                return new Integer(str->length());
-            } else if (Dict* dict = dynamic_cast<Dict*>(val)) {
-                return new Integer(dict->size());
+        if (val && val->getValueType()) {
+            // 通过类型系统调用相应的方法
+            vector<Value*> countArgs;
+            Value* result = val->getValueType()->callMethod(val, "length", countArgs);
+            if (!result) {
+                // 尝试其他可能的方法名
+                result = val->getValueType()->callMethod(val, "size", countArgs);
             }
+            return result;
         }
     }
     return nullptr;
@@ -59,13 +208,13 @@ Value* builtin_cin(vector<Value*>& args) {
     String* lastInputValue = nullptr;
     
     // 处理所有参数，为每个参数读取一个值
-    for (Value* arg : args) {
-        if (arg) {
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i]) {
             string input;
             cin >> input;
-            String* inputValue = new String(input);
-            arg = inputValue;
-            lastInputValue = inputValue;
+            // 直接修改args向量中的指针
+            args[i] = new String(input);
+            lastInputValue = dynamic_cast<String*>(args[i]);
         }
     }
     
@@ -244,63 +393,9 @@ Value* builtin_substring(vector<Value*>& args) {
     return nullptr;
 }
 
-Value* builtin_upper(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    if (String* str = dynamic_cast<String*>(val)) {
-        string s = str->getValue();
-        transform(s.begin(), s.end(), s.begin(), ::toupper);
-        return new String(s);
-    }
-    return nullptr;
-}
 
-Value* builtin_lower(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    if (String* str = dynamic_cast<String*>(val)) {
-        string s = str->getValue();
-        transform(s.begin(), s.end(), s.begin(), ::tolower);
-        return new String(s);
-    }
-    return nullptr;
-}
 
 // ==================== 数组函数实现 ====================
-
-Value* builtin_push(vector<Value*>& args) {
-    if (args.size() < 2 || !args[0]) return nullptr;
-    
-    Value* arrVal = args[0];
-    if (Array* arr = dynamic_cast<Array*>(arrVal)) {
-        for (size_t i = 1; i < args.size(); ++i) {
-            if (args[i]) {
-                // 使用Array的addElement方法
-                arr->addElement(args[i]);
-            }
-        }
-        return arr;
-    }
-    return nullptr;
-}
-
-Value* builtin_pop(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* arrVal = args[0];
-    if (Array* arr = dynamic_cast<Array*>(arrVal)) {
-        if (arr->size() > 0) {
-            // 获取最后一个元素并移除
-            Value* last = arr->getElement(arr->size() - 1);
-            // 这里需要实现移除最后一个元素的逻辑
-            // 暂时返回最后一个元素
-            return last;
-        }
-    }
-    return nullptr;
-}
 
 Value* builtin_sort(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
@@ -426,8 +521,8 @@ public:
         return PluginInfo{
             "core",
             "1.0.0",
-            "核心基础函数插件，包含print、println、count、cin、exit等基础功能",
-            {"print", "println", "count", "cin", "exit"}
+            "核心基础函数插件，包含print、println、count、cin、exit等基础功能，以及通过类型系统调用的通用方法",
+            {"print", "println", "count", "cin", "exit", "push", "pop", "to_upper", "to_lower", "substring", "length"}
         };
     }
     
@@ -442,7 +537,13 @@ public:
             {"println", builtin_println},
             {"count", builtin_count},
             {"cin", builtin_cin},
-            {"exit", builtin_exit}
+            {"exit", builtin_exit},
+            {"push", builtin_push},
+            {"pop", builtin_pop},
+            {"to_upper", builtin_to_upper},
+            {"to_lower", builtin_to_lower},
+            {"substring", builtin_substring},
+            {"length", builtin_length}
         };
     }
 };

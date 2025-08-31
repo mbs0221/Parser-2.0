@@ -1,4 +1,6 @@
 #include "interpreter/builtin_plugin.h"
+#include "interpreter/value.h"
+#include "interpreter/type_registry.h"
 #include "parser/function.h"
 
 #include <iostream>
@@ -6,52 +8,42 @@
 
 using namespace std;
 
-// ==================== 类型转换函数 ====================
+// ==================== 类型转换函数 - 通过类型系统调用方法 ====================
 
 Value* type_to_string(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
     Value* val = args[0];
-    if (val) {
-        return new String(val->getTypeName());
-    }
-    return nullptr;
+    ObjectType* type = val->getValueType();
+    if (!type) return nullptr;
+    
+    // 通过类型系统调用to_string方法
+    vector<Value*> methodArgs;
+    return type->callMethod(val, "to_string", methodArgs);
 }
 
 Value* type_to_int(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
     Value* val = args[0];
-    if (Integer* intVal = dynamic_cast<Integer*>(val)) {
-        return new Integer(intVal->getValue());
-    } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
-        return new Integer(static_cast<int>(doubleVal->getValue()));
-    } else if (String* strVal = dynamic_cast<String*>(val)) {
-        try {
-            return new Integer(stoi(strVal->getValue()));
-        } catch (...) {
-            return nullptr;
-        }
-    }
-    return nullptr;
+    ObjectType* type = val->getValueType();
+    if (!type) return nullptr;
+    
+    // 通过类型系统调用to_int方法
+    vector<Value*> methodArgs;
+    return type->callMethod(val, "to_int", methodArgs);
 }
 
 Value* type_to_double(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
     Value* val = args[0];
-    if (Integer* intVal = dynamic_cast<Integer*>(val)) {
-        return new Double(static_cast<double>(intVal->getValue()));
-    } else if (Double* doubleVal = dynamic_cast<Double*>(val)) {
-        return new Double(doubleVal->getValue());
-    } else if (String* strVal = dynamic_cast<String*>(val)) {
-        try {
-            return new Double(stod(strVal->getValue()));
-        } catch (...) {
-            return nullptr;
-        }
-    }
-    return nullptr;
+    ObjectType* type = val->getValueType();
+    if (!type) return nullptr;
+    
+    // 通过类型系统调用to_double方法
+    vector<Value*> methodArgs;
+    return type->callMethod(val, "to_double", methodArgs);
 }
 
 Value* type_cast(vector<Value*>& args) {
@@ -62,20 +54,12 @@ Value* type_cast(vector<Value*>& args) {
     
     if (!val || !typeVal) return nullptr;
     
-    if (String* typeStr = dynamic_cast<String*>(typeVal)) {
-        string type = typeStr->getValue();
-        if (type == "int" || type == "integer") {
-            vector<Value*> tempArgs = {args[0]};
-            return type_to_int(tempArgs);
-        } else if (type == "double" || type == "float") {
-            vector<Value*> tempArgs = {args[0]};
-            return type_to_double(tempArgs);
-        } else if (type == "string") {
-            vector<Value*> tempArgs = {args[0]};
-            return type_to_string(tempArgs);
-        }
-    }
-    return nullptr;
+    ObjectType* sourceType = val->getValueType();
+    if (!sourceType) return nullptr;
+    
+    // 通过类型系统调用convertTo方法
+    vector<Value*> methodArgs = {typeVal};
+    return sourceType->callMethod(val, "convertTo", methodArgs);
 }
 
 // 类型转换插件类

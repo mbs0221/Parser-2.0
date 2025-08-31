@@ -68,7 +68,7 @@ ObjectType* TypeConverter::convertASTTypeToRuntimeType(lexer::Type* astType) {
 }
 
 // 转换结构体定义
-StructType* TypeConverter::convertStructDefinition(StructDefinition* structDef) {
+StructType* TypeConverter::convertStructDefinition(StructDefinition* structDef, const vector<pair<string, Value*>>& memberInitialValues) {
     if (!structDef) {
         LOG_ERROR("StructDefinition is null");
         return nullptr;
@@ -131,6 +131,66 @@ StructType* TypeConverter::convertStructDefinition(StructDefinition* structDef) 
     structType->addMethod(structDef->name, constructor, VIS_PUBLIC);
     LOG_DEBUG("Added constructor '" + structDef->name + "' to struct '" + structDef->name + "'");
     
+    // 添加setMember方法，用于成员赋值
+    auto setMemberMethod = [](Value* instance, vector<Value*>& args) -> Value* {
+        if (args.size() >= 2) {
+            if (String* memberName = dynamic_cast<String*>(args[0])) {
+                if (Dict* dictInstance = dynamic_cast<Dict*>(instance)) {
+                    dictInstance->setEntry(memberName->getValue(), args[1]);
+                    return args[1];  // 返回设置的值
+                }
+            }
+        }
+        return nullptr;
+    };
+    structType->addMethod("setMember", setMemberMethod, VIS_PUBLIC);
+    LOG_DEBUG("Added setMember method to struct '" + structDef->name + "'");
+    
+    // 添加new方法，用于创建新实例，实质是调用Object的构造函数
+    auto newMethod = [this, structDef](Value* instance, vector<Value*>& args) -> Value* {
+        LOG_DEBUG("Executing struct new method for: " + structDef->name);
+        
+        // 创建新实例，调用Object的构造函数
+        Dict* newInstance = new Dict();
+        
+        // 处理参数初始化
+        if (!args.empty() && dynamic_cast<Dict*>(args[0])) {
+            // 字典初始化语法：Person {name: "Alice", age: 25}
+            Dict* memberDict = dynamic_cast<Dict*>(args[0]);
+            initializeStructFromDict(newInstance, structDef, memberDict);
+        } else {
+            // 参数初始化语法：Person("Alice", 25)
+            initializeStructFromArgs(newInstance, structDef, args);
+        }
+        
+        return newInstance;
+    };
+    structType->addMethod("new", newMethod, VIS_PUBLIC);
+    LOG_DEBUG("Added new method to struct '" + structDef->name + "'");
+    
+    // 添加assign方法，用于深拷贝赋值，本质是调用Object的赋值运算
+    auto assignMethod = [](Value* instance, vector<Value*>& args) -> Value* {
+        if (args.size() >= 1 && args[0]) {
+            // 通过类型系统调用assign方法，不强制转换成Dict类型
+            if (instance && instance->getValueType()) {
+                return instance->getValueType()->callMethod(instance, "assign", args);
+            }
+        }
+        return nullptr;
+    };
+    structType->addMethod("assign", assignMethod, VIS_PUBLIC);
+    LOG_DEBUG("Added assign method to struct '" + structDef->name + "'");
+    
+    // 添加toString方法，用于字符串表示，本质是调用Value类型的toString方法
+    auto toStringMethod = [](Value* instance, vector<Value*>& args) -> Value* {
+        if (instance) {
+            return new String(instance->toString());
+        }
+        return nullptr;
+    };
+    structType->addMethod("toString", toStringMethod, VIS_PUBLIC);
+    LOG_DEBUG("Added toString method to struct '" + structDef->name + "'");
+    
     // 注意：StructDefinition没有methods字段，结构体的方法通过其他方式处理
     LOG_INFO("Successfully converted struct '" + structDef->name + "' with " + 
              to_string(structDef->members.size()) + " members");
@@ -139,7 +199,7 @@ StructType* TypeConverter::convertStructDefinition(StructDefinition* structDef) 
 }
 
 // 转换类定义
-ClassType* TypeConverter::convertClassDefinition(ClassDefinition* classDef) {
+ClassType* TypeConverter::convertClassDefinition(ClassDefinition* classDef, const vector<pair<string, Value*>>& memberInitialValues) {
     if (!classDef) {
         LOG_ERROR("ClassDefinition is null");
         return nullptr;
@@ -264,6 +324,70 @@ ClassType* TypeConverter::convertClassDefinition(ClassDefinition* classDef) {
                  "' with visibility " + method->visibility);
     }
     
+    // 添加setMember方法，用于成员赋值
+    auto setMemberMethod = [](Value* instance, vector<Value*>& args) -> Value* {
+        if (args.size() >= 2) {
+            if (String* memberName = dynamic_cast<String*>(args[0])) {
+                if (Dict* dictInstance = dynamic_cast<Dict*>(instance)) {
+                    dictInstance->setEntry(memberName->getValue(), args[1]);
+                    return args[1];  // 返回设置的值
+                }
+            }
+        }
+        return nullptr;
+    };
+    classType->addMethod("setMember", setMemberMethod, VIS_PUBLIC);
+    LOG_DEBUG("Added setMember method to class '" + classDef->name + "'");
+    
+    // 添加new方法，用于创建新实例，实质是调用Object的构造函数
+    auto newMethod = [this, classDef](Value* instance, vector<Value*>& args) -> Value* {
+        LOG_DEBUG("Executing class new method for: " + classDef->name);
+        
+        // 创建新实例，调用Object的构造函数
+        Dict* newInstance = new Dict();
+        
+        // 处理参数初始化
+        if (!args.empty() && dynamic_cast<Dict*>(args[0])) {
+            // 字典初始化语法：Student {name: "Bob", grade: 10}
+            Dict* memberDict = dynamic_cast<Dict*>(args[0]);
+            initializeClassFromDict(newInstance, classDef, memberDict);
+        } else {
+            // 参数初始化语法：Student("Bob", 10)
+            initializeClassFromArgs(newInstance, classDef, args);
+        }
+        
+        return newInstance;
+    };
+    classType->addMethod("new", newMethod, VIS_PUBLIC);
+    LOG_DEBUG("Added new method to class '" + classDef->name + "'");
+    
+    // 添加assign方法，用于深拷贝赋值，本质是Object类型的赋值运算
+    auto assignMethod = [](Value* instance, vector<Value*>& args) -> Value* {
+        if (args.size() >= 1 && args[0]) {
+            // 将Value转换为Object类型，然后完成Object类型的赋值
+            if (Dict* currentInstance = dynamic_cast<Dict*>(instance)) {
+                if (Dict* otherInstance = dynamic_cast<Dict*>(args[0])) {
+                    // 调用Object类型的赋值运算符重载，进行深拷贝
+                    *currentInstance = *otherInstance;
+                    return currentInstance;
+                }
+            }
+        }
+        return nullptr;
+    };
+    classType->addMethod("assign", assignMethod, VIS_PUBLIC);
+    LOG_DEBUG("Added assign method to class '" + classDef->name + "'");
+    
+    // 添加toString方法，用于字符串表示，本质是调用Value类型的toString方法
+    auto toStringMethod = [](Value* instance, vector<Value*>& args) -> Value* {
+        if (instance) {
+            return new String(instance->toString());
+        }
+        return nullptr;
+    };
+    classType->addMethod("toString", toStringMethod, VIS_PUBLIC);
+    LOG_DEBUG("Added toString method to class '" + classDef->name + "'");
+    
     LOG_INFO("Successfully converted class '" + classDef->name + "' with " + 
              to_string(classDef->members.size()) + " members and " + 
              to_string(classDef->methods.size()) + " methods");
@@ -379,17 +503,68 @@ void TypeConverter::initializeClassFromArgs(Dict* instance, ClassDefinition* cla
 }
 
 Value* TypeConverter::createMemberDefaultValue(const StructMember& member) {
-    if (member.defaultValue && getInterpreter()) {
-        // 如果有默认值表达式，求值它
-        return getInterpreter()->visit(member.defaultValue);
-    } else {
-        // 否则使用类型的默认值
-        ObjectType* memberType = convertASTTypeToRuntimeType(member.type);
-        if (memberType) {
-            return ObjectFactory::createDefaultValueStatic(memberType);
-        } else {
-            return new Null();
+    // 当有初始值的时候，直接返回初始值
+    if (member.defaultValue) {
+        // 现在defaultValue是基本类型的ConstantExpression，需要根据类型获取值
+        if (member.type) {
+            switch (member.type->Tag) {
+                case NUM:
+                    if (ConstantExpression<int>* intExpr = dynamic_cast<ConstantExpression<int>*>(member.defaultValue)) {
+                        return new Integer(intExpr->getValue());
+                    }
+                    break;
+                case REAL:
+                case DOUBLE:
+                    if (ConstantExpression<double>* doubleExpr = dynamic_cast<ConstantExpression<double>*>(member.defaultValue)) {
+                        return new Double(doubleExpr->getValue());
+                    }
+                    break;
+                case CHAR:
+                    if (ConstantExpression<char>* charExpr = dynamic_cast<ConstantExpression<char>*>(member.defaultValue)) {
+                        return new Char(charExpr->getValue());
+                    }
+                    break;
+                case BOOL:
+                    if (ConstantExpression<bool>* boolExpr = dynamic_cast<ConstantExpression<bool>*>(member.defaultValue)) {
+                        return new Bool(boolExpr->getValue());
+                    }
+                    break;
+                case STR:
+                    if (ConstantExpression<string>* strExpr = dynamic_cast<ConstantExpression<string>*>(member.defaultValue)) {
+                        return new String(strExpr->getValue());
+                    }
+                    break;
+                case ID:
+                    // 用户定义的类型（结构体、类、数组、字典等）
+                    if (member.type && member.type->word == "array") {
+                        if (ConstantExpression<Array*>* arrayExpr = dynamic_cast<ConstantExpression<Array*>*>(member.defaultValue)) {
+                            return arrayExpr->getValue();
+                        }
+                    } else if (member.type && member.type->word == "dict") {
+                        if (ConstantExpression<Dict*>* dictExpr = dynamic_cast<ConstantExpression<Dict*>*>(member.defaultValue)) {
+                            return dictExpr->getValue();
+                        }
+                    } else {
+                        // 其他用户定义类型
+                        if (ConstantExpression<Dict*>* dictExpr = dynamic_cast<ConstantExpression<Dict*>*>(member.defaultValue)) {
+                            return dictExpr->getValue();
+                        } else if (ConstantExpression<Array*>* arrayExpr = dynamic_cast<ConstantExpression<Array*>*>(member.defaultValue)) {
+                            return arrayExpr->getValue();
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
+    }
+    
+    // 否则使用类型系统创建默认值
+    ObjectType* memberType = convertASTTypeToRuntimeType(member.type);
+    if (memberType) {
+        return ObjectFactory::createDefaultValueStatic(memberType);
+    } else {
+        return new Null();
     }
 }
 

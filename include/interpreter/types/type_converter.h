@@ -36,15 +36,13 @@ public:
     Interpreter* getInterpreter() const { return interpreter; }
     
     // 类型转换接口（线程安全）
-    StructType* convertStructDefinition(StructDefinition* structDef);
-    ClassType* convertClassDefinition(ClassDefinition* classDef);
+    StructType* convertStructDefinition(StructDefinition* structDef, const vector<pair<string, Value*>>& memberInitialValues);
+    ClassType* convertClassDefinition(ClassDefinition* classDef, const vector<pair<string, Value*>>& memberInitialValues);
     
     // 辅助方法
     void initializeStructFromDict(Dict* instance, StructDefinition* structDef, Dict* memberDict);
-    void initializeStructFromArgs(Dict* instance, StructDefinition* structDef, const vector<Value*>& args);
     void initializeClassFromDict(Dict* instance, ClassDefinition* classDef, Dict* memberDict);
     void initializeClassFromArgs(Dict* instance, ClassDefinition* classDef, const vector<Value*>& args);
-    Value* createMemberDefaultValue(const StructMember& member);
     
     // 析构函数
     ~TypeConverter();

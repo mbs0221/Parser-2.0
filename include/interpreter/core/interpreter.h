@@ -61,6 +61,8 @@ public:
     Value* visit(UnaryExpression* expr) override;
     Value* visit(BinaryExpression* expr) override;
     Value* visit(AssignExpression* expr) override;
+    Value* visit(MemberAssignExpression* expr) override;
+    Value* visit(IncrementDecrementExpression* expr) override;
     // CastExpression的访问方法
     Value* visit(CastExpression* expr) override;
     Value* visit(AccessExpression* expr) override;
@@ -118,10 +120,8 @@ public:
     // 类型转换器访问方法
     TypeConverter* getTypeConverter() const { return typeConverter; }
     
-    // 辅助方法
-    Expression* createExpressionFromValueImpl(Value* value);
-    template<typename T>
-    Expression* createExpressionFromValue(Value* value);
+    // 辅助方法：计算类型成员的初始值（通用方法，用于结构体和类）
+    vector<pair<string, Value*>> calculateTypeMemberInitialValues(const vector<StructMember>& members);
     
     // 作用域管理辅助函数 - 处理有返回值的函数
     template<typename Func>
@@ -156,26 +156,14 @@ private:
     string extractPluginName(const string& filePath);
     string join(const vector<string>& vec, const string& delimiter);
 
-    // 类型转换辅助方法
-    template<typename T>
-    Value* calculate_unary_casted(Value* value, int opTag);
-    Value* calculate_unary_compatible(Value* value, int opTag);
+    // 通用计算方法 - 通过类型系统调用运算符方法
+    Value* calculate_binary(Value* left, Value* right, int op);
+    Value* calculate_unary(Value* operand, int op);
     
-    // 一元操作的类型转换辅助方法
-    template<typename T>
-    Value* calculate_binary_casted(Value* left, Value* right, int opTag);
-    Value* calculate_binary_compatible(Value* left, Value* right, int opTag);
-    
-    // 赋值操作的类型转换辅助方法
-    template<typename T>
-    Value* calculate_assign_casted(Value* left, Value* right, int opTag);
-    Value* calculate_assign_compatible(Value* left, Value* right, int opTag);
-    
-    // 泛型计算方法 - 返回Value*类型
-    template<typename T>
-    Value* calculate(Value* left, Value* right, int op);
-    template<typename T>
-    Value* calculate(Value* value, int op);
+    // 赋值辅助方法
+    Value* handleVariableAssignment(VariableExpression* varExpr, Value* rightValue);
+    Value* handleMemberAssignment(AccessExpression* accessExpr, Value* rightValue);
+    Value* handleGeneralAssignment(Expression* leftExpr, Value* rightValue);
     
     // 错误处理
     void reportError(const string& message);

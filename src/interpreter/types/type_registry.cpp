@@ -46,10 +46,8 @@ bool ObjectType::implements(ObjectType* interface) const {
 
 // ==================== 类型注册表实现 ====================
 
-// 静态成员初始化
-TypeRegistry* TypeRegistry::instance = nullptr;
-
 void TypeRegistry::registerBuiltinType(const string& name, ObjectType* type) {
+    TypeRegistry* instance = getInstance();
     if (instance) {
         instance->types[name] = type;
     }

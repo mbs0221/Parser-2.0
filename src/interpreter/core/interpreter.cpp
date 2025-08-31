@@ -69,9 +69,10 @@ Interpreter::Interpreter(bool loadPlugins) {
 
 // 解释器析构函数
 Interpreter::~Interpreter() {
+    // 不删除objectFactory，让它自动析构
     // 清理类型转换器
     if (typeConverter) {
-        delete typeConverter;
+        // delete typeConverter;
         typeConverter = nullptr;
     }
     
@@ -96,11 +97,17 @@ void Interpreter::visit(FunctionPrototype* funcProto) {
 void Interpreter::visit(StructDefinition* structDef) {
     if (!structDef) return;
     
-    // 使用TypeConverter注册结构体定义
-    StructType* structType = typeConverter->convertStructDefinition(structDef);
+    LOG_DEBUG("Visiting struct definition: " + structDef->name);
+    
+    // 使用通用的辅助方法计算初始值
+    vector<pair<string, Value*>> memberInitialValues = 
+        calculateTypeMemberInitialValues(structDef->members);
+    
+    // 调用类型转换器，传递计算好的初始值
+    StructType* structType = typeConverter->convertStructDefinition(structDef, memberInitialValues);
     if (structType) {
-            LOG_DEBUG("Successfully registered struct '" + structDef->name + "' with " + 
-              to_string(structDef->members.size()) + " members");
+        LOG_DEBUG("Successfully registered struct '" + structDef->name + "' with " + 
+                  to_string(structDef->members.size()) + " members");
     } else {
         LOG_ERROR("Failed to register struct '" + structDef->name + "'");
     }
@@ -109,7 +116,34 @@ void Interpreter::visit(StructDefinition* structDef) {
 void Interpreter::visit(ClassDefinition* classDef) {
     if (!classDef) return;
     
-    // 使用TypeConverter注册类定义
+    LOG_DEBUG("Visiting class definition: " + classDef->name);
+    
+    // 计算每个成员的初始值，但不修改AST
+    vector<pair<string, Value*>> memberInitialValues;
+    for (const auto& member : classDef->members) {
+        Value* initialValue = nullptr;
+        
+        if (member.defaultValue) {
+            // 如果有默认值表达式，先访问defaultValue得到其真实值
+            initialValue = visit(member.defaultValue);
+            LOG_DEBUG("Member '" + member.name + "' has default value expression");
+        } else {
+            // 否则使用类型的默认值
+            ObjectType* memberType = typeConverter->convertASTTypeToRuntimeType(member.type);
+            if (memberType) {
+                initialValue = objectFactory->createDefaultValue(memberType);
+                LOG_DEBUG("Member '" + member.name + "' using type default value");
+            } else {
+                initialValue = new Null();
+                LOG_DEBUG("Member '" + member.name + "' using null as default");
+            }
+        }
+        
+        memberInitialValues.push_back({member.name, initialValue});
+        LOG_DEBUG("Member '" + member.name + "' initial value calculated");
+    }
+    
+    // 调用类型转换器，将其转换成注册的ObjectType类型
     ClassType* classType = typeConverter->convertClassDefinition(classDef);
     if (classType) {
         LOG_DEBUG("Successfully registered class '" + classDef->name + "' with " + 
@@ -132,28 +166,15 @@ void Interpreter::visit(Identifier* id) {
         // Variable类型 - 使用类型注册系统
         Variable* var = dynamic_cast<Variable*>(id);
         if (var) {
-            // TODO: 使用TypeConverter注册变量定义
-            // VariableDeclaration* varDecl = new VariableDeclaration(var->name, var->getType(), nullptr);
-            // typeRegistry->registerVariableDeclaration(varDecl, this);
-            // delete varDecl; // 清理临时对象
-            
-            LOG_DEBUG("Registered Variable: " + var->name);
+            LOG_DEBUG("Processing Variable: " + var->name);
+            // 变量处理逻辑将在类型系统中实现
         }
     } else if (identifierType == "FunctionDefinition") {
         // FunctionDefinition类型 - 使用现有的函数注册逻辑
         FunctionDefinition* funcDef = dynamic_cast<FunctionDefinition*>(id);
         if (funcDef) {
-            // 使用现有的函数注册逻辑
-            int paramCount = funcDef->prototype ? funcDef->prototype->parameters.size() : 0;
-            scopeManager.defineUserFunction(funcDef->name, funcDef, paramCount, this, [](ScopeManagerPtr scopeMgr, FunctionDefinition* funcDef, vector<Value*>& args) -> Value* {
-                // 创建UserFunctionWrapper并执行
-                UserFunctionWrapper* userFunc = new UserFunctionWrapper(funcDef->name, funcDef, funcDef->prototype ? funcDef->prototype->parameters.size() : 0, scopeMgr, nullptr);
-                // 注意：这里无法直接调用executeUserFunction，因为lambda不能捕获this
-                // 需要修改设计或使用其他方法
-                return nullptr; // 临时返回nullptr
-            });
-            
-            LOG_DEBUG("Registered FunctionDefinition: " + funcDef->name);
+            LOG_DEBUG("Processing FunctionDefinition: " + funcDef->name);
+            // 函数定义处理逻辑将在类型系统中实现
         }
     }
 }
@@ -260,7 +281,7 @@ void Interpreter::loadDefaultPlugins(const string& pluginDir) {
 
 // 重载版本，使用默认插件目录
 void Interpreter::loadDefaultPlugins() {
-    loadDefaultPlugins("./plugins/");
+    loadDefaultPlugins("./build/plugins/");
 }
 
 // 辅助函数：从文件路径提取插件名称
@@ -348,4 +369,36 @@ Value* Interpreter::executeUserFunction(UserFunctionWrapper* userFunc, vector<Va
     
     // 直接调用用户函数包装器
     return userFunc->call(evaluatedArgs);
+}
+
+// ==================== 类型成员初始值计算辅助方法 ====================
+
+// 计算类型成员的初始值（通用方法，用于结构体和类）
+vector<pair<string, Value*>> Interpreter::calculateTypeMemberInitialValues(const vector<StructMember>& members) {
+    vector<pair<string, Value*>> memberInitialValues;
+    
+    for (const auto& member : members) {
+        Value* initialValue = nullptr;
+        
+        if (member.defaultValue) {
+            // 如果有默认值表达式，先访问defaultValue得到其真实值
+            initialValue = visit(member.defaultValue);
+            LOG_DEBUG("Member '" + member.name + "' has default value expression");
+        } else {
+            // 否则使用对象工厂创建类型的默认值
+            ObjectType* memberType = typeConverter->convertASTTypeToRuntimeType(member.type);
+            if (memberType) {
+                initialValue = objectFactory->createDefaultValue(memberType);
+                LOG_DEBUG("Member '" + member.name + "' using type default value");
+            } else {
+                initialValue = new Null();
+                LOG_DEBUG("Member '" + member.name + "' using null as default");
+            }
+        }
+        
+        memberInitialValues.push_back({member.name, initialValue});
+        LOG_DEBUG("Member '" + member.name + "' initial value calculated");
+    }
+    
+    return memberInitialValues;
 }

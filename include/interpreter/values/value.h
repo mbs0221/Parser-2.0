@@ -33,6 +33,8 @@ using namespace std;
 // 前向声明类型系统
 class TypeRegistry;
 
+// ==================== 简化宏定义 ====================
+
 // ==================== 运行时值基类 ====================
 class Value{
 protected:
@@ -104,7 +106,7 @@ public:
 // ==================== 空值类型 ====================
 class Null : public Value {
 public:
-    Null() : Value(nullptr) {}
+    Null();
     
     string toString() const override { return "null"; }
     bool toBool() const override { return false; }
@@ -118,7 +120,13 @@ private:
     bool value;
 
 public:
-    Bool(bool val = false) : Value(nullptr), value(val) {}
+    Bool(bool val = false);
+    
+    // 拷贝构造函数
+    Bool(const Bool& other);
+    
+    // 赋值运算符重载
+    Bool& operator=(const Bool& other);
     
     bool getValue() const { return value; }
     void setValue(bool val) { value = val; }
@@ -140,7 +148,13 @@ private:
     int value;
 
 public:
-    Integer(int val = 0) : Value(nullptr), value(val) {}
+    Integer(int val = 0);
+    
+    // 拷贝构造函数
+    Integer(const Integer& other);
+    
+    // 赋值运算符重载
+    Integer& operator=(const Integer& other);
     
     int getValue() const { return value; }
     void setValue(int val) { value = val; }
@@ -180,7 +194,13 @@ private:
     double value;
 
 public:
-    Double(double val = 0.0) : Value(nullptr), value(val) {}
+    Double(double val = 0.0);
+    
+    // 拷贝构造函数
+    Double(const Double& other);
+    
+    // 赋值运算符重载
+    Double& operator=(const Double& other);
     
     double getValue() const { return value; }
     void setValue(double val) { value = val; }
@@ -227,7 +247,13 @@ private:
     char value;
 
 public:
-    Char(char val = '\0') : Value(nullptr), value(val) {}
+    Char(char val = '\0');
+    
+    // 拷贝构造函数
+    Char(const Char& other);
+    
+    // 赋值运算符重载
+    Char& operator=(const Char& other);
     
     char getValue() const { return value; }
     void setValue(char val) { value = val; }
@@ -244,7 +270,7 @@ private:
     string value;
 
 public:
-    String(const string& val = "") : Value(nullptr), value(val) {}
+    String(const string& val = "");
     
     const string& getValue() const { return value; }
     void setValue(const string& val) { value = val; }
@@ -273,6 +299,13 @@ public:
             this->elements.push_back(element ? element->clone() : nullptr);
         }
     }
+    
+    // 拷贝构造函数
+    Array(const Array& other);
+    
+    // 赋值运算符重载
+    Array& operator=(const Array& other);
+    
     ~Array() {
         for (auto element : elements) {
             delete element;
@@ -298,6 +331,9 @@ public:
     // 访问操作
     Value* access(int index) override;
     Value* access(const string& key) override;
+    
+    // 下标访问运算符重载 ([] 运算符)
+    Value* operator[](const Value& index) const;
 };
 
 // ==================== 字典值类型 ====================
@@ -310,6 +346,13 @@ public:
     Dict(const vector<pair<string, Value*>>& pairs = {}) : Value(nullptr) {
         for (const auto& pair : pairs) {
             elements[pair.first] = pair.second ? pair.second->clone() : nullptr;
+        }
+    }
+    
+    // 拷贝构造函数，用于Object类型的深拷贝
+    Dict(const Dict& other) : Value(nullptr) {
+        for (const auto& entry : other.elements) {
+            elements[entry.first] = entry.second ? entry.second->clone() : nullptr;
         }
     }
     ~Dict() {
@@ -337,6 +380,12 @@ public:
     
     // 访问操作
     Value* access(const string& key) override;
+    
+    // 下标访问运算符重载 ([] 运算符)
+    Value* operator[](const Value& key) const;
+    
+    // 赋值运算符重载，用于Object类型的赋值运算
+    Dict& operator=(const Dict& other);
 };
 
 // ==================== 函数值类型 ====================
@@ -405,6 +454,12 @@ public:
         }
     }
     
+    // 拷贝构造函数
+    ObjectValue(const ObjectValue& other);
+    
+    // 赋值运算符重载
+    ObjectValue& operator=(const ObjectValue& other);
+    
     // 属性操作
     void setProperty(const string& name, Value* value);
     Value* getProperty(const string& name) const;
@@ -431,6 +486,24 @@ class ValueFactory {
 public:
     static Value* createNull() { return new Null(); }
     
+    // 通用创建方法 - 根据类型名称和参数创建Value对象
+    static Value* create(const string& typeName, const vector<Value*>& args = {});
+    
+    // 通用的new方法 - 用于简化registerMethod的注册
+    static Value* createNew(const string& typeName, Value* instance, const vector<Value*>& args);
+    
+    // 创建基本类型的Value对象（保持向后兼容）
+    static Value* createBool(bool value = false) { return new Bool(value); }
+    static Value* createInteger(int value = 0) { return new Integer(value); }
+    static Value* createDouble(double value = 0.0) { return new Double(value); }
+    static Value* createChar(char value = '\0') { return new Char(value); }
+    static Value* createString(const string& value = "") { return new String(value); }
+    static Value* createArray(const vector<Value*>& elements = {}) { return new Array(elements); }
+    static Value* createDict(const vector<pair<string, Value*>>& pairs = {}) { return new Dict(pairs); }
+    
+    // 从其他Value创建指定类型的Value（类型转换）
+    static Value* createFromValue(Value* source, const string& targetType);
+    
     // 从Token创建值 - 已移除以避免lexer依赖
     Value* createFromToken(const lexer::Token* token);
     
@@ -455,5 +528,9 @@ class ObjectFactory;
 // 全局访问函数
 // 注意：这个函数需要在包含完整ObjectFactory定义的文件中实现
 ObjectFactory* getObjectFactory();
+
+// ==================== 运算符注册宏 ====================
+// 包含所有运算符注册宏定义
+#include "interpreter/operator_macros.h"
 
 #endif // INTERPRETER_VALUE_H

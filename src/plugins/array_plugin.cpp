@@ -1,66 +1,60 @@
 #include "interpreter/builtin_plugin.h"
+#include "interpreter/value.h"
+#include "interpreter/type_registry.h"
 #include "parser/function.h"
-
 #include <iostream>
 #include <algorithm>
 
 using namespace std;
 
-// ==================== 数组操作函数 ====================
+// ==================== 数组操作函数 - 通过类型系统调用方法 ====================
 
 Value* array_push(vector<Value*>& args) {
     if (args.size() < 2 || !args[0]) return nullptr;
     
     Value* arrVal = args[0];
-    if (Array* arr = dynamic_cast<Array*>(arrVal)) {
-        for (size_t i = 1; i < args.size(); ++i) {
-            if (args[i]) {
-                // 使用Array的addElement方法
-                arr->addElement(args[i]);
-            }
-        }
-        return arr;
-    }
-    return nullptr;
+    ObjectType* type = arrVal->getValueType();
+    if (!type) return nullptr;
+    
+    // 通过类型系统调用push方法
+    vector<Value*> methodArgs(args.begin() + 1, args.end());
+    return type->callMethod(arrVal, "push", methodArgs);
 }
 
 Value* array_pop(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
     Value* arrVal = args[0];
-    if (Array* arr = dynamic_cast<Array*>(arrVal)) {
-        if (arr->size() > 0) {
-            // 获取最后一个元素并移除
-            Value* last = arr->getElement(arr->size() - 1);
-            // 这里需要实现移除最后一个元素的逻辑
-            // 暂时返回最后一个元素
-            return last;
-        }
-    }
-    return nullptr;
+    ObjectType* type = arrVal->getValueType();
+    if (!type) return nullptr;
+    
+    // 通过类型系统调用pop方法
+    vector<Value*> methodArgs;
+    return type->callMethod(arrVal, "pop", methodArgs);
 }
 
 Value* array_sort(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
     Value* arrVal = args[0];
-    if (Array* arr = dynamic_cast<Array*>(arrVal)) {
-        // 简单的排序实现
-        // 这里可以添加实际的排序逻辑
-        return arr;
-    }
+    ObjectType* type = arrVal->getValueType();
+    if (!type) return nullptr;
     
-    return nullptr;
+    // 通过类型系统调用sort方法
+    vector<Value*> methodArgs;
+    return type->callMethod(arrVal, "sort", methodArgs);
 }
 
 Value* array_length(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
     Value* val = args[0];
-    if (Array* arr = dynamic_cast<Array*>(val)) {
-        return new Integer(arr->size());
-    }
-    return nullptr;
+    ObjectType* type = val->getValueType();
+    if (!type) return nullptr;
+    
+    // 通过类型系统调用length方法
+    vector<Value*> methodArgs;
+    return type->callMethod(val, "length", methodArgs);
 }
 
 // 数组操作插件类
@@ -70,7 +64,7 @@ public:
         return PluginInfo{
             "array",
             "1.0.0",
-            "数组操作插件，包含push、pop、sort、length等数组操作函数",
+            "数组操作插件，通过类型系统调用数组操作方法",
             {"push", "pop", "sort", "length"}
         };
     }

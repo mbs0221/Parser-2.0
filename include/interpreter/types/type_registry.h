@@ -22,7 +22,6 @@ using namespace std;
 // 不负责：对象创建、变量管理、作用域管理
 class TypeRegistry {
 private:
-    static TypeRegistry* instance;
     map<string, ObjectType*> types;
     
     TypeRegistry() {
@@ -44,10 +43,8 @@ public:
     };
     
     static TypeRegistry* getInstance() {
-        if (!instance) {
-            instance = new TypeRegistry();
-        }
-        return instance;
+        static TypeRegistry instance;
+        return &instance;
     }
     
     // 获取类型
@@ -152,7 +149,7 @@ inline TypeRegistry* getTypeRegistry() {
 
 // 注册基本类型的宏
 #define REGISTER_BUILTIN_TYPE(typeName, typeClass) \
-    static TypeRegistry::AutoRegistrar typeName##_registrar(#typeName, new typeClass())
+    static TypeRegistry::AutoRegistrar typeName##_registrar(#typeName, new typeClass());
 
 // 注册带继承关系的类型宏
 #define REGISTER_BUILTIN_TYPE_WITH_PARENT(typeName, typeClass, parentTypeName, parentTypeClass) \
@@ -161,7 +158,7 @@ inline TypeRegistry* getTypeRegistry() {
         parentTypeClass* parent = new parentTypeClass(); \
         type->setParentType(parent); \
         return static_cast<ObjectType*>(type); \
-    }())
+    }());
 
 // 注册带接口的类型宏
 #define REGISTER_BUILTIN_TYPE_WITH_INTERFACE(typeName, typeClass, interfaceName, interfaceClass) \
@@ -170,6 +167,6 @@ inline TypeRegistry* getTypeRegistry() {
         interfaceClass* interface = new interfaceClass(); \
         type->addInterface(interface); \
         return static_cast<ObjectType*>(type); \
-    }())
+    }());
 
 #endif // TYPE_REGISTRY_H

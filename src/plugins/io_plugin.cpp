@@ -1,5 +1,6 @@
 #include "interpreter/builtin_plugin.h"
 #include "interpreter/value.h"
+#include "interpreter/type_registry.h"
 #include "parser/function.h"
 
 #include <iostream>
@@ -29,7 +30,7 @@ bool isValidFileHandle(int handle) {
     return fileHandles.find(handle) != fileHandles.end() && fileHandles[handle] != nullptr;
 }
 
-// ==================== IO函数实现 ====================
+// ==================== IO函数实现 - 尽量通过类型系统调用方法 ====================
 
 Value* builtin_open(vector<Value*>& args) {
     if (args.size() < 1 || !args[0]) {
@@ -38,23 +39,26 @@ Value* builtin_open(vector<Value*>& args) {
     
     // 获取文件名
     Value* fileNameVal = args[0];
-    if (!fileNameVal) {
-        return nullptr;
-    }
+    ObjectType* type = fileNameVal->getValueType();
+    if (!type) return nullptr;
     
-    String* fileNameStr = dynamic_cast<String*>(fileNameVal);
-    if (!fileNameStr) {
-        return nullptr;
-    }
+    // 通过类型系统调用to_string方法获取文件名
+    vector<Value*> methodArgs;
+    Value* fileNameStr = type->callMethod(fileNameVal, "to_string", methodArgs);
+    if (!fileNameStr) return nullptr;
     
-    string fileName = fileNameStr->getValue();
+    string fileName = fileNameStr->toString();
     
     // 确定打开模式
     string mode = "r";  // 默认只读模式
     if (args.size() >= 2 && args[1]) {
         Value* modeVal = args[1];
-        if (String* modeStr = dynamic_cast<String*>(modeVal)) {
-            mode = modeStr->getValue();
+        ObjectType* modeType = modeVal->getValueType();
+        if (modeType) {
+            Value* modeStr = modeType->callMethod(modeVal, "to_string", methodArgs);
+            if (modeStr) {
+                mode = modeStr->toString();
+            }
         }
     }
     
@@ -155,11 +159,9 @@ Value* builtin_read(vector<Value*>& args) {
     // 将Buffer参数转换为字符串类型
     String* bufferStr = dynamic_cast<String*>(bufferVal);
     if (!bufferStr) {
-        // 如果不是字符串类型，创建一个新的字符串
+        // 如果不是字符串类型，创建一个新的字符串并替换原参数
         bufferStr = new String("");
-        // 这里需要更新args[1]指向新的字符串
-        // 但是直接修改参数可能不安全，我们先返回错误
-        return nullptr;
+        args[1] = bufferStr;
     }
     
     // 获取读取大小

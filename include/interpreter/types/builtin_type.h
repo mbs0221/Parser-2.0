@@ -128,12 +128,20 @@ public:
     
     // 获取类型信息
     virtual string getTypeInfo() const {
-        return "Object: " + typeName + 
-               " (primitive: " + (isPrimitive ? "true" : "false") + 
-               ", mutable: " + (isMutable ? "true" : "false") + 
-               ", reference: " + (isReference ? "true" : "false") + 
-               ", container: " + (isContainer ? "true" : "false") + 
-               ", userDefined: " + (isUserDefined ? "true" : "false") + ")";
+        stringstream ss;
+        ss << "Type: " << typeName;
+        if (parentType) {
+            ss << " (extends " << parentType->getTypeName() << ")";
+        }
+        if (!interfaces.empty()) {
+            ss << " (implements ";
+            for (size_t i = 0; i < interfaces.size(); ++i) {
+                if (i > 0) ss << ", ";
+                ss << interfaces[i]->getTypeName();
+            }
+            ss << ")";
+        }
+        return ss.str();
     }
     
     // 创建默认值
@@ -164,6 +172,79 @@ public:
     virtual void initializeInstance(Value* instance, vector<Value*>& args) {
         // 默认实现：空操作
         // 子类可以重写此方法来自定义初始化逻辑
+    }
+};
+
+// ==================== 基本类型层次结构 ====================
+
+// 基本类型基类 - 所有基本类型的父类
+class PrimitiveType : public ObjectType {
+public:
+    PrimitiveType(const string& name, bool mutable_ = true, ObjectType* parent = nullptr)
+        : ObjectType(name, true, mutable_, false, false, false, parent) {}
+    
+    // 基本类型都支持转换为字符串
+    virtual Value* convertToString(Value* value) = 0;
+    
+    // 基本类型都支持转换为布尔值
+    virtual Value* convertToBool(Value* value) = 0;
+    
+    // 基本类型的兼容性检查：基本类型只与自身兼容
+    bool isCompatibleWith(ObjectType* other) const override {
+        if (!other) return false;
+        return typeName == other->getTypeName();
+    }
+};
+
+// 数值类型基类 - 整数、浮点数、字符的父类
+class NumericType : public PrimitiveType {
+public:
+    NumericType(const string& name, bool mutable_ = true, ObjectType* parent = nullptr)
+        : PrimitiveType(name, mutable_, parent) {}
+    
+    // 数值类型都支持转换为其他数值类型
+    virtual Value* convertToInteger(Value* value) = 0;
+    virtual Value* convertToDouble(Value* value) = 0;
+    virtual Value* convertToChar(Value* value) = 0;
+    
+    // 数值类型都支持算术运算
+    virtual bool supportsArithmetic() const { return true; }
+    
+    // 数值类型都支持比较运算
+    virtual bool supportsComparison() const { return true; }
+    
+    // 数值类型的兼容性检查：数值类型之间可以相互转换
+    bool isCompatibleWith(ObjectType* other) const override {
+        if (!other) return false;
+        
+        // 与自身兼容
+        if (typeName == other->getTypeName()) return true;
+        
+        // 数值类型之间相互兼容
+        string otherTypeName = other->getTypeName();
+        return otherTypeName == "int" || otherTypeName == "double" || otherTypeName == "char";
+    }
+};
+
+// 容器类型基类 - 数组、字典的父类
+class ContainerType : public ObjectType {
+public:
+    ContainerType(const string& name, bool mutable_ = true, ObjectType* parent = nullptr)
+        : ObjectType(name, false, mutable_, false, true, false, parent) {}
+    
+    // 容器类型都支持访问操作
+    virtual bool supportsAccess() const { return true; }
+    
+    // 容器类型都支持迭代
+    virtual bool supportsIteration() const { return true; }
+    
+    // 容器类型都支持大小查询
+    virtual bool supportsSizeQuery() const { return true; }
+    
+    // 容器类型的兼容性检查：容器类型只与自身兼容
+    bool isCompatibleWith(ObjectType* other) const override {
+        if (!other) return false;
+        return typeName == other->getTypeName();
     }
 };
 
@@ -289,6 +370,8 @@ public:
         return userMethods;
     }
     
+
+    
     // 获取所有方法（包括继承的方法）
     map<string, function<Value*(Value*, vector<Value*>&)>> getMethods() const {
         map<string, function<Value*(Value*, vector<Value*>&)>> allMethods = userMethods;
@@ -323,8 +406,30 @@ public:
     }
     
     Value* createDefaultValue() override {
-        // 创建用户定义类型的默认值
-        return nullptr;
+        // 创建用户定义类型的默认值，使用存储的成员默认值
+        Dict* instance = new Dict();
+        
+        // 使用存储的默认值初始化成员
+        for (const auto& member : memberTypes) {
+            const string& memberName = member.first;
+            Value* defaultValue = getMemberDefaultValue(memberName);
+            
+            if (defaultValue) {
+                // 如果有默认值，使用默认值
+                instance->setEntry(memberName, defaultValue->clone());
+            } else {
+                // 如果没有默认值，使用成员类型的默认值
+                ObjectType* memberType = member.second;
+                if (memberType) {
+                    Value* memberDefault = memberType->createDefaultValue();
+                    if (memberDefault) {
+                        instance->setEntry(memberName, memberDefault);
+                    }
+                }
+            }
+        }
+        
+        return instance;
     }
 };
 
@@ -350,52 +455,81 @@ public:
 // ==================== 内置类型定义 ====================
 
 // 整数类型
-class IntType : public ObjectType {
+class IntType : public NumericType {
 public:
     IntType();
     Value* convertTo(ObjectType* targetType, Value* value) override;
     bool isCompatibleWith(ObjectType* other) const override;
     Value* createDefaultValue() override;
+    
+    // 实现NumericType的虚函数
+    Value* convertToString(Value* value) override;
+    Value* convertToBool(Value* value) override;
+    Value* convertToInteger(Value* value) override;
+    Value* convertToDouble(Value* value) override;
+    Value* convertToChar(Value* value) override;
 };
 
 // 浮点数类型
-class DoubleType : public ObjectType {
+class DoubleType : public NumericType {
 public:
     DoubleType();
     Value* convertTo(ObjectType* targetType, Value* value) override;
     bool isCompatibleWith(ObjectType* other) const override;
     Value* createDefaultValue() override;
+    
+    // 实现NumericType的虚函数
+    Value* convertToString(Value* value) override;
+    Value* convertToBool(Value* value) override;
+    Value* convertToInteger(Value* value) override;
+    Value* convertToDouble(Value* value) override;
+    Value* convertToChar(Value* value) override;
 };
 
 // 字符类型
-class CharType : public ObjectType {
+class CharType : public NumericType {
 public:
     CharType();
     Value* convertTo(ObjectType* targetType, Value* value) override;
     bool isCompatibleWith(ObjectType* other) const override;
     Value* createDefaultValue() override;
+    
+    // 实现NumericType的虚函数
+    Value* convertToString(Value* value) override;
+    Value* convertToBool(Value* value) override;
+    Value* convertToInteger(Value* value) override;
+    Value* convertToDouble(Value* value) override;
+    Value* convertToChar(Value* value) override;
 };
 
 // 布尔类型
-class BoolType : public ObjectType {
+class BoolType : public PrimitiveType {
 public:
     BoolType();
     Value* convertTo(ObjectType* targetType, Value* value) override;
     bool isCompatibleWith(ObjectType* other) const override;
     Value* createDefaultValue() override;
+    
+    // 实现PrimitiveType的虚函数
+    Value* convertToString(Value* value) override;
+    Value* convertToBool(Value* value) override;
 };
 
-// 字符串类型
-class StringType : public ObjectType {
+// 字符串类型 - 继承自ArrayType，因为字符串本质上是字符数组
+class StringType : public ArrayType {
 public:
     StringType();
     Value* convertTo(ObjectType* targetType, Value* value) override;
     bool isCompatibleWith(ObjectType* other) const override;
     Value* createDefaultValue() override;
+    
+    // 实现PrimitiveType的虚函数（通过ArrayType继承）
+    Value* convertToString(Value* value) override;
+    Value* convertToBool(Value* value) override;
 };
 
 // 数组类型
-class ArrayType : public ObjectType {
+class ArrayType : public ContainerType {
 public:
     ArrayType();
     Value* convertTo(ObjectType* targetType, Value* value) override;
@@ -404,7 +538,7 @@ public:
 };
 
 // 字典类型
-class DictType : public ObjectType {
+class DictType : public ContainerType {
 public:
     DictType();
     Value* convertTo(ObjectType* targetType, Value* value) override;
@@ -421,13 +555,13 @@ public:
     Value* createDefaultValue() override;
 };
 
-// ==================== Object工厂类（单例模式） ====================
+// ==================== Object工厂类 ====================
 // 用于创建指定Object子类型的Value对象的工厂类
 class ObjectFactory {
 public:
-    // 获取单例实例
-    static ObjectFactory* getInstance();
-    static void destroyInstance();
+    // 构造函数和析构函数
+    ObjectFactory();
+    ~ObjectFactory();
     
     // 根据ObjectType类型创建对应的Value对象
     Value* createValue(ObjectType* type);
@@ -496,24 +630,13 @@ public:
     void setInterpreter(Interpreter* interp);
     
 private:
-    // 私有构造函数（单例模式）
-    ObjectFactory();
-    ~ObjectFactory();
-    
     // 禁用拷贝构造和赋值
     ObjectFactory(const ObjectFactory&) = delete;
     ObjectFactory& operator=(const ObjectFactory&) = delete;
     
-    // 单例实例
-    static ObjectFactory* instance;
-    static std::mutex instanceMutex;
-    
     // 依赖注入的组件
     TypeRegistry* typeRegistry;
     Interpreter* interpreter;
-    
-    // 类型名称到创建函数的映射
-    map<string, function<Value*()>> valueCreators;
     
     // 初始化工厂映射
     void initializeCreators();
@@ -523,9 +646,9 @@ private:
 };
 
 // ==================== 全局访问函数 ====================
-// 全局访问函数实现
+// 全局访问函数实现 - 创建一个新的ObjectFactory实例
 inline ObjectFactory* getObjectFactory() {
-    return ObjectFactory::getInstance();
+    return new ObjectFactory();
 }
 
 #endif // BUILTIN_TYPES_H

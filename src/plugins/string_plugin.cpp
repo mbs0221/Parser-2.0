@@ -1,5 +1,6 @@
 #include "interpreter/builtin_plugin.h"
 #include "interpreter/value.h"
+#include "interpreter/type_registry.h"
 #include "parser/function.h"
 #include "interpreter/scope.h"
 #include <iostream>
@@ -9,97 +10,53 @@
 
 using namespace std;
 
-// 字符串函数实现
+// 字符串函数实现 - 通过类型系统调用方法
 Value* string_trim(vector<Value*>& args) {
     if (args.size() != 1 || !args[0]) return nullptr;
     
     Value* val = args[0];
-    if (String* str = dynamic_cast<String*>(val)) {
-        string s = str->getValue();
-        s.erase(0, s.find_first_not_of(" \t\n\r"));
-        s.erase(s.find_last_not_of(" \t\n\r") + 1);
-        return new String(s);
-    }
-    return nullptr;
+    ObjectType* type = val->getValueType();
+    if (!type) return nullptr;
+    
+    // 通过类型系统调用trim方法
+    vector<Value*> methodArgs;
+    return type->callMethod(val, "trim", methodArgs);
 }
 
 Value* string_replace(vector<Value*>& args) {
     if (args.size() != 3 || !args[0] || !args[1] || !args[2]) return nullptr;
     
     Value* strVal = args[0];
-    Value* oldVal = args[1];
-    Value* newVal = args[2];
+    ObjectType* type = strVal->getValueType();
+    if (!type) return nullptr;
     
-    if (String* str = dynamic_cast<String*>(strVal)) {
-        if (String* oldStr = dynamic_cast<String*>(oldVal)) {
-            if (String* newStr = dynamic_cast<String*>(newVal)) {
-                string result = str->getValue();
-                string oldStr_val = oldStr->getValue();
-                string newStr_val = newStr->getValue();
-                
-                size_t pos = 0;
-                while ((pos = result.find(oldStr_val, pos)) != string::npos) {
-                    result.replace(pos, oldStr_val.length(), newStr_val);
-                    pos += newStr_val.length();
-                }
-                return new String(result);
-            }
-        }
-    }
-    return nullptr;
+    // 通过类型系统调用replace方法
+    vector<Value*> methodArgs = {args[1], args[2]};
+    return type->callMethod(strVal, "replace", methodArgs);
 }
 
 Value* string_split(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
     Value* strVal = args[0];
-    Value* delimVal = args[1];
+    ObjectType* type = strVal->getValueType();
+    if (!type) return nullptr;
     
-    if (String* str = dynamic_cast<String*>(strVal)) {
-        if (String* delim = dynamic_cast<String*>(delimVal)) {
-            string s = str->getValue();
-            string delimiter = delim->getValue();
-            
-            Array* result = new Array();
-            size_t pos = 0;
-            string token;
-            
-            while ((pos = s.find(delimiter)) != string::npos) {
-                token = s.substr(0, pos);
-                result->addElement(new String(token));
-                s.erase(0, pos + delimiter.length());
-            }
-            result->addElement(new String(s));
-            
-            return result;
-        }
-    }
-    return nullptr;
+    // 通过类型系统调用split方法
+    vector<Value*> methodArgs = {args[1]};
+    return type->callMethod(strVal, "split", methodArgs);
 }
 
 Value* string_join(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
     
     Value* arrVal = args[0];
-    Value* delimVal = args[1];
+    ObjectType* type = arrVal->getValueType();
+    if (!type) return nullptr;
     
-    if (Array* arr = dynamic_cast<Array*>(arrVal)) {
-        if (String* delim = dynamic_cast<String*>(delimVal)) {
-            string delimiter = delim->getValue();
-            string result;
-            
-            for (size_t i = 0; i < arr->size(); ++i) {
-                Value* element = arr->getElement(i);
-                if (String* str = dynamic_cast<String*>(element)) {
-                    if (i > 0) result += delimiter;
-                    result += str->getValue();
-                }
-            }
-            
-            return new String(result);
-        }
-    }
-    return nullptr;
+    // 通过类型系统调用join方法
+    vector<Value*> methodArgs = {args[1]};
+    return type->callMethod(arrVal, "join", methodArgs);
 }
 
 Value* string_starts_with(vector<Value*>& args) {
