@@ -28,7 +28,7 @@ namespace lexer {
 //词法分析器标记
 enum Tag{
 	// 基本类型
-	BASIC = 256, ID, NUM, REAL, DOUBLE, CHAR, STR, BOOL, ARRAY, DICT, END_OF_FILE,
+	BASIC = 256, ID, NUM, REAL, DOUBLE, FLOAT, CHAR, STR, BOOL, ARRAY, DICT, END_OF_FILE,
 	
 	// 关键字
 	IF, THEN, ELSE, DO, WHILE, FOR, CASE, DEFAULT,

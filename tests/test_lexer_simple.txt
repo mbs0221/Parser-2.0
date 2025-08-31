@@ -1,0 +1,35 @@
+// 这是一个简单的测试文件，用于测试lexer的token解析功能
+
+let x = 42;
+let y = 3.14;
+let message = "Hello, World!";
+let flag = true;
+let ch = "A";
+
+// 测试算术运算
+let result = x + y * 2;
+
+// 测试比较运算
+if (x > 10) {
+    println("x is greater than 10");
+} else {
+    println("x is less than or equal to 10");
+}
+
+// 测试逻辑运算
+let condition = (x > 0) && (y < 5);
+
+// 测试注释
+/* 这是一个多行注释
+   用于测试注释解析功能 */
+
+# 这是一个单行注释
+
+// 测试字符串转义
+let escaped = "Line 1
+Line 2	Tabbed";
+
+// 测试字符转义
+let newline = "
+";
+let tab = "	";

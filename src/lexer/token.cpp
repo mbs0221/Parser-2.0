@@ -9,9 +9,9 @@ Token* Token::END_OF_FILE = new Token(lexer::END_OF_FILE);
 
 // 静态成员定义 - 直接初始化
 Type *Type::Int = new Type(NUM, "int", 4);
-Type *Type::Double = new Type(REAL, "double", 8);
+Type *Type::Double = new Type(DOUBLE, "double", 8);
 Type *Type::Char = new Type(CHAR, "char", 1);
-Type *Type::Float = new Type(REAL, "float", 8);
+Type *Type::Float = new Type(FLOAT, "float", 8);
 Type *Type::Bool = new Type(BOOL, "bool", 1);
 Type *Type::String = new Type(STR, "string", 0);
 

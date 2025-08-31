@@ -8,7 +8,7 @@ Lexer::Lexer(){
 	look = nullptr; // 初始化当前token
 	
 	words["int"] = Type::Int;// new Word(INT, "int");
-	words["double"] = Type::Double;// new Word(INT, "int");
+	words["double"] = Type::Double;
 	words["if"] = new Word(IF, "if");
 	words["then"] = new Word(THEN, "then");
 	words["else"] = new Word(ELSE, "else");
