@@ -1,0 +1,22 @@
+// 简单类型系统测试
+println("=== 简单类型系统测试 ===");
+
+// 测试基本类型方法调用
+let str = "Hello, World!";
+let num = 42;
+let arr = [1, 2, 3, 4, 5];
+
+println("字符串长度: ", str.length());
+println("数字转字符串: ", num.to_string());
+println("数组长度: ", arr.length());
+
+// 测试数组方法
+arr.push(6);
+println("添加元素后长度: ", arr.length());
+
+// 测试字典方法
+let dict = {"name": "Alice", "age": 25};
+println("字典大小: ", dict.size());
+println("字典键: ", dict.keys());
+
+println("=== 测试完成 ===");

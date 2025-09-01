@@ -1,0 +1,21 @@
+// Arithmetic test
+
+function testArithmetic() {
+    let a = 15;
+    let b = 3;
+    let c = 7;
+    
+    let sum = a + b + c;
+    let product = a * b * c;
+    let difference = a - b - c;
+    let quotient = a / b;
+    let remainder = a % b;
+    
+    println(sum);
+    println(product);
+    println(difference);
+    println(quotient);
+    println(remainder);
+}
+
+testArithmetic();

@@ -1,10 +1,10 @@
 // ==================== 高级功能综合测试 ====================
 
-print("=== 高级功能综合测试 ===
+println("=== 高级功能综合测试 ===
 ");
 
 // 1. 类和结构体
-print("1. 类和结构体:");
+println("1. 类和结构体:");
 class Student {
     public string name;
     public int age;
@@ -17,20 +17,20 @@ struct Person {
 }
 
 let student1 = Student("Alice", 20, 85);
-print("Student: " + student1.name + ", Age: " + student1.age + ", Grade: " + student1.grade);
+println("Student: " + student1.name + ", Age: " + student1.age + ", Grade: " + student1.grade);
 
 let person1 = Person("John", 25);
-print("Person: " + person1.name + ", Age: " + person1.age);
-print("
+println("Person: " + person1.name + ", Age: " + person1.age);
+println("
 ");
 
 // 2. 异常处理
-print("2. 异常处理:");
+println("2. 异常处理:");
 function testException() {
     try {
         let x = 10 / 0;
     } catch (error) {
-        print("Caught division by zero: " + error);
+        println("Caught division by zero: " + error);
     }
 }
 
@@ -39,17 +39,17 @@ function testException2() {
         let arr = [1, 2, 3];
         let value = arr[10];
     } catch (error) {
-        print("Caught array index error: " + error);
+        println("Caught array index error: " + error);
     }
 }
 
 testException();
 testException2();
-print("
+println("
 ");
 
 // 3. 复杂函数
-print("3. 复杂函数:");
+println("3. 复杂函数:");
 function factorial(n) {
     if (n <= 1) {
         return 1;
@@ -66,19 +66,19 @@ function fibonacci(n) {
     }
 }
 
-print("factorial(5) = " + factorial(5));
-print("fibonacci(8) = " + fibonacci(8));
-print("
+println("factorial(5) = " + factorial(5));
+println("fibonacci(8) = " + fibonacci(8));
+println("
 ");
 
 // 4. 嵌套控制结构
-print("4. 嵌套控制结构:");
+println("4. 嵌套控制结构:");
 for (let i = 0; i < 3; i = i + 1) {
-    print("Outer loop i = " + i);
+    println("Outer loop i = " + i);
     for (let j = 0; j < 2; j = j + 1) {
-        print("  Inner loop j = " + j);
+        println("  Inner loop j = " + j);
         if (i == 1 && j == 1) {
-            print("    Breaking inner loop");
+            println("    Breaking inner loop");
             break;
         }
     }
@@ -90,52 +90,52 @@ while (k < 5) {
         k = k + 1;
         continue;
     }
-    print("while loop k = " + k);
+    println("while loop k = " + k);
     k = k + 1;
 }
-print("
+println("
 ");
 
 // 5. 复杂表达式和运算符优先级
-print("5. 复杂表达式和运算符优先级:");
+println("5. 复杂表达式和运算符优先级:");
 let a = 10;
 let b = 3;
 let c = 7;
-print("a = " + a + ", b = " + b + ", c = " + c);
-print("a + b * c = " + (a + b * c));
-print("(a + b) * c = " + ((a + b) * c));
-print("a + b + c = " + (a + b + c));
-print("a * b + c = " + (a * b + c));
-print("a & b | c = " + (a & b | c));
-print("a ^ b << 1 = " + (a ^ b << 1));
-print("
+println("a = " + a + ", b = " + b + ", c = " + c);
+println("a + b * c = " + (a + b * c));
+println("(a + b) * c = " + ((a + b) * c));
+println("a + b + c = " + (a + b + c));
+println("a * b + c = " + (a * b + c));
+println("a & b | c = " + (a & b | c));
+println("a ^ b << 1 = " + (a ^ b << 1));
+println("
 ");
 
 // 6. 字符串和数组的高级操作
-print("6. 字符串和数组的高级操作:");
+println("6. 字符串和数组的高级操作:");
 let str1 = "Hello";
 let str2 = "World";
 let combined = str1 + " " + str2;
-print("Combined string: " + combined);
+println("Combined string: " + combined);
 
 let arr1 = [1, 2, 3];
 let arr2 = [4, 5, 6];
-print("Array 1: " + arr1);
-print("Array 2: " + arr2);
-print("Array 1 count: " + count(arr1));
-print("Array 2 count: " + count(arr2));
-print("
+println("Array 1: " + arr1);
+println("Array 2: " + arr2);
+println("Array 1 count: " + count(arr1));
+println("Array 2 count: " + count(arr2));
+println("
 ");
 
 // 7. 字典操作
-print("7. 字典操作:");
+println("7. 字典操作:");
 let dict = {"name": "Alice", "age": 25, "city": "New York"};
-print("Dictionary: " + dict);
-print("Name: " + dict["name"]);
-print("Age: " + dict["age"]);
-print("City: " + dict["city"]);
-print("
+println("Dictionary: " + dict);
+println("Name: " + dict["name"]);
+println("Age: " + dict["age"]);
+println("City: " + dict["city"]);
+println("
 ");
 
-print("=== 高级功能测试完成 ===
+println("=== 高级功能测试完成 ===
 ");

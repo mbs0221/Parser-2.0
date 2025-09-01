@@ -63,9 +63,9 @@ TEST_F(ASTOnlyTest, ExpressionStatements) {
     delete exprStmt;
 }
 
-TEST_F(ASTOnlyTest, VariableDeclarations) {
+TEST_F(ASTOnlyTest, VariableDefinitions) {
     ConstantExpression* intExpr = new ConstantExpression(42);
-    VariableDeclaration* varDecl = new VariableDeclaration("y", "int", intExpr);
+    VariableDefinition* varDecl = new VariableDefinition("y", "int", intExpr);
     
     EXPECT_NE(varDecl, nullptr);
     
@@ -76,7 +76,7 @@ TEST_F(ASTOnlyTest, VariableDeclarations) {
 TEST_F(ASTOnlyTest, ProgramStructure) {
     ConstantExpression* intExpr = new ConstantExpression(42);
     ExpressionStatement* exprStmt = new ExpressionStatement(intExpr);
-    VariableDeclaration* varDecl = new VariableDeclaration("y", "int", intExpr);
+    VariableDefinition* varDecl = new VariableDefinition("y", "int", intExpr);
     
     vector<Statement*> statements;
     statements.push_back(exprStmt);

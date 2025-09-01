@@ -1,0 +1,6 @@
+// 基本函数测试
+function add(a, b) {
+    return a + b;
+}
+
+let result = add(5, 3);

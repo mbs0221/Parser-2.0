@@ -1,0 +1,163 @@
+// 测试成员访问的类型系统集成
+println("=== 成员访问类型系统测试 ===");
+
+// 定义结构体
+struct Person {
+    string name;
+    int age;
+    double height;
+}
+
+// 定义类
+class Student {
+    string name;
+    int grade;
+    double gpa;
+    
+    function study() {
+        println("Student ", name, " is studying");
+    }
+    
+    function getGrade() {
+        return grade;
+    }
+}
+
+// 测试基本类型成员访问的函数
+function testBuiltinTypeMethods() {
+    println("--- 测试内置类型方法 ---");
+    
+    let intVal = 42;
+    let doubleVal = 3.14;
+    let strVal = "Hello, World!";
+
+    // 使用类型系统调用内置方法
+    println("整数转字符串: ", intVal.to_string());
+    println("浮点数转整数: ", doubleVal.to_int());
+    println("字符串长度: ", strVal.length());
+    println("字符串转大写: ", strVal.to_upper());
+    println("字符串转小写: ", strVal.to_lower());
+    
+    // 测试循环中的方法调用
+    let numbers = [10, 20, 30, 40, 50];
+    let i = 0;
+    for (i = 0; i < numbers.length(); i = i + 1) {
+        println("数字 ", i, " 的字符串表示: ", numbers[i].to_string());
+    }
+}
+
+// 测试数组和字典成员访问的函数
+function testCollectionMethods() {
+    println("--- 测试集合类型方法 ---");
+    
+    // 测试数组的成员访问
+    let arr = [1, 2, 3, 4, 5];
+    println("数组长度: ", arr.length());
+    
+    // 在循环中添加元素
+    let j = 6;
+    for (j = 6; j <= 10; j = j + 1) {
+        arr.push(j);
+        println("添加元素后长度: ", arr.length());
+    }
+    
+    // 测试字典的成员访问
+    let dict = {"name": "Alice", "age": 25};
+    println("字典大小: ", dict.size());
+    let keys = dict.keys();
+    println("字典键: ", keys);
+    
+    // 在条件分支中测试字典操作
+    if (dict.has("name")) {
+        println("字典包含name键: ", dict.get("name"));
+    } else {
+        println("字典不包含name键");
+    }
+}
+
+// 测试用户定义类型成员访问的函数
+function testUserDefinedTypes() {
+    println("--- 测试用户定义类型成员访问 ---");
+    
+    // 创建结构体实例
+    let person = Person();
+    person.name = "Alice";
+    person.age = 25;
+    person.height = 1.75;
+
+    // 使用类型系统进行成员访问
+    println("Person: ", person.name, ", age: ", person.age, ", height: ", person.height);
+    
+    // 在循环中修改成员
+    for (let i = 0; i < 3; i++) {
+        person.age = person.age + 1;
+        println("Person年龄更新: ", person.age);
+    }
+
+    // 创建类实例
+    let student = Student();
+    student.name = "Bob";
+    student.grade = 10;
+    student.gpa = 3.8;
+
+    // 使用类型系统进行成员访问
+    println("Student: ", student.name, ", grade: ", student.grade, ", GPA: ", student.gpa);
+    
+    // 在条件分支中调用方法
+    if (student.gpa >= 3.5) {
+        println("优秀学生: ", student.name);
+        student.study();
+    } else {
+        println("需要努力的学生: ", student.name);
+    }
+    
+    println("Student grade: ", student.getGrade());
+}
+
+// 测试混合类型操作的函数
+function testMixedTypeOperations() {
+    println("--- 测试混合类型操作 ---");
+    
+    let person = Person();
+    person.name = "Charlie";
+    person.age = 30;
+    person.height = 1.80;
+    
+    let student = Student();
+    student.name = "David";
+    student.grade = 12;
+    student.gpa = 3.9;
+    
+    // 在循环中比较不同类型的成员
+    let people = [person, student];
+    for (let i = 0; i < people.length(); i++) {
+        let current = people[i];
+        if (current.name.length() > 5) {
+            println("长名字的人: ", current.name);
+        } else {
+            println("短名字的人: ", current.name);
+        }
+    }
+    
+    // 在条件分支中进行类型转换
+    let value = 42;
+    if (value > 40) {
+        let strValue = value.to_string();
+        println("转换后的字符串: ", strValue, " 长度: ", strValue.length());
+    }
+}
+
+// 主函数
+function main() {
+    println("开始成员访问类型系统测试");
+    
+    testBuiltinTypeMethods();
+    testCollectionMethods();
+    testUserDefinedTypes();
+    testMixedTypeOperations();
+    
+    println("=== 成员访问类型系统测试完成 ===");
+}
+
+// 执行主函数
+main();

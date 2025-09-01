@@ -1,152 +1,50 @@
-#include "interpreter/builtin_plugin.h" 
-#include "interpreter/value.h"
-#include "interpreter/type_registry.h"
-#include "parser/function.h"
-#include "interpreter/scope.h"
-#include "interpreter/interpreter.h"
+#include "interpreter/plugins/builtin_plugin.h"
+#include "interpreter/values/value.h"
+#include "interpreter/types/types.h"
+#include "parser/definition.h"
 #include <iostream>
 #include <cmath>
 #include <vector>
 
 using namespace std;
 
-// 通用的数学函数实现 - 通过类型系统调用方法
-Value* math_sin(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用sin方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "sin", methodArgs);
-}
+// ==================== 数学函数实现 - 使用宏自动生成 ====================
 
-Value* math_cos(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用cos方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "cos", methodArgs);
-}
+// 使用宏自动生成数学函数实现
+AUTO_PLUGIN_MATH_FUNCTION(math_sin, "sin")
+AUTO_PLUGIN_MATH_FUNCTION(math_cos, "cos")
+AUTO_PLUGIN_MATH_FUNCTION(math_tan, "tan")
+AUTO_PLUGIN_MATH_FUNCTION(math_sqrt, "sqrt")
+AUTO_PLUGIN_MATH_FUNCTION(math_log, "log")
+AUTO_PLUGIN_MATH_FUNCTION(math_floor, "floor")
+AUTO_PLUGIN_MATH_FUNCTION(math_ceil, "ceil")
+AUTO_PLUGIN_MATH_FUNCTION(math_round, "round")
+AUTO_PLUGIN_MATH_FUNCTION(math_abs, "abs")
 
-Value* math_tan(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用tan方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "tan", methodArgs);
-}
-
-Value* math_sqrt(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用sqrt方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "sqrt", methodArgs);
-}
-
-Value* math_log(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用log方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "log", methodArgs);
-}
-
-Value* math_floor(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用floor方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "floor", methodArgs);
-}
-
-Value* math_ceil(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用ceil方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "ceil", methodArgs);
-}
-
-Value* math_round(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用round方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "round", methodArgs);
-}
-
-Value* math_abs(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用abs方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "abs", methodArgs);
-}
-
-// 数学函数插件类
+// ==================== 数学函数插件类 ====================
 class MathPlugin : public BuiltinPlugin {
 public:
     PluginInfo getPluginInfo() const override {
         return PluginInfo{
             "math_plugin",
             "1.0.0",
-            "数学函数插件，通过类型系统调用数学运算方法",
+            "基础数学函数插件，通过类型系统调用数学运算方法",
             {"sin", "cos", "tan", "sqrt", "log", "floor", "ceil", "round", "abs"}
         };
     }
     
-    void registerFunctions(ScopeManager& scopeManager) override {
-        // 使用辅助方法批量注册函数
-        defineBuiltinFunctions(scopeManager, getFunctionMap());
-    }
-    
-    map<string, BuiltinFunctionPtr> getFunctionMap() const override {
+protected:
+    map<string, FunctionInfo> getFunctionInfoMap() const override {
         return {
-            {"sin", math_sin},
-            {"cos", math_cos},
-            {"tan", math_tan},
-            {"sqrt", math_sqrt},
-            {"log", math_log},
-            {"floor", math_floor},
-            {"ceil", math_ceil},
-            {"round", math_round},
-            {"abs", math_abs}
+            {"sin", {math_sin, {"value"}, "计算正弦值"}},
+            {"cos", {math_cos, {"value"}, "计算余弦值"}},
+            {"tan", {math_tan, {"value"}, "计算正切值"}},
+            {"sqrt", {math_sqrt, {"value"}, "计算平方根"}},
+            {"log", {math_log, {"value"}, "计算自然对数"}},
+            {"floor", {math_floor, {"value"}, "向下取整"}},
+            {"ceil", {math_ceil, {"value"}, "向上取整"}},
+            {"round", {math_round, {"value"}, "四舍五入"}},
+            {"abs", {math_abs, {"value"}, "计算绝对值"}}
         };
     }
 };

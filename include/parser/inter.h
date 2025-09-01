@@ -10,7 +10,7 @@
 #include <sstream>
 #include <typeinfo>
 
-using namespace std;
+
 
 // 前向声明
 class StatementVisitor;
@@ -28,7 +28,7 @@ struct AST {
     virtual ~AST() = default;
     
     // 获取节点位置信息（用于错误报告）
-    virtual string getLocation() const { return "unknown"; }
+    virtual std::string getLocation() const { return "unknown"; }
 };
 
 

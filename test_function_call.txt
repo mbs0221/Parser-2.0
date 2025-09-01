@@ -1,5 +1,56 @@
-print("Testing function call\n");
+// 测试函数调用和成员访问
 
-let x = 5;
-print(x);
-print("\n");
+// 1. 测试基础函数调用
+print("开始测试函数调用和成员访问...");
+
+// 2. 测试数学函数
+let x = 10;
+let y = 20;
+let sum = x + y;
+println("x + y = " + sum);
+
+// 3. 测试字符串函数
+let str = "Hello World";
+let len = str.length();
+println("字符串长度: " + len);
+
+let substr = str.substring(0, 5);
+println("子字符串: " + substr);
+
+// 4. 测试数组操作
+let arr = [1, 2, 3, 4, 5];
+let arrLen = arr.length();
+println("数组长度: " + arrLen);
+
+// 5. 测试类型转换
+let numStr = "42";
+let num = to_int(numStr);
+println("转换后的数字: " + num);
+
+// 6. 测试用户自定义函数
+function greet(name) {
+    return "Hello, " + name + "!";
+}
+
+let greeting = greet("World");
+println(greeting);
+
+// 7. 测试函数参数传递
+function add(a, b) {
+    return a + b;
+}
+
+let result = add(15, 25);
+println("15 + 25 = " + result);
+
+// 8. 测试作用域
+let globalVar = "全局变量";
+function testScope() {
+    let localVar = "局部变量";
+    println("在函数内部: " + localVar);
+    println("访问全局变量: " + globalVar);
+}
+
+testScope();
+
+println("测试完成！");

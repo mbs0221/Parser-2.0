@@ -1,6 +1,7 @@
-#include "interpreter/builtin_plugin.h"
-#include "interpreter/value.h"
-#include "parser/function.h"
+#include "interpreter/plugins/builtin_plugin.h"
+#include "interpreter/values/value.h"
+#include "interpreter/types/types.h"
+#include "parser/definition.h"
 
 #include <iostream>
 #include <sstream>
@@ -53,7 +54,7 @@ Value* convertToType(Value* value, const string& targetTypeName) {
     }
     
     // 如果类型系统没有convertTo方法，尝试直接转换
-    TypeRegistry* registry = TypeRegistry::getInstance();
+    TypeRegistry* registry = TypeRegistry::getGlobalInstance();
     if (registry) {
         ObjectType* targetType = registry->getType(targetTypeName);
         if (targetType) {
@@ -350,49 +351,6 @@ Value* builtin_pow(vector<Value*>& args) {
 
 // ==================== 字符串函数实现 ====================
 
-Value* builtin_length(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    if (String* str = dynamic_cast<String*>(val)) {
-        return new Integer(str->length());
-    } else if (Array* arr = dynamic_cast<Array*>(val)) {
-        return new Integer(arr->size());
-    }
-    return nullptr;
-}
-
-Value* builtin_substring(vector<Value*>& args) {
-    if (args.size() < 2 || args.size() > 3 || !args[0]) return nullptr;
-    
-    Value* strVal = args[0];
-    if (String* str = dynamic_cast<String*>(strVal)) {
-        string s = str->getValue();
-        
-        if (args.size() == 2) {
-            // substring(str, start)
-            if (Integer* start = dynamic_cast<Integer*>(args[1])) {
-                int startPos = start->getValue();
-                if (startPos >= 0 && startPos < s.length()) {
-                    return new String(s.substr(startPos));
-                }
-            }
-        } else if (args.size() == 3) {
-            // substring(str, start, length)
-            if (Integer* start = dynamic_cast<Integer*>(args[1])) {
-                if (Integer* length = dynamic_cast<Integer*>(args[2])) {
-                    int startPos = start->getValue();
-                    int len = length->getValue();
-                    if (startPos >= 0 && len >= 0 && startPos + len <= s.length()) {
-                        return new String(s.substr(startPos, len));
-                    }
-                }
-            }
-        }
-    }
-    return nullptr;
-}
-
 
 
 // ==================== 数组函数实现 ====================
@@ -526,24 +484,20 @@ public:
         };
     }
     
-    void registerFunctions(ScopeManager& scopeManager) override {
-        // 使用辅助方法批量注册函数
-        defineBuiltinFunctions(scopeManager, getFunctionMap());
-    }
-    
-    map<string, BuiltinFunctionPtr> getFunctionMap() const override {
+protected:
+    map<string, FunctionInfo> getFunctionInfoMap() const override {
         return {
-            {"print", builtin_print},
-            {"println", builtin_println},
-            {"count", builtin_count},
-            {"cin", builtin_cin},
-            {"exit", builtin_exit},
-            {"push", builtin_push},
-            {"pop", builtin_pop},
-            {"to_upper", builtin_to_upper},
-            {"to_lower", builtin_to_lower},
-            {"substring", builtin_substring},
-            {"length", builtin_length}
+            {"print", {builtin_print, {"value", "..."}, "打印值到控制台"}},
+            {"println", {builtin_println, {"value", "..."}, "打印值到控制台并换行"}},
+            {"count", {builtin_count, {"value"}, "计算值的长度或元素数量"}},
+            {"cin", {builtin_cin, {}, "从控制台读取输入"}},
+            {"exit", {builtin_exit, {"code"}, "退出程序，返回指定代码"}},
+            {"push", {builtin_push, {"array", "value"}, "向数组末尾添加元素"}},
+            {"pop", {builtin_pop, {"array"}, "从数组末尾移除并返回元素"}},
+            {"to_upper", {builtin_to_upper, {"string"}, "将字符串转换为大写"}},
+            {"to_lower", {builtin_to_lower, {"string"}, "将字符串转换为小写"}},
+            {"substring", {builtin_substring, {"string", "start", "length"}, "提取字符串的子串"}},
+            {"length", {builtin_length, {"value"}, "获取值的长度"}}
         };
     }
 };

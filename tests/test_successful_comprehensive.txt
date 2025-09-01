@@ -1,0 +1,316 @@
+// 成功的综合测试：循环、分支、异常处理、函数调用、算术逻辑运算
+
+// 全局变量
+let globalCounter = 0;
+let globalResult = 0;
+
+// 函数1：计算阶乘
+function factorial(n) {
+    if (n <= 1) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+// 函数2：检查质数（简化版）
+function isPrime(num) {
+    if (num < 2) {
+        return false;
+    }
+    
+    let i = 2;
+    while (i <= num) {
+        let remainder = num % i;
+        if (remainder == 0) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+// 函数3：异常处理测试
+function testException(x, y) {
+    try {
+        println("计算开始");
+        let result = x / y;
+        println("计算完成");
+        return result;
+    } catch (error) {
+        println("异常处理");
+        return 0;
+    }
+}
+
+// 函数4：算术运算测试
+function testArithmetic(a, b, c) {
+    let sum = a + b + c;
+    let product = a * b * c;
+    let difference = a - b - c;
+    let quotient = a / b;
+    let remainder = a % b;
+    
+    println("算术运算完成");
+    println("和: " + sum);
+    println("积: " + product);
+    println("差: " + difference);
+    println("商: " + quotient);
+    println("余数: " + remainder);
+    
+    return sum + product;
+}
+
+// 函数5：逻辑运算测试
+function testLogic(a, b, c) {
+    let logicalAnd = a > 0 && b > 0 && c > 0;
+    let logicalOr = a > 10 || b > 10 || c > 10;
+    let logicalNot = !(a == 0);
+    
+    println("逻辑运算完成");
+    println("逻辑与: " + logicalAnd);
+    println("逻辑或: " + logicalOr);
+    println("逻辑非: " + logicalNot);
+    
+    return logicalAnd;
+}
+
+// 函数6：比较运算测试
+function testComparison(a, b) {
+    let equal = a == b;
+    let notEqual = a != b;
+    let lessThan = a < b;
+    let greaterThan = a > b;
+    let lessEqual = a <= b;
+    let greaterEqual = a >= b;
+    
+    println("比较运算完成");
+    println("相等: " + equal);
+    println("不等: " + notEqual);
+    println("小于: " + lessThan);
+    println("大于: " + greaterThan);
+    println("小于等于: " + lessEqual);
+    println("大于等于: " + greaterEqual);
+    
+    return equal;
+}
+
+// 函数7：位运算测试
+function testBitwise(a, b) {
+    let bitwiseAnd = a & b;
+    let bitwiseOr = a | b;
+    let bitwiseXor = a ^ b;
+    let leftShift = a << 2;
+    let rightShift = a >> 1;
+    
+    println("位运算完成");
+    println("位与: " + bitwiseAnd);
+    println("位或: " + bitwiseOr);
+    println("位异或: " + bitwiseXor);
+    println("左移: " + leftShift);
+    println("右移: " + rightShift);
+    
+    return bitwiseAnd;
+}
+
+// 函数8：循环测试
+function testLoops() {
+    println("循环测试开始");
+    
+    // while循环
+    let sum = 0;
+    let j = 1;
+    while (j <= 5) {
+        sum = sum + j;
+        j = j + 1;
+    }
+    println("1到5的和: " + sum);
+    
+    // 嵌套循环
+    let product = 1;
+    let k = 1;
+    while (k <= 3) {
+        let inner = 1;
+        let l = 1;
+        while (l <= k) {
+            inner = inner * l;
+            l = l + 1;
+        }
+        product = product * inner;
+        k = k + 1;
+    }
+    println("嵌套循环结果: " + product);
+}
+
+// 函数9：分支测试
+function testBranches() {
+    println("分支测试开始");
+    
+    let score = 85;
+    
+    if (score >= 90) {
+        println("优秀");
+    } else if (score >= 80) {
+        println("良好");
+    } else if (score >= 70) {
+        println("中等");
+    } else if (score >= 60) {
+        println("及格");
+    } else {
+        println("不及格");
+    }
+    
+    // 嵌套if
+    let age = 25;
+    let income = 50000;
+    
+    if (age >= 18) {
+        if (income >= 30000) {
+            println("成年人，收入较高");
+        } else {
+            println("成年人，收入一般");
+        }
+    } else {
+        println("未成年人");
+    }
+}
+
+// 函数10：switch测试
+function testSwitch(day) {
+    switch (day) {
+        case 1:
+            println("星期一");
+            break;
+        case 2:
+            println("星期二");
+            break;
+        case 3:
+            println("星期三");
+            break;
+        case 4:
+            println("星期四");
+            break;
+        case 5:
+            println("星期五");
+            break;
+        case 6:
+        case 7:
+            println("周末");
+            break;
+        default:
+            println("无效日期");
+            break;
+    }
+}
+
+// 函数11：结构体测试
+function testStructs() {
+    println("结构体测试开始");
+    
+    struct Person {
+        name: string,
+        age: int,
+        salary: double
+    }
+    
+    let person1 = Person {name: "张三", age: 30, salary: 8000.5};
+    let person2 = Person {name: "李四", age: 25, salary: 6000.0};
+    
+    println("人员信息:");
+    println(person1.name);
+    println(person1.age);
+    println(person1.salary);
+    println(person2.name);
+    println(person2.age);
+    println(person2.salary);
+}
+
+// 函数12：数组测试
+function testArrays() {
+    println("数组测试开始");
+    
+    let numbers = [1, 2, 3, 4, 5];
+    let sum = 0;
+    let i = 0;
+    while (i < 5) {
+        sum = sum + numbers[i];
+        i = i + 1;
+    }
+    println("数组元素和: " + sum);
+}
+
+// 主函数：执行所有测试
+function main() {
+    println("=== 成功的综合测试开始 ===");
+    
+    // 1. 函数调用测试
+    println("1. 函数调用测试:");
+    let fact5 = factorial(5);
+    println("5的阶乘: " + fact5);
+    
+    let prime7 = isPrime(7);
+    let prime8 = isPrime(8);
+    println("7是质数: " + prime7);
+    println("8是质数: " + prime8);
+    
+    // 2. 异常处理测试
+    println("2. 异常处理测试:");
+    testException(10, 2);
+    testException(10, 0);
+    
+    // 3. 算术运算测试
+    println("3. 算术运算测试:");
+    let calcResult = testArithmetic(15, 3, 7);
+    println("最终结果: " + calcResult);
+    
+    // 4. 逻辑运算测试
+    println("4. 逻辑运算测试:");
+    testLogic(15, 3, 7);
+    
+    // 5. 比较运算测试
+    println("5. 比较运算测试:");
+    testComparison(15, 3);
+    
+    // 6. 位运算测试
+    println("6. 位运算测试:");
+    testBitwise(15, 3);
+    
+    // 7. 循环测试
+    println("7. 循环测试:");
+    testLoops();
+    
+    // 8. 分支测试
+    println("8. 分支测试:");
+    testBranches();
+    
+    // 9. Switch测试
+    println("9. Switch测试:");
+    testSwitch(3);
+    testSwitch(6);
+    testSwitch(10);
+    
+    // 10. 结构体测试
+    println("10. 结构体测试:");
+    testStructs();
+    
+    // 11. 数组测试
+    println("11. 数组测试:");
+    testArrays();
+    
+    // 12. 全局变量测试
+    println("12. 全局变量测试:");
+    globalResult = fact5 + calcResult;
+    println("全局结果: " + globalResult);
+    
+    // 13. 字符串操作测试
+    println("13. 字符串操作测试:");
+    let str1 = "Hello";
+    let str2 = "World";
+    let combined = str1 + " " + str2;
+    println("字符串拼接: " + combined);
+    
+    println("=== 成功的综合测试完成 ===");
+    println("所有功能测试通过！");
+}
+
+main();

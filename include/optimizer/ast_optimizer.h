@@ -2,6 +2,8 @@
 #define AST_OPTIMIZER_H
 
 #include "parser/ast_visitor.h"
+#include "parser/statement.h"
+#include "parser/expression.h"
 #include <string>
 
 // AST优化器基类
@@ -35,19 +37,14 @@ public:
     Value* visit(AssignExpression* expr) override;
     Value* visit(AccessExpression* expr) override;
     Value* visit(CallExpression* expr) override;
-    Value* visit(MethodCallExpression* expr) override;
-    Value* visit(CastExpression<Integer>* expr) override;
-    Value* visit(CastExpression<Double>* expr) override;
-    Value* visit(CastExpression<Bool>* expr) override;
-    Value* visit(CastExpression<Char>* expr) override;
-    Value* visit(CastExpression<String>* expr) override;
+    Value* visit(CastExpression* expr) override;
 
     // 语句访问方法
     void visit(Program* program) override;
     void visit(Statement* stmt) override;
     void visit(ImportStatement* stmt) override;
     void visit(ExpressionStatement* stmt) override;
-    void visit(VariableDeclaration* stmt) override;
+    void visit(VariableDefinition* stmt) override;
     void visit(IfStatement* stmt) override;
     void visit(WhileStatement* stmt) override;
     void visit(ForStatement* stmt) override;
@@ -63,7 +60,6 @@ public:
     void visit(FunctionPrototype* stmt) override;
     void visit(Identifier* id) override;
     void visit(Variable* var) override;
-    void visit(UserFunction* func) override;
 
 private:
     // 辅助方法

@@ -1,0 +1,5 @@
+// 调试方法调用
+println("=== 调试方法调用 ===");
+let str = "Hello";
+let len = length(str);
+println("长度: ", len);

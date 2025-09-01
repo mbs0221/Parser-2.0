@@ -4,7 +4,7 @@
 namespace lexer {
 
 // 词法分析器实现
-Lexer::Lexer(){
+Lexer::Lexer() : inf(nullptr) {
 	look = nullptr; // 初始化当前token
 	
 	words["int"] = Type::Int;// new Word(INT, "int");
@@ -43,22 +43,32 @@ Lexer::Lexer(){
 
 Lexer::~Lexer(){
 	words.clear();
-	inf.close();
+	// 不需要关闭流，因为指针指向的对象会自动管理
 }
 
-bool Lexer::open(string file){
-	inf.open(file, ios::in);
-	if (inf.is_open()){
+bool Lexer::from_file(const string& filepath){
+	// 从文件加载
+	file_inf.open(filepath, ios::in);
+	if (file_inf.is_open()) {
+		inf = &file_inf;
 		return true;
 	}
 	return false;
 }
 
+bool Lexer::from_string(const string& code){
+	// 从字符串加载
+	str_inf.clear();
+	str_inf.str(code);
+	inf = &str_inf;
+	return true;
+}
+
 Token *Lexer::scan(){//LL(1)
-	if (inf.eof()){
+	if (!inf || inf->eof()){
 		return Token::END_OF_FILE;
 	}
-	while (inf.read(&peek, 1)){
+	while (inf->read(&peek, 1)){
 		column++;
 		if (peek == ' ' || peek == '\t')continue;
 		else if (peek == '\r')continue; // 忽略回车符
@@ -74,12 +84,15 @@ Token *Lexer::scan(){//LL(1)
 		else break;
 	}
 	
+	#ifdef LEXER_DEBUG
 	cout << "[LEXER DEBUG] scan() - peek char: '" << peek << "' (ASCII: " << (int)peek << ")" << endl;
+	#endif
 	
-	// 检查是否到达文件末尾
-	if (inf.eof()){
+	// 检查是否到达输入末尾
+	if (inf->eof()){
 		return Token::END_OF_FILE;
 	}
+	
 	if (peek == '\''){
 		return match_char();
 	} else if (peek == '"'){
@@ -96,9 +109,9 @@ Token *Lexer::scan(){//LL(1)
 
 Token *Lexer::match_char(){
 	char c; // '
-	inf.read(&peek, 1);
+	inf->read(&peek, 1);
 	if (peek == '\\'){// '\a
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		switch (peek){
 		case 'a':c = '\a'; break;
 		case 'b':c = '\b'; break;
@@ -116,10 +129,10 @@ Token *Lexer::match_char(){
 			printf("LEXICAL ERROR line[%03d]: invalid escape sequence '\\%c'\n", line, peek);
 			exit(1);  // 强制退出
 		}
-		inf.read(&peek, 1);// 读取结束引号
+		inf->read(&peek, 1);// 读取结束引号
 	}else{
 		c = peek;
-		inf.read(&peek, 1);// 读取结束引号
+		inf->read(&peek, 1);// 读取结束引号
 	}
 	
 	// 检查是否遇到结束引号
@@ -136,12 +149,12 @@ Token *Lexer::match_id(){
 	string str;
 	do{
 		str.push_back(peek);
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 	} while (isalnum(peek) || peek == '_');
-	inf.seekg(-1, ios_base::cur);
+	inf->seekg(-1, ios_base::cur);
 	// 重新读取peek字符，确保peek变量与文件指针同步
-	inf.read(&peek, 1);
-	inf.seekg(-1, ios_base::cur);
+	inf->read(&peek, 1);
+	inf->seekg(-1, ios_base::cur);
 	
 	cout << "[LEXER DEBUG] Identified identifier: '" << str << "'" << endl;
 	
@@ -156,7 +169,7 @@ Token *Lexer::match_id(){
 
 Token *Lexer::match_number(){
 	if (peek == '0'){
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		if (peek == 'x'){
 			return match_hex();
 		} else if (isdigit(peek) && peek >= '1' && peek <= '7'){
@@ -165,12 +178,12 @@ Token *Lexer::match_number(){
 		// 对于0.0等情况，直接处理
 		if (peek == '.' || isdigit(peek)){
 			// 重新设置peek为'0'，然后处理
-			inf.seekg(-1, ios_base::cur);
+			inf->seekg(-1, ios_base::cur);
 			peek = '0';
 			return match_decimal();
 		}
 		// 单独的0 - 使用TokenFactory管理
-		inf.seekg(-1, ios_base::cur);
+		inf->seekg(-1, ios_base::cur);
 		peek = '0';
 		// 直接创建Integer对象
 		return getFactory()->getInteger(0).get();
@@ -189,25 +202,25 @@ Token *Lexer::match_decimal(){
 	// 读取整数部分
 	do{
 		val = val * 10 + peek - '0';
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 	} while (isdigit(peek));
 	
 	// 检查是否有小数点
 	if (peek == '.'){
 		isFloat = true;
 		floatVal = (double)val;
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		
 		// 读取小数部分
 		while (isdigit(peek)){
 			floatVal += (peek - '0') * decimalPart;
 			decimalPart *= 0.1;
-			inf.read(&peek, 1);
+			inf->read(&peek, 1);
 		}
 	}
 	
 	// 回退一个字符，让peek指向下一个要处理的字符
-	inf.seekg(-1, ios_base::cur);
+	inf->seekg(-1, ios_base::cur);
 	
 	// 根据是否为浮点数返回相应的Token
 	if (isFloat){
@@ -220,7 +233,7 @@ Token *Lexer::match_decimal(){
 
 Token *Lexer::match_hex(){
 	int val = 0;
-	inf.read(&peek, 1);
+	inf->read(&peek, 1);
 	do{
 		if (isdigit(peek)){
 			val = val * 16 + peek - '0';
@@ -231,9 +244,9 @@ Token *Lexer::match_hex(){
 		else if (peek >= 'A' && peek <= 'F'){
 			val = val * 16 + peek - 'A' + 10;
 		}
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 	} while (isxdigit(peek));
-	inf.seekg(-1, ios_base::cur);
+	inf->seekg(-1, ios_base::cur);
 	// 使用享元模式管理Integer对象
 	return getFactory()->getInteger(val).get();
 }
@@ -242,9 +255,9 @@ Token *Lexer::match_oct(){
 	int val = 0;
 	do{
 		val = val * 8 + peek - '0';
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 	} while (isdigit(peek) && peek >= '0' && peek <= '7');
-	inf.seekg(-1, ios_base::cur);
+	inf->seekg(-1, ios_base::cur);
 	// 使用享元模式管理Integer对象
 	return factory->getInteger(val).get();
 }
@@ -252,27 +265,27 @@ Token *Lexer::match_oct(){
 Token *Lexer::match_other(){
 	// 处理多字符运算符
 	if (peek == '=') {
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		if (peek == '=') {
 			// ==
 			return Operator::EQ;  // 使用静态常量
 		} else {
 			// =
-			inf.seekg(-1, ios_base::cur);
+			inf->seekg(-1, ios_base::cur);
 			return Operator::Assign;  // 赋值运算符，优先级2，右结合
 		}
 	} else if (peek == '!') {
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		if (peek == '=') {
 			// !=
 			return Operator::NE;  // 使用静态常量
 		} else {
 			// !
-			inf.seekg(-1, ios_base::cur);
+			inf->seekg(-1, ios_base::cur);
 			return Operator::Not;  // 使用静态常量
 		}
 	} else if (peek == '<') {
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		if (peek == '<') {
 			// <<
 			return Operator::LeftShift;  // 使用静态常量
@@ -281,11 +294,11 @@ Token *Lexer::match_other(){
 			return Operator::LE;  // 使用静态常量
 		} else {
 			// <
-			inf.seekg(-1, ios_base::cur);
+			inf->seekg(-1, ios_base::cur);
 			return Operator::LT;  // 使用静态常量
 		}
 	} else if (peek == '>') {
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		if (peek == '>') {
 			// >>
 			return Operator::RightShift;  // 使用静态常量
@@ -294,66 +307,66 @@ Token *Lexer::match_other(){
 			return Operator::GE;  // 使用静态常量
 		} else {
 			// >
-			inf.seekg(-1, ios_base::cur);
+			inf->seekg(-1, ios_base::cur);
 			return Operator::GT;  // 使用静态常量
 		}
 	} else if (peek == '&') {
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		if (peek == '&') {
 			// &&
 			return Operator::AND;  // 使用静态常量
 		} else {
 			// &
-			inf.seekg(-1, ios_base::cur);
+			inf->seekg(-1, ios_base::cur);
 			return Operator::BitAnd;  // 使用静态常量
 		}
 	} else if (peek == '|') {
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		if (peek == '|') {
 			// ||
 			return Operator::OR;  // 使用静态常量
 		} else {
 			// |
-			inf.seekg(-1, ios_base::cur);
+			inf->seekg(-1, ios_base::cur);
 			return Operator::BitOr;  // 使用静态常量
 		}
 	} else if (peek == '+') {
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		if (peek == '+') {
 			// ++
 			return Operator::Increment;  // 使用静态常量
 		} else {
 			// +
-			inf.seekg(-1, ios_base::cur);
+			inf->seekg(-1, ios_base::cur);
 			return Operator::Add;  // 使用静态常量
 		}
 	} else if (peek == '-') {
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		if (peek == '-') {
 			// --
 			return Operator::Decrement;  // 使用静态常量
 		} else {
 			// -
-			inf.seekg(-1, ios_base::cur);
+			inf->seekg(-1, ios_base::cur);
 			return Operator::Sub;  // 使用静态常量
 		}
 	} else if (peek == '*') {
-		inf.read(&peek, 1);  // 读取下一个字符
+		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::Mul;  // 使用静态常量
 	} else if (peek == '/') {
-		inf.read(&peek, 1);  // 读取下一个字符
+		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::Div;  // 使用静态常量
 	} else if (peek == '%') {
-		inf.read(&peek, 1);  // 读取下一个字符
+		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::Mod;  // 使用静态常量
 	} else if (peek == '^') {
-		inf.read(&peek, 1);  // 读取下一个字符
+		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::BitXor;  // 使用静态常量
 	} else if (peek == '~') {
-		inf.read(&peek, 1);  // 读取下一个字符
+		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::BitNot;  // 使用静态常量
 	} else if (peek == '.') {
-		// inf.read(&peek, 1);  // 读取下一个字符
+		// inf->read(&peek, 1);  // 读取下一个字符
 		// 不需要回退文件指针，因为peek已经指向下一个字符
 		return Operator::Dot;  // 使用静态常量
 	} else {
@@ -370,13 +383,13 @@ Token *Lexer::match_other(){
 
 Token *Lexer::skip_comment(){
 	if (peek == '/'){
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 		if (peek == '/'){
 			// 单行注释 //
 			string content = "//";
-			while (peek != '\n' && !inf.eof()){
+			while (peek != '\n' && !inf->eof()){
 				content += peek;
-				inf.read(&peek, 1);
+				inf->read(&peek, 1);
 			}
 			// 如果遇到换行符，需要更新行号和列号
 			if (peek == '\n') {
@@ -393,14 +406,14 @@ Token *Lexer::skip_comment(){
 		else if (peek == '*'){
 			// 多行注释 /* */
 			string content = "/*";
-			inf.read(&peek, 1);
-			while (!inf.eof()){
+			inf->read(&peek, 1);
+			while (!inf->eof()){
 				content += peek;
 				if (peek == '*'){
-					inf.read(&peek, 1);
+					inf->read(&peek, 1);
 					content += peek;
 					if (peek == '/'){
-						inf.read(&peek, 1);
+						inf->read(&peek, 1);
 						// 使用享元模式管理Comment对象
 						static Comment* staticMultiLineComment = nullptr;
 						if (!staticMultiLineComment) {
@@ -416,13 +429,13 @@ Token *Lexer::skip_comment(){
 				} else {
 					column++;
 				}
-				inf.read(&peek, 1);
+				inf->read(&peek, 1);
 			}
 			return new Comment(content, "/*");
 		}
 		else{
 			// 不是注释，回退文件指针，让scan()方法处理除法运算
-			inf.seekg(-1, ios_base::cur);
+			inf->seekg(-1, ios_base::cur);
 			peek = '/';
 			return nullptr;
 		}
@@ -430,10 +443,10 @@ Token *Lexer::skip_comment(){
 	else if (peek == '#'){
 		// 单行注释 #
 		string content = "#";
-		inf.read(&peek, 1);
-		while (peek != '\n' && !inf.eof()){
+		inf->read(&peek, 1);
+		while (peek != '\n' && !inf->eof()){
 			content += peek;
-			inf.read(&peek, 1);
+			inf->read(&peek, 1);
 		}
 		// 如果遇到换行符，需要更新行号和列号
 		if (peek == '\n') {
@@ -452,13 +465,13 @@ Token *Lexer::skip_comment(){
 
 Token *Lexer::match_string(){
 	string str;
-	inf.read(&peek, 1); // 跳过开始的引号
+	inf->read(&peek, 1); // 跳过开始的引号
 	
 	// 读取字符串内容，直到遇到结束引号
-	while (peek != '"' && !inf.eof()) {
+	while (peek != '"' && !inf->eof()) {
 		if (peek == '\\') {
 			// 处理转义字符
-			inf.read(&peek, 1);
+			inf->read(&peek, 1);
 			switch (peek) {
 				case 'n': str += '\n'; break;
 				case 't': str += '\t'; break;
@@ -476,11 +489,11 @@ Token *Lexer::match_string(){
 		} else {
 			str += peek;
 		}
-		inf.read(&peek, 1);
+		inf->read(&peek, 1);
 	}
 	
 	// 跳过结束引号
-	// inf.read(&peek, 1);
+	// inf->read(&peek, 1);
 	
 	// 返回字符串字面量token
 	return new String(str);

@@ -1,0 +1,33 @@
+# 测试混合算数表达式
+
+function add(a, b) {
+    return a + b;
+}
+
+function multiply(a, b) {
+    return a * b;
+}
+
+let x = 10;
+let y = 5;
+let z = 3;
+
+# 测试基本混合算数表达式
+let result1 = x + y * z;
+print("result1 = ");
+print(result1);
+
+let result2 = (x + y) * z;
+print("result2 = ");
+print(result2);
+
+# 测试函数调用与算数表达式混合
+let func_result1 = add(x, y) * z;
+print("func_result1 = ");
+print(func_result1);
+
+let func_result2 = multiply(add(x, y), z);
+print("func_result2 = ");
+print(func_result2);
+
+print("测试完成");

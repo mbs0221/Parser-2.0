@@ -87,9 +87,9 @@ TEST_F(SimpleParserTest, BinaryExpressionCreation) {
     delete op;
 }
 
-// 测试VariableDeclaration的创建
-TEST_F(SimpleParserTest, VariableDeclarationCreation) {
-    VariableDeclaration* varDecl = new VariableDeclaration("x", "int");
+// 测试VariableDefinition的创建
+TEST_F(SimpleParserTest, VariableDefinitionCreation) {
+    VariableDefinition* varDecl = new VariableDefinition("x", "int");
     
     ASSERT_NE(varDecl, nullptr);
     EXPECT_EQ(varDecl->variables.size(), 1);
@@ -99,10 +99,10 @@ TEST_F(SimpleParserTest, VariableDeclarationCreation) {
     delete varDecl;
 }
 
-// 测试VariableDeclaration带初始值
-TEST_F(SimpleParserTest, VariableDeclarationWithInitialValue) {
+// 测试VariableDefinition带初始值
+TEST_F(SimpleParserTest, VariableDefinitionWithInitialValue) {
     ConstantExpression* initValue = new ConstantExpression(42);
-    VariableDeclaration* varDecl = new VariableDeclaration("x", "int");
+    VariableDefinition* varDecl = new VariableDefinition("x", "int");
     varDecl->variables[0].second = initValue;
     
     ASSERT_NE(varDecl, nullptr);

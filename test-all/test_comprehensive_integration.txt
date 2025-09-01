@@ -1,0 +1,292 @@
+// 综合功能测试：循环、分支、异常处理、函数调用、算术逻辑运算
+
+// 全局变量
+let globalCounter = 0;
+let globalResult = 0;
+
+// 函数1：计算阶乘
+function factorial(n) {
+    if (n <= 1) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+// 函数2：检查数字是否为质数
+function isPrime(num) {
+    if (num < 2) {
+        return false;
+    }
+    
+    let i = 2;
+    while (i * i <= num) {
+        if (num % i == 0) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+// 函数3：异常处理测试函数
+function testExceptionHandling(x, y) {
+    try {
+        print("尝试计算: " + x + " / " + y);
+        let result = x / y;
+        print("计算结果: " + result);
+        return result;
+    } catch (error) {
+        print("捕获到异常: " + error);
+        return 0;
+    } finally {
+        print("finally块执行完成");
+    }
+}
+
+// 函数4：复杂算术和逻辑运算
+function complexCalculations(a, b, c) {
+    // 算术运算
+    let sum = a + b + c;
+    let product = a * b * c;
+    let difference = a - b - c;
+    let quotient = a / b;
+    let remainder = a % b;
+    
+    // 逻辑运算
+    let logicalAnd = a > 0 && b > 0 && c > 0;
+    let logicalOr = a > 10 || b > 10 || c > 10;
+    let logicalNot = !(a == 0);
+    
+    // 位运算
+    let bitwiseAnd = a & b;
+    let bitwiseOr = a | b;
+    let bitwiseXor = a ^ b;
+    let leftShift = a << 2;
+    let rightShift = a >> 1;
+    
+    // 比较运算
+    let equal = a == b;
+    let notEqual = a != b;
+    let lessThan = a < b;
+    let greaterThan = a > b;
+    let lessEqual = a <= b;
+    let greaterEqual = a >= b;
+    
+    print("算术运算结果:");
+    print("  和: " + sum);
+    print("  积: " + product);
+    print("  差: " + difference);
+    print("  商: " + quotient);
+    print("  余数: " + remainder);
+    
+    print("逻辑运算结果:");
+    print("  逻辑与: " + logicalAnd);
+    print("  逻辑或: " + logicalOr);
+    print("  逻辑非: " + logicalNot);
+    
+    print("位运算结果:");
+    print("  位与: " + bitwiseAnd);
+    print("  位或: " + bitwiseOr);
+    print("  位异或: " + bitwiseXor);
+    print("  左移: " + leftShift);
+    print("  右移: " + rightShift);
+    
+    print("比较运算结果:");
+    print("  相等: " + equal);
+    print("  不等: " + notEqual);
+    print("  小于: " + lessThan);
+    print("  大于: " + greaterThan);
+    print("  小于等于: " + lessEqual);
+    print("  大于等于: " + greaterEqual);
+    
+    return sum + product;
+}
+
+// 函数5：switch-case测试
+function testSwitchCase(day) {
+    switch (day) {
+        case 1:
+            print("星期一");
+            break;
+        case 2:
+            print("星期二");
+            break;
+        case 3:
+            print("星期三");
+            break;
+        case 4:
+            print("星期四");
+            break;
+        case 5:
+            print("星期五");
+            break;
+        case 6:
+        case 7:
+            print("周末");
+            break;
+        default:
+            print("无效的日期");
+            break;
+    }
+}
+
+// 函数6：循环测试
+function testLoops() {
+    print("=== 循环测试 ===");
+    
+    // for循环
+    print("For循环 (1到5):");
+    for (let i = 1; i <= 5; i = i + 1) {
+        print("  i = " + i);
+        globalCounter = globalCounter + 1;
+    }
+    
+    // while循环
+    print("While循环 (计算1到10的和):");
+    let sum = 0;
+    let j = 1;
+    while (j <= 10) {
+        sum = sum + j;
+        j = j + 1;
+    }
+    print("  1到10的和: " + sum);
+    
+    // do-while循环
+    print("Do-while循环 (计算阶乘):");
+    let n = 5;
+    let factorial = 1;
+    do {
+        factorial = factorial * n;
+        n = n - 1;
+    } while (n > 0);
+    print("  5的阶乘: " + factorial);
+}
+
+// 函数7：分支测试
+function testBranches() {
+    print("=== 分支测试 ===");
+    
+    let score = 85;
+    
+    if (score >= 90) {
+        print("优秀");
+    } else if (score >= 80) {
+        print("良好");
+    } else if (score >= 70) {
+        print("中等");
+    } else if (score >= 60) {
+        print("及格");
+    } else {
+        print("不及格");
+    }
+    
+    // 嵌套if
+    let age = 25;
+    let income = 50000;
+    
+    if (age >= 18) {
+        if (income >= 30000) {
+            print("成年人，收入较高");
+        } else {
+            print("成年人，收入一般");
+        }
+    } else {
+        print("未成年人");
+    }
+}
+
+// 函数8：结构体测试
+function testStructs() {
+    print("=== 结构体测试 ===");
+    
+    // 定义结构体
+    struct Person {
+        name: string,
+        age: int,
+        salary: double
+    }
+    
+    // 创建结构体实例
+    let person1 = Person {name: "张三", age: 30, salary: 8000.5};
+    let person2 = Person {name: "李四", age: 25, salary: 6000.0};
+    
+    print("人员信息:");
+    print("  " + person1.name + ": " + person1.age + "岁, 工资" + person1.salary);
+    print("  " + person2.name + ": " + person2.age + "岁, 工资" + person2.salary);
+    
+    // 结构体数组
+    let people = [person1, person2];
+    print("数组中的第一个人员: " + people[0].name);
+}
+
+// 主函数：执行所有测试
+function main() {
+    print("=== 综合功能测试开始 ===");
+    
+    // 1. 函数调用测试
+    print("\n1. 函数调用测试:");
+    let fact5 = factorial(5);
+    print("5的阶乘: " + fact5);
+    
+    let prime7 = isPrime(7);
+    let prime8 = isPrime(8);
+    print("7是质数: " + prime7);
+    print("8是质数: " + prime8);
+    
+    // 2. 异常处理测试
+    print("\n2. 异常处理测试:");
+    testExceptionHandling(10, 2);  // 正常情况
+    testExceptionHandling(10, 0);  // 除零异常
+    
+    // 3. 算术逻辑运算测试
+    print("\n3. 复杂运算测试:");
+    let calcResult = complexCalculations(15, 3, 7);
+    print("复杂计算最终结果: " + calcResult);
+    
+    // 4. Switch-case测试
+    print("\n4. Switch-case测试:");
+    testSwitchCase(3);
+    testSwitchCase(6);
+    testSwitchCase(10);
+    
+    // 5. 循环测试
+    print("\n5. 循环测试:");
+    testLoops();
+    print("全局计数器: " + globalCounter);
+    
+    // 6. 分支测试
+    print("\n6. 分支测试:");
+    testBranches();
+    
+    // 7. 结构体测试
+    print("\n7. 结构体测试:");
+    testStructs();
+    
+    // 8. 字符串操作测试
+    print("\n8. 字符串操作测试:");
+    let str1 = "Hello";
+    let str2 = "World";
+    let combined = str1 + " " + str2;
+    print("字符串拼接: " + combined);
+    
+    // 9. 数组操作测试
+    print("\n9. 数组操作测试:");
+    let numbers = [1, 2, 3, 4, 5];
+    let sum = 0;
+    for (let i = 0; i < 5; i = i + 1) {
+        sum = sum + numbers[i];
+    }
+    print("数组元素和: " + sum);
+    
+    // 10. 全局变量测试
+    print("\n10. 全局变量测试:");
+    globalResult = fact5 + calcResult;
+    print("全局结果: " + globalResult);
+    
+    print("\n=== 综合功能测试完成 ===");
+    print("所有测试通过！");
+}
+
+// 执行主函数
+main();

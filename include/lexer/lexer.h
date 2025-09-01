@@ -1,13 +1,16 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+#include "lexer/token.h"
+
 #include <string>
 #include <map>
 #include <fstream>
+#include <iostream>
+#include <sstream>
 #include <memory>
 #include <mutex>
-#include <mutex>
-#include "lexer/token.h"
+
 
 using namespace std;
 
@@ -18,11 +21,13 @@ class Lexer{
 private:
 	char peek;
 	map<string, Token*> words;
-	ifstream inf;// 文件输入流
+	istream* inf;// 输入流指针，可以是文件流或字符串流
+	ifstream file_inf; // 文件流对象
+	istringstream str_inf; // 字符串流对象
 	Token* look; // 当前token，从Parser移动过来
 	bool read(char c){
 		char a;
-		inf.read(&a, sizeof(char));
+		inf->read(&a, sizeof(char));
 		return a == c;
 	}
 public:
@@ -30,7 +35,8 @@ public:
 	int line = 1;
 	Lexer();
 	~Lexer();
-	bool open(string file);
+	bool from_file(const string& filepath); // 从文件加载
+	bool from_string(const string& code); // 从字符串加载
 	Token *scan();
 	
 	// 匹配方法 - 从Parser移动过来

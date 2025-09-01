@@ -1,0 +1,36 @@
+// 测试函数中的循环和分支操作
+function testLoop() {
+    let i = 0;
+    while (i < 5) {
+        if (i % 2 == 0) {
+            println("Even: ", i);
+        } else {
+            println("Odd: ", i);
+        }
+        i = i + 1;
+    }
+}
+
+function testForLoop() {
+    for (let j = 0; j < 3; j = j + 1) {
+        println("For loop iteration: ", j);
+    }
+}
+
+function testConditional() {
+    let x = 10;
+    let y = 5;
+    
+    if (x > y) {
+        println("x is greater than y");
+    } else if (x < y) {
+        println("x is less than y");
+    } else {
+        println("x equals y");
+    }
+}
+
+// 调用测试函数
+testLoop();
+testForLoop();
+testConditional();

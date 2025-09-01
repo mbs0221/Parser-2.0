@@ -10,9 +10,7 @@ void ExpressionStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-void VariableDeclaration::accept(StatementVisitor* visitor) {
-    visitor->visit(this);
-}
+
 
 // ==================== 控制流语句类型 ====================
 void IfStatement::accept(StatementVisitor* visitor) {

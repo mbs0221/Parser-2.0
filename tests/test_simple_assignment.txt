@@ -1,0 +1,17 @@
+// 简单测试 - 验证赋值表达式的左操作数可以是成员访问
+
+// 测试1: 简单变量赋值
+let a = 5;
+let b = 10;
+
+print("Initial values: a = " + a + ", b = " + b);
+
+// 测试2: 数组赋值（如果支持的话）
+let arr = [1, 2, 3];
+print("Array created: " + arr);
+
+// 测试3: 字典赋值（如果支持的话）
+let dict = {"key": "value"};
+print("Dictionary created: " + dict);
+
+print("Test completed");

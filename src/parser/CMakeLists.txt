@@ -6,7 +6,7 @@ set(PARSER_SOURCES
     ${CMAKE_SOURCE_DIR}/src/parser/expression.cpp
     ${CMAKE_SOURCE_DIR}/src/parser/statement.cpp
     ${CMAKE_SOURCE_DIR}/src/parser/inter.cpp
-    ${CMAKE_SOURCE_DIR}/src/parser/function.cpp
+    ${CMAKE_SOURCE_DIR}/src/parser/definition.cpp
 )
 
 # 设置头文件
@@ -14,7 +14,7 @@ set(PARSER_HEADERS
     ${CMAKE_SOURCE_DIR}/include/parser/parser.h
     ${CMAKE_SOURCE_DIR}/include/parser/expression.h
     ${CMAKE_SOURCE_DIR}/include/parser/statement.h
-    ${CMAKE_SOURCE_DIR}/include/parser/function.h
+    ${CMAKE_SOURCE_DIR}/include/parser/definition.h
     ${CMAKE_SOURCE_DIR}/include/parser/ast_visitor.h
     ${CMAKE_SOURCE_DIR}/include/parser/inter.h
 )

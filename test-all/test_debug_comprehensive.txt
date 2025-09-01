@@ -1,0 +1,91 @@
+// 调试综合测试
+
+// 全局变量
+let globalCounter = 0;
+
+// 函数1：简单测试
+function simpleTest() {
+    print("简单测试开始");
+    return 42;
+}
+
+// 函数2：异常处理测试
+function testException(x, y) {
+    try {
+        print("计算开始");
+        let result = x / y;
+        print("计算完成");
+        return result;
+    } catch (error) {
+        print("异常处理");
+        return 0;
+    }
+}
+
+// 函数3：循环测试
+function testLoops() {
+    print("循环测试开始");
+    
+    let sum = 0;
+    let j = 1;
+    while (j <= 3) {
+        sum = sum + j;
+        j = j + 1;
+    }
+    print("循环完成");
+}
+
+// 函数4：分支测试
+function testBranches() {
+    print("分支测试开始");
+    
+    let score = 85;
+    
+    if (score >= 80) {
+        print("成绩良好");
+    } else {
+        print("需要努力");
+    }
+}
+
+// 函数5：switch测试
+function testSwitch(day) {
+    switch (day) {
+        case 1:
+            print("星期一");
+            break;
+        case 2:
+            print("星期二");
+            break;
+        default:
+            print("其他");
+            break;
+    }
+}
+
+// 主函数
+function main() {
+    print("调试测试开始");
+    
+    // 函数调用
+    let result = simpleTest();
+    print("简单测试结果: " + result);
+    
+    // 异常处理
+    testException(10, 2);
+    testException(10, 0);
+    
+    // 循环
+    testLoops();
+    
+    // 分支
+    testBranches();
+    
+    // switch
+    testSwitch(1);
+    testSwitch(2);
+    
+    print("调试测试完成");
+}
+
+main();

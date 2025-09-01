@@ -12,6 +12,18 @@ target_include_directories(core_plugin PRIVATE
 
 target_link_libraries(core_plugin parser interpreter)
 
+# 基础数学函数插件
+add_library(math_plugin SHARED
+    math_plugin.cpp
+)
+
+target_include_directories(math_plugin PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/Parser
+)
+
+target_link_libraries(math_plugin parser interpreter)
+
 # 增强数学函数插件
 add_library(math_enhanced_plugin SHARED
     math_plugin_enhanced.cpp
@@ -73,7 +85,7 @@ target_include_directories(io_plugin PRIVATE
 target_link_libraries(io_plugin parser interpreter)
 
 # 设置插件输出目录
-set_target_properties(core_plugin math_enhanced_plugin string_plugin array_plugin type_plugin io_plugin PROPERTIES
+set_target_properties(core_plugin math_plugin math_enhanced_plugin string_plugin array_plugin type_plugin io_plugin PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins
     CXX_STANDARD 11
     CXX_STANDARD_REQUIRED ON

@@ -1,0 +1,31 @@
+// 简单条件测试
+
+// 全局变量
+let globalCounter = 0;
+
+// 函数1：测试简单条件
+function testSimpleCondition() {
+    println("简单条件测试开始");
+    
+    let num = 10;
+    let i = 2;
+    
+    while (i <= num) {
+        println("条件满足");
+        i = i + 1;
+    }
+    
+    println("简单条件测试完成");
+}
+
+// 主函数
+function main() {
+    println("简单条件测试开始");
+    
+    // 测试简单条件
+    testSimpleCondition();
+    
+    println("简单条件测试完成");
+}
+
+main();

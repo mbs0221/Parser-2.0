@@ -1,0 +1,16 @@
+# 测试单目运算符
+
+function add(a, b) {
+    return a + b;
+}
+
+let x = 10;
+let y = 5;
+
+let test1 = -add(x, y);
+print("test1 = ");
+print(test1);
+
+let test2 = -x;
+print("test2 = ");
+print(test2);

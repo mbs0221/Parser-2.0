@@ -1,8 +1,8 @@
-#include "interpreter/builtin_plugin.h"
-#include "interpreter/value.h"
-#include "interpreter/type_registry.h"
-#include "parser/function.h"
-#include "interpreter/scope.h"
+#include "interpreter/plugins/builtin_plugin.h"
+#include "interpreter/values/value.h"
+#include "interpreter/types/types.h"
+#include "parser/definition.h"
+#include "interpreter/scope/scope.h"
 #include <iostream>
 #include <algorithm>
 #include <sstream>
@@ -10,54 +10,11 @@
 
 using namespace std;
 
-// 字符串函数实现 - 通过类型系统调用方法
-Value* string_trim(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用trim方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "trim", methodArgs);
-}
-
-Value* string_replace(vector<Value*>& args) {
-    if (args.size() != 3 || !args[0] || !args[1] || !args[2]) return nullptr;
-    
-    Value* strVal = args[0];
-    ObjectType* type = strVal->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用replace方法
-    vector<Value*> methodArgs = {args[1], args[2]};
-    return type->callMethod(strVal, "replace", methodArgs);
-}
-
-Value* string_split(vector<Value*>& args) {
-    if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
-    
-    Value* strVal = args[0];
-    ObjectType* type = strVal->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用split方法
-    vector<Value*> methodArgs = {args[1]};
-    return type->callMethod(strVal, "split", methodArgs);
-}
-
-Value* string_join(vector<Value*>& args) {
-    if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
-    
-    Value* arrVal = args[0];
-    ObjectType* type = arrVal->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用join方法
-    vector<Value*> methodArgs = {args[1]};
-    return type->callMethod(arrVal, "join", methodArgs);
-}
+// 使用宏自动生成字符串函数实现
+AUTO_PLUGIN_STRING_FUNCTION(string_trim, "trim")
+AUTO_PLUGIN_STRING_FUNCTION(string_replace, "replace")
+AUTO_PLUGIN_STRING_FUNCTION(string_split, "split")
+AUTO_PLUGIN_STRING_FUNCTION(string_join, "join")
 
 Value* string_starts_with(vector<Value*>& args) {
     if (args.size() != 2 || !args[0] || !args[1]) return nullptr;
@@ -123,20 +80,16 @@ public:
         };
     }
     
-    void registerFunctions(ScopeManager& scopeManager) override {
-        // 使用辅助方法批量注册函数
-        defineBuiltinFunctions(scopeManager, getFunctionMap());
-    }
-    
-    map<string, BuiltinFunctionPtr> getFunctionMap() const override {
+protected:
+    map<string, FunctionInfo> getFunctionInfoMap() const override {
         return {
-            {"trim", string_trim},
-            {"replace", string_replace},
-            {"split", string_split},
-            {"join", string_join},
-            {"starts_with", string_starts_with},
-            {"ends_with", string_ends_with},
-            {"contains", string_contains}
+            {"trim", {string_trim, {"string"}, "去除字符串首尾空白字符"}},
+            {"replace", {string_replace, {"string", "old", "new"}, "替换字符串中的子串"}},
+            {"split", {string_split, {"string", "delimiter"}, "按分隔符分割字符串"}},
+            {"join", {string_join, {"array", "separator"}, "用分隔符连接字符串数组"}},
+            {"starts_with", {string_starts_with, {"string", "prefix"}, "检查字符串是否以指定前缀开头"}},
+            {"ends_with", {string_ends_with, {"string", "suffix"}, "检查字符串是否以指定后缀结尾"}},
+            {"contains", {string_contains, {"string", "substring"}, "检查字符串是否包含指定子串"}}
         };
     }
 };

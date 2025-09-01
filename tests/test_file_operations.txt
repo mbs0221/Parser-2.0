@@ -1,0 +1,14 @@
+// 测试文件操作 - 使用let语法
+let handle = open("test_output.txt", "w");
+write(handle, "Hello, World!");
+write(handle, "This is a test file.", true);
+close(handle);
+
+// 读取文件
+let readHandle = open("test_output.txt", "r");
+let line1 = read(readHandle);
+let line2 = read(readHandle);
+close(readHandle);
+
+println("Line 1: ", line1);
+println("Line 2: ", line2);

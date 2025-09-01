@@ -1,20 +1,32 @@
-
-#include "interpreter/interpreter.h"
-#include "interpreter/calculate.h"
-#include "parser/expression.h"
-#include "parser/function.h"
-#include "parser/inter.h"
-#include "lexer/token.h"
-#include "interpreter/logger.h"
-#include "interpreter/value.h"
-
+// ==================== 标准库头文件 ====================
 #include <iostream>
 #include <sstream>
 #include <typeinfo>
 #include <map>
 #include <functional>
 
-using namespace std;
+// ==================== 项目头文件 ====================
+// 1. 当前源文件对应的头文件（如果有的话）
+// 2. 项目核心头文件
+#include "interpreter/core/interpreter.h"
+#include "interpreter/values/value.h"
+#include "interpreter/types/types.h"
+
+// 3. 项目功能头文件
+#include "interpreter/values/calculate.h"
+#include "interpreter/core/function_call.h"
+#include "interpreter/utils/logger.h"
+
+// 4. 解析器头文件
+#include "parser/expression.h"
+#include "parser/definition.h"
+#include "parser/inter.h"
+#include "parser/operator_mapping.h"
+
+// 5. 词法分析器头文件
+#include "lexer/token.h"
+
+// 注意：已移除 using namespace std;，使用显式std前缀
 
 // 求值表达式 - 使用访问者模式
 Value* Interpreter::visit(Expression* expr) {
@@ -29,14 +41,12 @@ Value* Interpreter::visit(Expression* expr) {
         return visit(boolExpr);
     } else if (ConstantExpression<char>* charExpr = dynamic_cast<ConstantExpression<char>*>(expr)) {
         return visit(charExpr);
-    } else if (ConstantExpression<string>* stringExpr = dynamic_cast<ConstantExpression<string>*>(expr)) {
+    } else if (ConstantExpression<std::string>* stringExpr = dynamic_cast<ConstantExpression<std::string>*>(expr)) {
         return visit(stringExpr);
     } else if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(expr)) {
         return visit(varExpr);
     } else if (UnaryExpression* unaryExpr = dynamic_cast<UnaryExpression*>(expr)) {
         return visit(unaryExpr);
-    } else if (AssignExpression* assignExpr = dynamic_cast<AssignExpression*>(expr)) {
-        return visit(assignExpr);
     } else if (BinaryExpression* binaryExpr = dynamic_cast<BinaryExpression*>(expr)) {
         return visit(binaryExpr);
     } else if (CastExpression* castExpr = dynamic_cast<CastExpression*>(expr)) {
@@ -45,16 +55,12 @@ Value* Interpreter::visit(Expression* expr) {
         return visit(accessExpr);
     } else if (CallExpression* callExpr = dynamic_cast<CallExpression*>(expr)) {
         return visit(callExpr);
-    } else if (MethodCallExpression* methodCallExpr = dynamic_cast<MethodCallExpression*>(expr)) {
-        return visit(methodCallExpr);
-    } else if (IncrementDecrementExpression* incDecExpr = dynamic_cast<IncrementDecrementExpression*>(expr)) {
-        // IncrementDecrementExpression现在继承自UnaryExpression，可以利用基类特性
-        return visit(incDecExpr);
-    } else if (MemberAssignExpression* memberAssignExpr = dynamic_cast<MemberAssignExpression*>(expr)) {
-        return visit(memberAssignExpr);
+    // IncDecExpression已合并到UnaryExpression中，不需要单独处理
+    } else if (TernaryExpression* ternaryExpr = dynamic_cast<TernaryExpression*>(expr)) {
+        return visit(ternaryExpr);
     }
     
-    reportError("Unknown expression type");
+    Interpreter::reportError("Unknown expression type");
     return nullptr;
 }
 
@@ -63,7 +69,7 @@ Value* Interpreter::visit(Expression* expr) {
 // 整数常量表达式求值
 Value* Interpreter::visit(ConstantExpression<int>* expr) {
     if (!expr) {
-        reportError("Null integer constant expression");
+        Interpreter::reportError("Null integer constant expression");
         return nullptr;
     }
     
@@ -74,7 +80,7 @@ Value* Interpreter::visit(ConstantExpression<int>* expr) {
 // 浮点数常量表达式求值
 Value* Interpreter::visit(ConstantExpression<double>* expr) {
     if (!expr) {
-        reportError("Null double constant expression");
+        Interpreter::reportError("Null double constant expression");
         return nullptr;
     }
     
@@ -85,34 +91,45 @@ Value* Interpreter::visit(ConstantExpression<double>* expr) {
 // 布尔常量表达式求值
 Value* Interpreter::visit(ConstantExpression<bool>* expr) {
     if (!expr) {
-        reportError("Null boolean constant expression");
+        Interpreter::reportError("Null boolean constant expression");
         return nullptr;
     }
     
-    LOG_DEBUG("Evaluating boolean constant: " + string(expr->value ? "true" : "false"));
+            LOG_DEBUG("Evaluating boolean constant: " + std::string(expr->value ? "true" : "false"));
     return new Bool(expr->value);
 }
 
 // 字符常量表达式求值
 Value* Interpreter::visit(ConstantExpression<char>* expr) {
     if (!expr) {
-        reportError("Null character constant expression");
+        Interpreter::reportError("Null character constant expression");
         return nullptr;
     }
     
-    LOG_DEBUG("Evaluating character constant: " + string(1, expr->value));
+    LOG_DEBUG("Evaluating character constant: " + std::string(1, expr->value));
     return new Char(expr->value);
 }
 
 // 字符串常量表达式求值
-Value* Interpreter::visit(ConstantExpression<string>* expr) {
+Value* Interpreter::visit(ConstantExpression<std::string>* expr) {
     if (!expr) {
-        reportError("Null string constant expression");
+        Interpreter::reportError("Null string constant expression");
         return nullptr;
     }
     
     LOG_DEBUG("Evaluating string constant: " + expr->value);
-    return new String(expr->value);
+    String* strValue = new String(expr->value);
+    
+    // 设置字符串的类型
+    ObjectType* stringType = TypeRegistry::getGlobalInstance()->getType("string");
+    if (stringType) {
+        strValue->setValueType(stringType);
+        LOG_DEBUG("String constant type set to: " + stringType->getTypeName());
+    } else {
+        LOG_DEBUG("Could not find string type in registry");
+    }
+    
+    return strValue;
 }
 
 // 类型转换表达式求值
@@ -123,105 +140,114 @@ Value* Interpreter::visit(CastExpression* castExpr) {
     Value* operandValue = visit(castExpr->operand);
     if (!operandValue) return nullptr;
     
-    // 使用Calculator的智能类型转换
-    Value* result = Calculator::smartTypeConversion(
-        operandValue, 
-        castExpr->getTargetTypeName()
-    );
+    // 直接进行类型转换
+    std::string targetTypeName = castExpr->getTargetTypeName();
+    std::string currentTypeName = getValueTypeName(operandValue);
     
-    if (!result) {
-        reportError("Type conversion failed from " + getValueTypeName(operandValue) + 
-                   " to " + castExpr->getTargetTypeName());
-        return nullptr;
+    // 如果已经是目标类型，直接克隆
+    if (currentTypeName == targetTypeName) {
+        return operandValue->clone();
     }
     
-    return result;
-}
-
-// 声明求值 - 语句类型，不需要返回值
-void Interpreter::visit(VariableDeclaration* decl) {
-    if (!decl) return;
+    // 使用类型系统进行转换
+    ObjectType* valueType = operandValue->getValueType();
+    if (!valueType) return nullptr;
     
-    LOG_DEBUG("Interpreter::visit(VariableDeclaration): processing variable declarations");
+    // 根据目标类型名称构造转换方法名
+    std::string methodName = "to" + targetTypeName;
+    // 首字母大写
+    if (!methodName.empty() && methodName.length() > 2) {
+        methodName[2] = toupper(methodName[2]);
+    }
     
-    // 处理每个变量声明
-    for (const auto& varPair : decl->variables) {
-        string varName = varPair.first;
-        Expression* initExpr = varPair.second;
-        
-        LOG_DEBUG("Processing variable declaration: " + varName);
-        
-        // 创建变量值
-        Value* varValue = nullptr;
-        
-        if (initExpr) {
-            // 如果有初始化表达式，求值它
-            varValue = visit(initExpr);
-            if (!varValue) {
-                LOG_ERROR("Failed to evaluate initialization expression for variable: " + varName);
-                continue;
-            }
-        } else {
-            // 如果没有初始化表达式，使用ObjectFactory创建默认值
-            // 这里我们假设所有变量都是auto类型，或者可以从初始化表达式推断类型
-            varValue = ObjectFactory::createDefaultValueStatic("auto");
+    // 检查是否有对应的转换方法
+    if (valueType->hasMethod(methodName)) {
+        // 调用类型系统注册的转换方法
+        std::vector<Value*> convertArgs;
+        Value* result = valueType->callMethod(operandValue, methodName, convertArgs);
+        if (result) {
+            return result;
         }
-        
-        // 在作用域中定义变量
-        scopeManager.defineVariable(varName, varValue);
-        
-        LOG_DEBUG("Successfully declared variable: " + varName + " with value: " + varValue->toString());
     }
+    
+    // 如果转换失败，报告错误
+    Interpreter::reportError("Type conversion failed from " + getValueTypeName(operandValue) + 
+               " to " + castExpr->getTargetTypeName());
+    return nullptr;
 }
 
-// 变量引用表达式求值 - 使用作用域管理器
+// 变量引用表达式求值 - 使用新的统一接口
 Value* Interpreter::visit(VariableExpression* varExpr) {
     if (!varExpr) {
-        reportError("Null variable expression");
+        Interpreter::reportError("Null variable expression");
         return nullptr;
     }
     
     string name = varExpr->name;
     
-    // 从作用域中查找变量
-    RuntimeVariable* variable = scopeManager.lookupVariable(name);
+    // 使用新的统一接口查找标识符
+    Value* value = scopeManager.lookup(name);
     
-    if (!variable) {
-        reportError("Undefined variable: " + name);
-        return nullptr;
-    }
-    
-    Value* value = variable->getValue();
     if (!value) {
-        reportError("Variable has no value: " + name);
+        Interpreter::reportError("Undefined variable: " + name);
         return nullptr;
     }
     
-    LOG_DEBUG("VariableExpression: " + name + " = " + value->toString());
+    // 检查变量的类型
+    if (!value->getValueType()) {
+        // 如果这是一个类型名称对象（没有运行时类型），不要为其设置类型
+        if (String* typeNameStr = dynamic_cast<String*>(value)) {
+            // 检查是否是类型名称
+            ObjectType* type = scopeManager.lookupType(typeNameStr->getValue());
+            if (type) {
+                return value; // 不设置运行时类型，保持为类型名称对象
+            }
+        }
+        
+        // 尝试推断类型
+        string typeName = value->getBuiltinTypeName();
+        ObjectType* inferredType = TypeRegistry::getGlobalInstance()->getType(typeName);
+        if (inferredType) {
+            value->setValueType(inferredType);
+        }
+    }
+    
     return value;
 }
 
 // 一元表达式求值
 Value* Interpreter::visit(UnaryExpression* unary) {
     if (!unary || !unary->operand || !unary->operator_) {
-        reportError("Invalid unary expression");
+        Interpreter::reportError("Invalid unary expression");
         return nullptr;
+    }
+    
+    // 特殊处理自增自减操作
+    if (unary->operator_->Tag == INCREMENT || unary->operator_->Tag == DECREMENT) {
+        return handleIncrementDecrement(unary);
     }
     
     // 处理操作数
     Value* operand = visit(unary->operand);
     if (!operand) {
-        reportError("Invalid operand in unary expression");
+        Interpreter::reportError("Invalid operand in unary expression");
         return nullptr;
     }
 
-    return Calculator::executeUnaryOperation(operand, unary->operator_->Tag);
+    // 使用Calculator进行一元运算
+    try {
+        // 使用getOperationType()获取标准化的操作类型
+        return calculator->executeUnaryOperation(operand, unary->operator_);
+    } catch (const std::runtime_error& e) {
+        Interpreter::reportError("Unary operation failed: " + std::string(e.what()));
+        return nullptr;
+    }
 }
 
 // 二元运算表达式求值 - 返回Value类型
 Value* Interpreter::visit(BinaryExpression* binary) {
     if (!binary || !binary->left || !binary->right || !binary->operator_) {
-        reportError("Invalid binary expression");
+        Interpreter::reportError("Invalid binary expression");
         return nullptr;
     }
     
@@ -230,7 +256,7 @@ Value* Interpreter::visit(BinaryExpression* binary) {
     Value* right = visit(binary->right);
     
     if (!left || !right) {
-        reportError("Invalid operands in binary expression");
+        Interpreter::reportError("Invalid operands in binary expression");
         return nullptr;
     }
     
@@ -240,117 +266,23 @@ Value* Interpreter::visit(BinaryExpression* binary) {
     // 2. 获取操作符
     Operator* op = binary->operator_;
     if (!op) {
-        reportError("Invalid operator in binary expression");
+        Interpreter::reportError("Invalid operator in binary expression");
         return nullptr;
     }
     LOG_DEBUG("executeBinaryOperation called with operator: " + op->getSymbol());
  
-    // 4. 使用Calculator进行二元运算
-    return Calculator::executeBinaryOperation(left, right, op->Tag);
-}
-
-// 赋值表达式求值 - 支持变量赋值和一般表达式赋值
-Value* Interpreter::visit(AssignExpression* assign) {
-    if (!assign || !assign->left || !assign->right) {
-        reportError("Invalid assignment expression");
+    // 使用Calculator进行二元运算，自动处理类型转换
+    try {
+        // 所有二元运算都通过Calculator处理，包括赋值运算
+        // 使用getOperationType()获取标准化的操作类型
+        return calculator->executeBinaryOperation(left, right, op);
+    } catch (const std::runtime_error& e) {
+        Interpreter::reportError("Binary operation failed: " + std::string(e.what()));
         return nullptr;
-    }
-    
-    // 计算右边的值
-    Value* rightValue = visit(assign->right);
-    if (!rightValue) {
-        reportError("Failed to evaluate right side of assignment");
-        return nullptr;
-    }
-    
-    // 检查左操作数的类型并处理赋值
-    if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(assign->left)) {
-        // 变量赋值 - 先转换类型再赋值
-        return handleVariableAssignment(varExpr, rightValue);
-    } else if (AccessExpression* accessExpr = dynamic_cast<AccessExpression*>(assign->left)) {
-        // 成员访问或数组访问赋值 - 先转换类型再赋值
-        return handleMemberAssignment(accessExpr, rightValue);
-    } else {
-        // 其他表达式类型，先转换类型再赋值
-        return handleGeneralAssignment(assign->left, rightValue);
     }
 }
 
-// 成员赋值表达式求值 - 处理成员赋值操作
-Value* Interpreter::visit(MemberAssignExpression* memberAssign) {
-    if (!memberAssign || !memberAssign->target || !memberAssign->member || !memberAssign->value) {
-        reportError("Invalid member assignment expression");
-        return nullptr;
-    }
-    
-    // 求值目标对象
-    Value* target = visit(memberAssign->target);
-    if (!target) {
-        reportError("Failed to evaluate target object in member assignment");
-        return nullptr;
-    }
-    
-    // 求值成员名称或索引
-    Value* member = visit(memberAssign->member);
-    if (!member) {
-        reportError("Failed to evaluate member name or index in member assignment");
-        delete target;
-        return nullptr;
-    }
-    
-    // 求值要赋值的值
-    Value* value = visit(memberAssign->value);
-    if (!value) {
-        reportError("Failed to evaluate value in member assignment");
-        delete target;
-        delete member;
-        return nullptr;
-    }
-    
-    // 通过类型系统处理成员赋值
-    ObjectType* targetType = target->getValueType();
-    if (!targetType) {
-        reportError("Cannot assign to member of object without runtime type");
-        delete target;
-        delete member;
-        delete value;
-        return nullptr;
-    }
-    
-    // 成员赋值可以通过成员访问和赋值运算符的组合来实现
-    // 首先获取成员引用，然后进行赋值操作
-    
-    // 检查类型是否支持成员访问操作
-    if (!targetType->hasMethod("member_access")) {
-        reportError("Type '" + targetType->getTypeName() + "' does not support member access");
-        delete target;
-        delete member;
-        delete value;
-        return nullptr;
-    }
-    
-    // 通过成员访问获取成员引用，然后进行赋值
-    // 这里需要实现成员引用的逻辑，暂时使用直接赋值
-    // TODO: 实现成员引用的完整逻辑
-    reportError("Member assignment not yet implemented - requires member reference support");
-    delete target;
-    delete member;
-    delete value;
-    return nullptr;
-    
-    if (!result) {
-        reportError("Failed to assign value to member of type '" + targetType->getTypeName() + "'");
-    }
-    
-    // 清理临时值
-    delete target;
-    delete member;
-    delete value;
-    
-    return result;
-}
-
-// 访问表达式求值 - 通过类型系统统一处理
+// 访问表达式求值 - 直接使用ScopeManager的统一接口
 Value* Interpreter::visit(AccessExpression* access) {
     if (!access || !access->target || !access->key) return nullptr;
     
@@ -362,27 +294,124 @@ Value* Interpreter::visit(AccessExpression* access) {
     Value* key = visit(access->key);
     if (!key) return nullptr;
     
-    // 通过类型系统处理访问操作
-            ObjectType* targetType = target->getValueType();
-    if (!targetType) {
-        reportError("Cannot access object without runtime type");
+    // 获取成员名称
+    string memberName = extractMemberName(key);
+    if (memberName.empty()) return nullptr;
+    
+    // 情况1: 目标没有运行时类型，尝试作为类型名称处理（静态访问）
+    if (!target->getValueType()) {
+        // 如果target已经是ClassMethodValue，说明之前已经找到了方法，直接返回
+        if (ClassMethodValue* classMethod = dynamic_cast<ClassMethodValue*>(target)) {
+            cout << "DEBUG: AccessExpression: target is already a ClassMethodValue, returning it" << endl;
+            return classMethod;
+        }
+        
+        // 如果target已经是MethodValue，说明之前已经找到了方法，直接返回
+        if (MethodValue* method = dynamic_cast<MethodValue*>(target)) {
+            cout << "DEBUG: AccessExpression: target is already a MethodValue, returning it" << endl;
+            return method;
+        }
+        
+        if (String* typeNameStr = dynamic_cast<String*>(target)) {
+            string typeName = typeNameStr->getValue();
+            cout << "DEBUG: AccessExpression: target is String, typeName: '" + typeName + "'" << endl;
+            
+            // 使用统一接口查找类型方法
+            Value* typeMethod = scopeManager.lookupTypeMethod(typeName, memberName);
+            if (typeMethod) {
+                cout << "DEBUG: AccessExpression: found type method '" + memberName + "' in type '" + typeName + "'" << endl;
+                return typeMethod;
+            }
+            
+            // 如果找不到方法，尝试查找类型本身
+            ObjectType* type = scopeManager.lookupType(typeName);
+            if (type) {
+                cout << "DEBUG: AccessExpression: found type '" + typeName + "'" << endl;
+                return new String(typeName);
+            }
+            
+            cout << "DEBUG: AccessExpression: no static method/static member '" + memberName + "' found in type '" + typeName + "'" << endl;
+            Interpreter::reportError("Static member '" + memberName + "' not found in type '" + typeName + "'");
+            return nullptr;
+        }
+        
+        cout << "DEBUG: AccessExpression: target is not String, cannot access object without runtime type" << endl;
+        Interpreter::reportError("Cannot access object without runtime type");
         return nullptr;
     }
     
-    // 检查类型是否支持访问操作
-    if (!targetType->hasMethod("access")) {
-        reportError("Type '" + targetType->getTypeName() + "' does not support access operations");
+    // 情况2: 目标有运行时类型，处理实例成员访问
+    ObjectType* targetType = target->getValueType();
+    
+    // 使用统一接口查找方法
+    Value* method = scopeManager.lookupMethod(memberName);
+    if (method) {
+        return method;
+    }
+    
+    // 检查成员变量
+    if (targetType->hasMember(memberName)) {
+        Value* memberValue = targetType->accessMember(target, memberName);
+        if (memberValue) {
+            return memberValue;
+        }
+        Interpreter::reportError("Failed to access member variable '" + memberName + "'");
         return nullptr;
     }
     
-    // 调用类型系统的访问方法
-    vector<Value*> args = {key};
-    return targetType->callMethod(target, "access", args);
+    // 如果是类类型，检查静态成员
+    if (ClassType* classType = dynamic_cast<ClassType*>(targetType)) {
+        if (classType->hasStaticMethodName(memberName)) {
+            return new ClassMethodValue(classType, memberName);
+        }
+    }
+    
+    Interpreter::reportError("Member '" + memberName + "' not found in type '" + targetType->getTypeName() + "'");
+    return nullptr;
 }
 
-// 函数调用表达式求值 - 通过类型系统统一处理
+// 提取成员名称的辅助方法
+string Interpreter::extractMemberName(Value* key) {
+    if (String* stringKey = dynamic_cast<String*>(key)) {
+        return stringKey->getValue();
+    }
+    
+    // 如果不是字符串，尝试转换为字符串
+    ObjectType* keyType = key->getValueType();
+    if (!keyType) {
+        Interpreter::reportError("Access key has no runtime type");
+        return "";
+    }
+    
+    // 检查是否有toString方法
+    if (!keyType->hasMethod("toString")) {
+        Interpreter::reportError("Access key type does not support conversion to string");
+        return "";
+    }
+    
+    // 调用toString方法
+    vector<Value*> convertArgs;
+    Value* convertedStringKey = keyType->callMethod(key, "toString", convertArgs);
+    if (convertedStringKey) {
+        string result = dynamic_cast<String*>(convertedStringKey)->getValue();
+        delete convertedStringKey;
+        return result;
+    }
+    
+    Interpreter::reportError("Failed to convert access key to string");
+    return "";
+}
+
+// 函数调用表达式求值 - 统一处理所有函数调用
 Value* Interpreter::visit(CallExpression* call) {
     if (!call) return nullptr;
+    
+    // 求值被调用者（函数表达式）
+    Value* callee = visit(call->callee);
+    if (!callee) {
+        Interpreter::reportError("Failed to evaluate function callee");
+        return nullptr;
+    }
     
     // 求值所有参数
     vector<Value*> evaluatedArgs;
@@ -392,154 +421,96 @@ Value* Interpreter::visit(CallExpression* call) {
         if (value) {
             evaluatedArgs.push_back(value);
         } else {
-            reportError("Failed to evaluate argument " + to_string(i + 1) + " in function call to " + call->functionName);
+            Interpreter::reportError("Failed to evaluate argument " + to_string(i + 1) + " in function call");
             return nullptr;
         }
     }
     
-    // 特殊处理内置函数
-    string funcName = call->functionName;
+    // 检查是否为可调用对象
+    LOG_DEBUG("CallExpression: checking if callee is callable");
+    LOG_DEBUG("CallExpression: callee type: " + (callee->getValueType() ? callee->getValueType()->getTypeName() : "nullptr"));
+    LOG_DEBUG("CallExpression: callee builtin type: " + callee->getBuiltinTypeName());
+    LOG_DEBUG("CallExpression: callee toString: " + callee->toString());
     
-    // 处理数组字面量
-    if (funcName == "new_array") {
-        Array* newArray = new Array();
-        for (Value* arg : evaluatedArgs) {
-            newArray->addElement(arg);
-        }
-        return newArray;
+    if (!callee->isCallable()) {
+        Interpreter::reportError("Object is not callable");
+        return nullptr;
     }
     
-    // 处理字典字面量
-    if (funcName == "new_dict") {
-        Dict* newDict = new Dict();
-        // 字典字面量参数是键值对交替出现
-        for (size_t i = 0; i < evaluatedArgs.size(); i += 2) {
-            if (i + 1 < evaluatedArgs.size()) {
-                if (String* key = dynamic_cast<String*>(evaluatedArgs[i])) {
-                    newDict->setEntry(key->getValue(), evaluatedArgs[i + 1]);
-                } else {
-                    reportError("Dictionary key must be a string");
-                    delete newDict;
-                    return nullptr;
-                }
+    // 执行函数调用 - 使用执行器自动管理作用域
+    Value* result = nullptr;
+    
+    // 检查函数类型并调用相应的方法
+    if (Function* func = dynamic_cast<Function*>(callee)) {
+        // 统一处理所有函数类型（内置函数和用户函数）
+        if (!func->isCallable()) {
+            Interpreter::reportError("Function is not callable");
+        } else {
+            // 检查参数数量（使用函数的参数验证方法）
+            if (!func->validateArguments(evaluatedArgs)) {
+                size_t expectedParams = func->getParameters().size();
+                Interpreter::reportError("Function expects " + to_string(expectedParams) + " arguments, but got " + to_string(evaluatedArgs.size()));
+            } else {
+                // 使用新的函数调用架构
+                BasicFunctionCall functionCall(scopeManager.getCurrentScope(), func, evaluatedArgs);
+                result = functionCall.execute();
             }
         }
-        return newDict;
-    }
-    
-    // 普通函数调用
-    RuntimeFunction* runtimeFunc = scopeManager.lookupFunction(funcName);
-    if (!runtimeFunc) {
-        reportError("Function not found: " + funcName);
-        return nullptr;
-    }
-    
-    // 执行运行时函数调用
-    Value* result = runtimeFunc->call(evaluatedArgs);
-    // 对于像println这样的函数，返回nullptr是正常的，不应该被视为错误
-    // 只有在函数调用过程中出现异常时才应该报告错误
-    return result;
-}
-
-// ==================== MethodCallExpression访问方法 ====================
-
-// 方法调用表达式求值 - 专门处理方法调用
-Value* Interpreter::visit(MethodCallExpression* methodCall) {
-    if (!methodCall) return nullptr;
-    
-    // 求值对象
-    Value* object = visit(methodCall->object);
-    if (!object) {
-        reportError("Failed to evaluate method call object");
-        return nullptr;
-    }
-    
-    // 求值方法参数
-    vector<Value*> methodArgs;
-    for (Expression* arg : methodCall->arguments) {
-        Value* value = visit(arg);
-        if (value) {
-            methodArgs.push_back(value);
+    } else {
+        // 其他可调用对象（通过类型系统的方法调用）
+        ObjectType* funcType = callee->getValueType();
+        if (funcType) {
+            vector<Value*> methodArgs = evaluatedArgs;
+            result = funcType->callMethod(callee, "call", methodArgs);
         } else {
-            reportError("Failed to evaluate method argument");
-            return nullptr;
+            Interpreter::reportError("Function object has no type information");
         }
     }
     
-    // 获取对象的运行时类型
-            ObjectType* objectType = object->getValueType();
-    if (!objectType) {
-        reportError("Method call object has no runtime type");
-        return nullptr;
-    }
-    
-    // 检查方法是否存在
-    if (!objectType->hasMethod(methodCall->functionName)) {
-        reportError("Method '" + methodCall->functionName + "' not found in type '" + objectType->getTypeName() + "'");
-        return nullptr;
-    }
-    
-    // 执行方法调用
-    Value* result = objectType->callMethod(object, methodCall->functionName, methodArgs);
-    if (!result) {
-        reportError("Method '" + methodCall->functionName + "' call failed on type '" + objectType->getTypeName() + "'");
-        return nullptr;
+    // 清理参数（除了返回值）
+    for (Value* arg : evaluatedArgs) {
+        if (arg != result) {
+            delete arg;
+        }
     }
     
     return result;
 }
 
-// ==================== IncrementDecrementExpression访问方法 ====================
+// ==================== 自增自减操作处理 ====================
 
-// 自增自减表达式求值 - 继承自UnaryExpression，利用基类特性
-Value* Interpreter::visit(IncrementDecrementExpression* expr) {
-    if (!expr) return nullptr;
-    
-    // 利用基类UnaryExpression的operand字段
-    Expression* operand = expr->operand;
-    if (!operand) {
-        reportError("Increment/decrement expression has no operand");
-        return nullptr;
-    }
-    
-    // 求值操作数
-    Value* operandValue = visit(operand);
-    if (!operandValue) {
-        reportError("Failed to evaluate increment/decrement operand");
-        return nullptr;
-    }
+// 处理自增自减操作 - 现在通过UnaryExpression统一处理
+Value* Interpreter::handleIncrementDecrement(UnaryExpression* unary) {
+    if (!unary || !unary->operand) return nullptr;
     
     // 检查操作数是否为变量表达式（只有变量才能被修改）
-    VariableExpression* varExpr = dynamic_cast<VariableExpression*>(operand);
+    VariableExpression* varExpr = dynamic_cast<VariableExpression*>(unary->operand);
     if (!varExpr) {
-        reportError("Increment/decrement operand must be a variable");
+        Interpreter::reportError("Increment/decrement operand must be a variable");
         return nullptr;
     }
     
-    string varName = varExpr->name;
+    std::string varName = varExpr->name;
     
     // 获取变量的当前值
-    RuntimeVariable* runtimeVar = scopeManager.lookupVariable(varName);
-    if (!runtimeVar) {
-        reportError("Variable '" + varName + "' not found for increment/decrement");
-        return nullptr;
-    }
-    Value* currentValue = runtimeVar->getValue();
+    Value* currentValue = scopeManager.lookupVariable(varName);
     if (!currentValue) {
-        reportError("Variable '" + varName + "' has no value for increment/decrement");
+        Interpreter::reportError("Variable '" + varName + "' not found for increment/decrement");
         return nullptr;
     }
     
     // 计算新值
     Value* newValue = nullptr;
-    if (expr->isIncrement()) {
+    bool isIncrement = (unary->operator_->Tag == INCREMENT);
+    
+    if (isIncrement) {
         // 自增操作
         if (Integer* intVal = dynamic_cast<Integer*>(currentValue)) {
             newValue = new Integer(intVal->getValue() + 1);
         } else if (Double* doubleVal = dynamic_cast<Double*>(currentValue)) {
             newValue = new Double(doubleVal->getValue() + 1.0);
         } else {
-            reportError("Cannot increment non-numeric value");
+            Interpreter::reportError("Cannot increment non-numeric value");
             return nullptr;
         }
     } else {
@@ -549,14 +520,14 @@ Value* Interpreter::visit(IncrementDecrementExpression* expr) {
         } else if (Double* doubleVal = dynamic_cast<Double*>(currentValue)) {
             newValue = new Double(doubleVal->getValue() - 1.0);
         } else {
-            reportError("Cannot increment non-numeric value");
+            Interpreter::reportError("Cannot decrement non-numeric value");
             return nullptr;
         }
     }
     
     // 根据前缀/后缀返回不同的值
     Value* result = nullptr;
-    if (expr->isPrefixOperation()) {
+    if (unary->isPrefixOperation()) {
         // 前缀操作：先更新变量值，然后返回新值
         scopeManager.updateVariable(varName, newValue);
         result = newValue->clone();
@@ -571,185 +542,41 @@ Value* Interpreter::visit(IncrementDecrementExpression* expr) {
 
 // ==================== 赋值辅助方法 ====================
 
-// 处理变量赋值
-Value* Interpreter::handleVariableAssignment(VariableExpression* varExpr, Value* rightValue) {
-    if (!varExpr || !rightValue) {
-        reportError("Invalid variable assignment");
+// 三元表达式求值 - 条件 ? 真值 : 假值
+Value* Interpreter::visit(TernaryExpression* ternary) {
+    if (!ternary || !ternary->condition || !ternary->left || !ternary->right) {
+        Interpreter::reportError("Invalid ternary expression");
         return nullptr;
     }
     
-    // 获取变量的当前类型
-    RuntimeVariable* variable = scopeManager.lookupVariable(varExpr->name);
-    Value* leftValue = nullptr;
-    
-    if (variable && variable->getValue()) {
-        // 如果变量已定义，使用其当前类型
-        leftValue = variable->getValue();
-    } else {
-        // 如果变量未定义，创建新变量
-        leftValue = rightValue->clone();
-        scopeManager.defineVariable(varExpr->name, leftValue);
-        return rightValue;
-    }
-    
-    // 先进行类型转换，再进行赋值
-    if (leftValue->getValueType() && leftValue->getValueType()->hasMethod("convertTo")) {
-        string targetTypeName = leftValue->getTypeName();
-        if (targetTypeName != rightValue->getTypeName()) {
-            // 尝试将右值转换为左值的类型
-            vector<Value*> convertArgs = {new String(targetTypeName)};
-            Value* convertedValue = rightValue->getValueType()->callMethod(rightValue, "convertTo", convertArgs);
-            if (convertedValue) {
-                // 转换成功，进行赋值
-                if (leftValue->getValueType()->hasMethod("assign")) {
-                    vector<Value*> assignArgs = {convertedValue};
-                    Value* result = leftValue->getValueType()->callMethod(leftValue, "assign", assignArgs);
-                    if (result) {
-                        // 更新变量值
-                        scopeManager.updateVariable(varExpr->name, result);
-                        LOG_DEBUG("Successfully converted and assigned value through type system");
-                        delete convertedValue;
-                        return result;
-                    }
-                }
-                // 如果assign方法失败，直接更新变量值
-                scopeManager.updateVariable(varExpr->name, convertedValue);
-                LOG_DEBUG("Successfully converted value and updated variable through type system");
-                return convertedValue;
-            }
-        }
-    }
-    
-    // 如果类型转换失败，尝试直接赋值
-    if (leftValue->getValueType() && leftValue->getValueType()->hasMethod("assign")) {
-        vector<Value*> assignArgs = {rightValue};
-        Value* result = leftValue->getValueType()->callMethod(leftValue, "assign", assignArgs);
-        if (result) {
-            // 更新变量值
-            scopeManager.updateVariable(varExpr->name, result);
-            LOG_DEBUG("Successfully assigned value through type system assign method");
-            return result;
-        }
-    }
-    
-    // 如果类型系统方法都失败，回退到Calculator的赋值操作
-    Value* castedValue = Calculator::executeAssignmentOperation(leftValue, rightValue, '=');
-    if (!castedValue) {
-        reportError("Failed to cast value to type " + leftValue->getTypeName() + " for assignment");
+    // 1. 计算条件表达式的值
+    Value* condition = visit(ternary->condition);
+    if (!condition) {
+        Interpreter::reportError("Failed to evaluate condition in ternary expression");
         return nullptr;
     }
     
-    // 更新变量值
-    scopeManager.updateVariable(varExpr->name, castedValue);
-    LOG_DEBUG("Assigned value " + castedValue->toString() + " to variable " + varExpr->name);
-    return castedValue;
-}
-
-// 处理成员赋值
-Value* Interpreter::handleMemberAssignment(AccessExpression* accessExpr, Value* rightValue) {
-    if (!accessExpr || !rightValue) {
-        reportError("Invalid member assignment");
+    // 2. 计算真值和假值表达式
+    Value* trueValue = visit(ternary->left);
+    Value* falseValue = visit(ternary->right);
+    
+    if (!trueValue || !falseValue) {
+        Interpreter::reportError("Failed to evaluate true or false value in ternary expression");
+        delete condition;
+        if (trueValue) delete trueValue;
+        if (falseValue) delete falseValue;
         return nullptr;
     }
     
-    // 求值目标对象
-    Value* target = visit(accessExpr->target);
-    if (!target) {
-        reportError("Failed to evaluate target object in member assignment");
+    // 3. 使用Calculator处理三元运算
+    try {
+        Value* result = calculator->executeTernaryOperation(condition, trueValue, falseValue);
+        return result;
+    } catch (const std::runtime_error& e) {
+        Interpreter::reportError("Ternary operation failed: " + std::string(e.what()));
+        delete condition;
+        delete trueValue;
+        delete falseValue;
         return nullptr;
     }
-    
-    // 求值成员名称或索引
-    Value* member = visit(accessExpr->key);
-    if (!member) {
-        reportError("Failed to evaluate member name or index in member assignment");
-        delete target;
-        return nullptr;
-    }
-    
-    // 通过类型系统处理成员赋值
-    ObjectType* targetType = target->getValueType();
-    if (!targetType) {
-        reportError("Cannot assign to member of object without runtime type");
-        delete target;
-        delete member;
-        return nullptr;
-    }
-    
-    // 成员赋值可以通过成员访问和赋值运算符的组合来实现
-    // 首先获取成员引用，然后进行赋值操作
-    
-    // 检查类型是否支持成员访问操作
-    if (!targetType->hasMethod("member_access")) {
-        reportError("Type '" + targetType->getTypeName() + "' does not support member access");
-        delete target;
-        delete member;
-        return nullptr;
-    }
-    
-    // 通过成员访问获取成员引用，然后进行赋值
-    // 这里需要实现成员引用的逻辑，暂时使用直接赋值
-    // TODO: 实现成员引用的完整逻辑
-    reportError("Member assignment not yet implemented - requires member reference support");
-    delete target;
-    delete member;
-    return nullptr;
-    
-    // 成员赋值功能已暂时禁用，等待成员引用支持
-    return nullptr;
-}
-
-// 处理一般表达式赋值
-Value* Interpreter::handleGeneralAssignment(Expression* leftExpr, Value* rightValue) {
-    if (!leftExpr || !rightValue) {
-        reportError("Invalid general assignment");
-        return nullptr;
-    }
-    
-    // 尝试对左边表达式求值
-    Value* leftValue = visit(leftExpr);
-    if (!leftValue) {
-        reportError("Failed to evaluate left side of assignment");
-        return nullptr;
-    }
-    
-    // 先进行类型转换，再进行赋值
-    ObjectType* leftType = leftValue->getValueType();
-    if (leftType && leftType->hasMethod("convertTo")) {
-        string targetTypeName = leftValue->getTypeName();
-        if (targetTypeName != rightValue->getTypeName()) {
-            // 尝试将右值转换为左值的类型
-            vector<Value*> convertArgs = {new String(targetTypeName)};
-            Value* convertedValue = rightValue->getValueType()->callMethod(rightValue, "convertTo", convertArgs);
-            if (convertedValue) {
-                // 转换成功，进行赋值
-                if (leftType->hasMethod("assign")) {
-                    vector<Value*> assignArgs = {convertedValue};
-                    Value* result = leftType->callMethod(leftValue, "assign", assignArgs);
-                    if (result) {
-                        LOG_DEBUG("Successfully converted and assigned value through type system");
-                        delete convertedValue;
-                        return result;
-                    }
-                }
-                // 如果assign方法失败，返回转换后的值
-                LOG_DEBUG("Successfully converted value through type system");
-                return convertedValue;
-            }
-        }
-    }
-    
-    // 如果类型转换失败或不需要转换，尝试直接赋值
-    if (leftType && leftType->hasMethod("assign")) {
-        vector<Value*> args = {rightValue};
-        Value* result = leftType->callMethod(leftValue, "assign", args);
-        if (result) {
-            LOG_DEBUG("Successfully assigned value through type system assign method");
-            return result;
-        }
-    }
-    
-    // 如果不支持赋值，报告错误
-    reportError("Left side of assignment does not support assignment operation");
-    return nullptr;
 }

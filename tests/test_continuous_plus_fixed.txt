@@ -1,0 +1,19 @@
+// 测试连续加法运算符
+
+function test() {
+    let a = 15;
+    let b = 3;
+    let c = 7;
+    
+    // 这个应该现在没问题了
+    let sum1 = a + b + c;
+    println(sum1);
+    
+    // 这些应该也没问题
+    let sum2 = a + b * c;
+    println(sum2);
+    let sum3 = a * b + c;
+    println(sum3);
+}
+
+test();

@@ -2,17 +2,18 @@
 #define INTERPRETER_H
 
 #include "parser/inter.h"
-#include "interpreter/control_flow.h"
-#include "parser/ast_visitor.h"
-#include "interpreter/scope.h"
-#include "interpreter/builtin_plugin.h"
-#include "interpreter/type_registry.h"
-#include "interpreter/builtin_type.h"
-#include "interpreter/type_converter.h"
-#include "parser/function.h"
-#include "interpreter/value.h"
+#include "parser/definition.h"
 #include "parser/expression.h"
 #include "parser/statement.h"
+#include "parser/ast_visitor.h"
+#include "interpreter/core/control_flow.h"
+#include "interpreter/core/function_call.h"
+#include "interpreter/scope/scope.h"
+#include "interpreter/plugins/builtin_plugin.h"
+#include "interpreter/types/types.h"
+#include "interpreter/values/calculate.h"
+#include "interpreter/values/value.h"
+
 #include <string>
 #include <list>
 #include <map>
@@ -39,15 +40,17 @@ public:
     // 对象工厂
     ObjectFactory* objectFactory;
     
-    // 类型转换器
-    TypeConverter* typeConverter;
-    
+    // 计算器实例
+    Calculator* calculator;
+
     // 调用栈（用于调试和错误报告）
-    vector<string> callStack;
+    std::vector<std::string> callStack;
 
 public:
+    // 构造函数
     Interpreter();
     Interpreter(bool loadPlugins); // 新增构造函数，可以选择是否加载插件
+    // 析构函数
     ~Interpreter();
     
     // ASTVisitor接口实现 - 表达式访问方法
@@ -56,72 +59,71 @@ public:
     Value* visit(ConstantExpression<double>* expr) override;
     Value* visit(ConstantExpression<bool>* expr) override;
     Value* visit(ConstantExpression<char>* expr) override;
-    Value* visit(ConstantExpression<string>* expr) override;
+    Value* visit(ConstantExpression<std::string>* expr) override;
     Value* visit(VariableExpression* expr) override;
     Value* visit(UnaryExpression* expr) override;
     Value* visit(BinaryExpression* expr) override;
-    Value* visit(AssignExpression* expr) override;
-    Value* visit(MemberAssignExpression* expr) override;
-    Value* visit(IncrementDecrementExpression* expr) override;
+    // IncDecExpression已合并到UnaryExpression中
     // CastExpression的访问方法
     Value* visit(CastExpression* expr) override;
     Value* visit(AccessExpression* expr) override;
     Value* visit(CallExpression* expr) override;
-    Value* visit(MethodCallExpression* expr) override;
-
+    Value* visit(TernaryExpression* expr) override;
+    
     // ASTVisitor接口实现 - 语句访问方法
     void visit(Statement* stmt) override;
     void visit(ImportStatement* stmt) override;
     void visit(ExpressionStatement* stmt) override;
-    void visit(VariableDeclaration* stmt) override;
     void visit(IfStatement* stmt) override;
     void visit(WhileStatement* stmt) override;
     void visit(ForStatement* stmt) override;
     void visit(DoWhileStatement* stmt) override;
     void visit(BlockStatement* stmt) override;
-    void visit(FunctionPrototype* stmt) override;
-    void visit(StructDefinition* stmt) override;
-    void visit(ClassDefinition* stmt) override;
     void visit(BreakStatement* stmt) override;
     void visit(ContinueStatement* stmt) override;
     void visit(ReturnStatement* stmt) override;
     void visit(TryStatement* stmt) override;
-
     void visit(SwitchStatement* stmt) override;
-    // CaseStatement和DefaultStatement的visit方法已移除，合并到SwitchStatement中
-    void visit(FunctionDefinition* stmt) override;
-    void visit(ClassMethod* method) override;
 
-    // ASTVisitor接口实现 - function.h中定义的类的访问方法
-    void visit(Identifier* id) override;
-    void visit(Variable* var) override;
+    void visit(VariableDefinition* stmt) override;
+    void visit(FunctionPrototype* stmt) override;
+    void visit(FunctionDefinition* stmt) override;
+    void visit(StructDefinition* stmt) override;
+    void visit(ClassMember* member) override;
+    void visit(ClassMethod* method) override;
+    void visit(ClassDefinition* stmt) override;
+    
 
     // ASTVisitor接口实现 - 程序访问方法
     void visit(Program* program) override;
     
+    // ==================== AccessExpression辅助方法 ====================
+    
+    // 提取成员名称
+    string extractMemberName(Value* key);
+    
     // 插件管理
-    void loadPlugin(const string& pluginPath);
-    void unloadPlugin(const string& pluginName);
-    vector<string> getLoadedPlugins() const;
+    void loadPlugin(const std::string& pluginPath);
+    void unloadPlugin(const std::string& pluginName);
+    std::vector<std::string> getLoadedPlugins() const;
     void loadDefaultPlugins();
-    void loadDefaultPlugins(const string& pluginDir);
+    void loadDefaultPlugins(const std::string& pluginDir);
     
     // 类型系统相关方法
-    string getValueTypeName(Value* value);
-    Value* callTypeMethod(Value* instance, const string& methodName, vector<Value*>& args);
-    
-    // 函数调用辅助方法
-    Value* executeBuiltinFunction(BuiltinFunctionWrapper* builtinFunc, vector<Value*>& evaluatedArgs);
-    Value* executeUserFunction(UserFunctionWrapper* userFunc, vector<Value*>& evaluatedArgs);
+    std::string getValueTypeName(Value* value);
     
     // 对象工厂访问方法
     ObjectFactory* getObjectFactory() const { return objectFactory; }
     
-    // 类型转换器访问方法
-    TypeConverter* getTypeConverter() const { return typeConverter; }
+    // 类型工厂访问方法
     
-    // 辅助方法：计算类型成员的初始值（通用方法，用于结构体和类）
-    vector<pair<string, Value*>> calculateTypeMemberInitialValues(const vector<StructMember>& members);
+    // 辅助方法声明
+    void processMemberPrototypes(ObjectType* type, const std::vector<ClassMember*>& members);
+    void processStructDefinition(StructDefinition* structDef);
+    void processStructDefinition(ClassDefinition* classDef);
+    
+    // 自增自减操作处理
+    Value* handleIncrementDecrement(UnaryExpression* unary);
     
     // 作用域管理辅助函数 - 处理有返回值的函数
     template<typename Func>
@@ -153,21 +155,15 @@ public:
 private:
     
     // 辅助函数
-    string extractPluginName(const string& filePath);
-    string join(const vector<string>& vec, const string& delimiter);
+    std::string extractPluginName(const std::string& filePath);
 
     // 通用计算方法 - 通过类型系统调用运算符方法
     Value* calculate_binary(Value* left, Value* right, int op);
     Value* calculate_unary(Value* operand, int op);
     
-    // 赋值辅助方法
-    Value* handleVariableAssignment(VariableExpression* varExpr, Value* rightValue);
-    Value* handleMemberAssignment(AccessExpression* accessExpr, Value* rightValue);
-    Value* handleGeneralAssignment(Expression* leftExpr, Value* rightValue);
-    
-    // 错误处理
-    void reportError(const string& message);
-    void reportTypeError(const string& expected, const string& actual);
+    // 实例错误报告函数
+    void reportError(const std::string& message);
+    void reportTypeError(const std::string& expected, const std::string& actual);
 };
 
 #endif // INTERPRETER_H

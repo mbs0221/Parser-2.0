@@ -1,0 +1,54 @@
+// 测试类型系统注册结构体和类
+println("=== 类型系统测试 ===");
+
+// 定义结构体
+struct Person {
+    string name;
+    int age;
+    double height;
+}
+
+// 定义类
+class Student {
+    string name;
+    int grade;
+    double gpa;
+    
+    function study() {
+        println("Student ", name, " is studying");
+    }
+    
+    function getGrade() {
+        return grade;
+    }
+}
+
+// 测试基本类型
+let intVal = 42;
+let doubleVal = 3.14;
+let strVal = "Hello";
+
+// 测试类型转换
+println("整数转字符串: ", intVal.to_string());
+println("浮点数转整数: ", doubleVal.to_int());
+println("字符串长度: ", strVal.length());
+
+// 创建结构体实例
+let person = Person();
+person.name = "Alice";
+person.age = 25;
+person.height = 1.75;
+
+println("Person: ", person.name, ", age: ", person.age, ", height: ", person.height);
+
+// 创建类实例
+let student = Student();
+student.name = "Bob";
+student.grade = 10;
+student.gpa = 3.8;
+
+println("Student: ", student.name, ", grade: ", student.grade, ", GPA: ", student.gpa);
+student.study();
+println("Student grade: ", student.getGrade());
+
+println("=== 类型系统测试完成 ===");

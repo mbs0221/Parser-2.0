@@ -17,7 +17,7 @@ Parser::~Parser() {
 
 // parse方法实现 - 返回AST
 Program* Parser::parse(const string& file) {
-    if (lex.open(file)) {
+    if (lex.from_file(file)) {
         lex.move();
         return parseProgram();
     } else {
@@ -46,7 +46,7 @@ Statement* Parser::parseDeclaration() {
         case IMPORT:
             return parseImportStatement();
         case LET:
-            return parseVariableDeclaration();
+            return parseVariableDefinition();
         case FUNCTION:
             return parseFunction();
         case STRUCT:
@@ -55,6 +55,9 @@ Statement* Parser::parseDeclaration() {
             return parseClass();
         case ID:
             return parseExpressionStatement();
+        case END_OF_FILE:
+            // 文件结束，返回nullptr表示没有更多声明
+            return nullptr;
         default:
             printf("SYNTAX ERROR line[%03d]: unexpected token in global declaration\n", lex.line);
             exit(1);  // 强制退出
@@ -66,7 +69,7 @@ Statement* Parser::parseDeclaration() {
 Statement* Parser::parseStatement() {
     switch (lex.token()->Tag) {
         case LET:
-            return parseVariableDeclaration();
+            return parseVariableDefinition();
         case IF:
             return parseIfStatement();
         case WHILE:
@@ -115,14 +118,14 @@ ImportStatement* Parser::parseImportStatement() {
     return new ImportStatement(moduleName);
 }
 
-// 解析变量声明语句 (let x = 10, y = 20, z;)
-VariableDeclaration* Parser::parseVariableDeclaration() {
+// 解析变量定义语句 (let x = 10, y = 20, z;)
+VariableDefinition* Parser::parseVariableDefinition() {
     lex.match(LET);
-    VariableDeclaration* decl = new VariableDeclaration();
+    VariableDefinition* decl = new VariableDefinition();
     
     while (true) {
         // 解析标识符
-        string name = lex.matchIdentifier();
+        std::string name = lex.matchIdentifier();
         
         Expression* value = nullptr;
         
@@ -371,13 +374,21 @@ Expression* Parser::parseExpressionWithPrecedence(int minPrecedence) {
         
         // 处理赋值操作符的特殊情况
         if (op->Tag == '=') {
-            // 检查左操作数是否为变量引用
+            // 检查左操作数是否为变量引用或成员访问
             if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(left)) {
                 // 对于赋值操作符，使用右结合性，所以递归调用时使用相同优先级
                 Expression* right = parseExpressionWithPrecedence(precedence);
-                left = new AssignExpression(left, right);
+                left = new BinaryExpression(left, right, op);
+            } else if (AccessExpression* accessExpr = dynamic_cast<AccessExpression*>(left)) {
+                // 成员赋值：obj.member = value 或 obj[index] = value
+                Expression* right = parseExpressionWithPrecedence(precedence);
+                left = new BinaryExpression(left, right, op);
+                // 注意：这里我们"偷取"了AccessExpression的target和key，所以需要防止它们被删除
+                accessExpr->target = nullptr;
+                accessExpr->key = nullptr;
+                delete accessExpr;
             } else {
-                printf("Error: Left side of assignment must be a variable\n");
+                printf("Error: Left side of assignment must be a variable or member access\n");
                 break;
             }
         } else {
@@ -409,8 +420,32 @@ Expression* Parser::parsePrimary() {
                 operand = parsePostfix(operand);
                 return new UnaryExpression(operand, op);
             }
+        case INCREMENT: // 前缀自增 ++
+            {
+                lex.matchOperator(); // 消费 ++
+                Expression* operand = parsePrimary();
+                operand = parsePostfix(operand);
+                // 创建前缀自增表达式，继承自UnaryExpression
+                return new IncrementDecrementExpression(operand, true, 1); // true表示前缀，1表示自增
+            }
+        case DECREMENT: // 前缀自减 --
+            {
+                lex.matchOperator(); // 消费 --
+                Expression* operand = parsePrimary();
+                operand = parsePostfix(operand);
+                // 创建前缀自减表达式，继承自UnaryExpression
+                return new IncrementDecrementExpression(operand, true, -1); // true表示前缀，-1表示自减
+            }
         case ID: // 标识符
-            return parseVariable();
+            {
+                printf("[PARSER DEBUG] Found ID token, calling parseVariable()\n");
+                Expression* expr = parseVariable();
+                printf("[PARSER DEBUG] parseVariable() returned, calling parsePostfix()\n");
+                // 对标识符进行后缀处理，以支持函数调用、成员访问、结构体实例化等
+                Expression* result = parsePostfix(expr);
+                printf("[PARSER DEBUG] parsePostfix() returned\n");
+                return result;
+            }
         case NUM: // 整数
             return new ConstantExpression<int>(lex.match<Integer>()->getValue());
         case REAL: // 浮点数
@@ -453,7 +488,11 @@ Expression* Parser::parsePostfix(Expression* expr) {
                     cout << "[PARSER DEBUG] Member name: '" << memberName << "'" << endl;
                     
                     if (lex.token()->Tag == '(') {
-                        // 方法调用：创建 MethodCallExpression
+                        // 方法调用：先创建 AccessExpression，再创建 CallExpression
+                        // 这样 str.length() 会被解析为 CallExpression(AccessExpression(str, "length"), [])
+                        Expression* methodRef = new AccessExpression(expr, new ConstantExpression<string>(memberName));
+                        cout << "[PARSER DEBUG] Created AccessExpression for method: '" << memberName << "'" << endl;
+                        
                         lex.matchToken('(');
                         vector<Expression*> arguments;
                         
@@ -466,11 +505,12 @@ Expression* Parser::parsePostfix(Expression* expr) {
                         }
                         
                         lex.matchToken(')');
-                        expr = new MethodCallExpression(expr, memberName, arguments);
+                        expr = new CallExpression(methodRef, arguments);
+                        cout << "[PARSER DEBUG] Created CallExpression for method call: '" << memberName << "()'" << endl;
                     } else {
                         // 成员访问
                         cout << "[PARSER DEBUG] Creating AccessExpression for member: '" << memberName << "'" << endl;
-                        expr = new AccessExpression(expr, new ConstantExpression<String>(memberName));
+                        expr = new AccessExpression(expr, new ConstantExpression<string>(memberName));
                     }
                 }
                 break;
@@ -492,14 +532,34 @@ Expression* Parser::parsePostfix(Expression* expr) {
                 }
                 break;
                 
+            case INCREMENT: // 后缀自增 ++
+                {
+                    lex.matchOperator(); // 消费 ++
+                    // 创建后缀自增表达式，继承自UnaryExpression
+                    expr = new IncrementDecrementExpression(expr, false, 1); // false表示后缀，1表示自增
+                }
+                break;
+                
+            case DECREMENT: // 后缀自减 --
+                {
+                    lex.matchOperator(); // 消费 --
+                    // 创建后缀自减表达式，继承自UnaryExpression
+                    expr = new IncrementDecrementExpression(expr, false, -1); // false表示后缀，-1表示自减
+                }
+                break;
+                
             case '{':
                 // 结构体实例化：ID {member: value, ...}
                 {
+                    printf("[PARSER DEBUG] Found '{' token, checking for struct instantiation\n");
                     // 检查前面的表达式是否是标识符
                     if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(expr)) {
+                        printf("[PARSER DEBUG] Found VariableExpression '%s', parsing struct instantiation\n", varExpr->name.c_str());
                         // 解析结构体实例化
                         expr = parseStructInstantiation(varExpr->name);
+                        printf("[PARSER DEBUG] Struct instantiation parsed successfully\n");
                     } else {
+                        printf("[PARSER DEBUG] Expression is not VariableExpression, type: %s\n", typeid(*expr).name());
                         // 如果不是标识符，报错
                         printf("SYNTAX ERROR line[%03d]: expected identifier before '{' for struct instantiation\n", lex.line);
                         return nullptr;
@@ -524,8 +584,8 @@ bool Parser::isBinaryOperator(int tag) {
     
     // 检查多字符操作符（枚举类型）
     return tag == LE || tag == GE || tag == EQ_EQ || tag == NE_EQ || 
-           tag == AND_AND || tag == OR_OR || tag == BIT_AND || tag == BIT_OR || 
-           tag == BIT_XOR || tag == LEFT_SHIFT || tag == RIGHT_SHIFT;
+           tag == AND_AND || tag == OR_OR || tag == '&' || tag == '|' || 
+           tag == '^' || tag == LEFT_SHIFT || tag == RIGHT_SHIFT;
 }
 
 // 解析标识符
@@ -564,7 +624,7 @@ Expression* Parser::parseConstant() {
     }
 }
 
-// 解析数组字面量 - 作为array构造函数的调用
+// 解析数组字面量 - 直接创建Array对象
 Expression* Parser::parseArray() {
     lex.match('[');  // 匹配开始方括号
     
@@ -585,11 +645,13 @@ Expression* Parser::parseArray() {
     
     lex.match(']');  // 匹配结束方括号
     
-    // 返回array构造函数的调用
-    return new CallExpression("array", arguments);
+    // 生成Array构造函数调用，传入元素列表作为参数
+    // 这样 [1, 2, 3, 4, 5] 会被解析为 Array(1, 2, 3, 4, 5)
+    // Array作为变量表达式，系统会去查询Array符号并找到Array类型的同名方法
+    return new CallExpression(new VariableExpression("array"), arguments);
 }
 
-// 解析字典字面量 - 作为dict构造函数的调用
+// 解析字典字面量 - 作为new_dict构造函数的调用
 Expression* Parser::parseDict() {
     lex.match('{');  // 匹配开始大括号
     
@@ -609,7 +671,6 @@ Expression* Parser::parseDict() {
         while (lex.token()->Tag == ',') {  
             lex.match(',');
             key = lex.match<String>();
-            lex.match(':');
             valueExpr = parseExpression();
             
             // 将键值对作为两个参数传递
@@ -620,8 +681,10 @@ Expression* Parser::parseDict() {
     
     lex.match('}');  // 匹配结束大括号
     
-    // 返回dict构造函数的调用
-    return new CallExpression("dict", arguments);
+    // 返回Dict构造函数的调用，让类型系统提供支持
+    // 我们需要创建一个Dict对象，而不是调用字符串"Dict"
+    // Dict作为变量表达式，系统会去查询Dict符号并找到Dict类型的同名方法
+    return new CallExpression(new VariableExpression("dict"), arguments);
 }
 
 // 解析结构体实例化
@@ -650,18 +713,20 @@ Expression* Parser::parseStructInstantiation(const string& structName) {
     lex.match('}');  // 匹配结束大括号
     
     // 创建结构体实例化表达式
-    // 这里我们使用CallExpression来表示结构体实例化
-    // 按照结构体定义的成员顺序传递参数
+    // 使用字典字面量语法，然后调用结构体构造函数
     vector<Expression*> arguments;
     
-    // 将成员按照结构体定义的顺序转换为参数列表
-    // 直接传递成员表达式作为参数
+    // 创建字典字面量作为第一个参数
+    vector<Expression*> dictArgs;
     for (const auto& member : members) {
-        arguments.push_back(member.second);
+        dictArgs.push_back(new ConstantExpression<string>(member.first));
+        dictArgs.push_back(member.second);
     }
+    Expression* dictLiteral = new CallExpression(new ConstantExpression<string>("Dict"), dictArgs);
+    arguments.push_back(dictLiteral);
     
-    // 返回结构体实例化调用表达式
-    return new CallExpression(structName, arguments);
+    // 返回结构体构造函数调用表达式
+    return new CallExpression(new VariableExpression(structName), arguments);
 }
 
 
@@ -687,7 +752,7 @@ Expression* Parser::parseCallExpression(Expression* calleeExpr) {
     // 根据被调用表达式的类型决定如何处理
     if (VariableExpression* varExpr = dynamic_cast<VariableExpression*>(calleeExpr)) {
         // 变量表达式调用 - 可能是函数调用或类实例化
-        return new CallExpression(varExpr->name, arguments);
+        return new CallExpression(calleeExpr, arguments);
 
     } else {
         // 其他类型的表达式调用 - 报告错误
@@ -724,15 +789,17 @@ StructDefinition* Parser::parseStruct() {
     string structName = lex.matchIdentifier();
 	lex.match('{');
     
-    vector<StructMember> members;
+    vector<ClassMember*> members;
     
     while (lex.token()->Tag != '}') {
         // 结构体成员默认为public
-        members.push_back(parseClassMember("public"));
+        ClassMember* member = parseClassMember("public");
+        members.push_back(member);
     }
     
 	lex.match('}');
     
+    // 现在StructDefinition继承ClassDefinition，所以需要传递空的基类和方法列表
     return new StructDefinition(structName, members);
 }
 
@@ -753,7 +820,7 @@ ClassDefinition* Parser::parseClass() {
     
     lex.match('{');
     
-    vector<StructMember> members;
+    vector<ClassMember*> members;
     vector<ClassMethod*> methods;
     
     // 当前访问修饰符，默认为public
@@ -774,7 +841,8 @@ ClassDefinition* Parser::parseClass() {
             methods.push_back(method);
         } else {
             // 解析成员变量，使用当前访问修饰符
-            members.push_back(parseClassMember(currentVisibility));
+            ClassMember* member = parseClassMember(currentVisibility);
+            members.push_back(member);
         }
     }
     
@@ -784,7 +852,7 @@ ClassDefinition* Parser::parseClass() {
 }
 
 // 解析类成员变量
-StructMember Parser::parseClassMember(const string& visibility) {
+ClassMember* Parser::parseClassMember(const string& visibility) {
     // 解析类型和名称
     Type* memberType = lex.matchType();
     string memberName = lex.matchIdentifier();
@@ -797,7 +865,7 @@ StructMember Parser::parseClassMember(const string& visibility) {
     
     lex.match(';');
     
-    return StructMember(memberName, memberType, visibility, defaultValue);
+    return new ClassMember(memberName, memberType->str(), visibility, defaultValue);
 }
 
 // 解析类方法

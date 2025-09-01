@@ -1,5 +1,0 @@
-let x = 10;
-let y = 5;
-let z = 8;
-let result = max(x, y, z);
-print(result);

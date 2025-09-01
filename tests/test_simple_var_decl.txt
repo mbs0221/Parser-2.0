@@ -1,0 +1,4 @@
+// 简单的变量声明测试
+let x = 42;
+let y = "Hello";
+let z = true;

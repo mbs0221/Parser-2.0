@@ -1,0 +1,15 @@
+# 测试Type对象
+
+function test_type_debug() {
+    println("开始测试Type对象...");
+    
+    # 测试简单的字符串拼接
+    let str1 = "Hello";
+    let str2 = "World";
+    let result = str1 + str2;
+    println("字符串拼接结果: " + result);
+    
+    println("测试完成");
+}
+
+test_type_debug();

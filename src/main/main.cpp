@@ -1,5 +1,8 @@
-#include "interpreter/interpreter.h"
-#include "interpreter/logger.h"
+#include "interpreter/core/interpreter.h"
+#include "interpreter/utils/logger.h"
+#include "interpreter/types/types.h"
+#include "interpreter/values/value.h"
+#include "interpreter/scope/scope.h"
 #include "parser/parser.h"
 #include <iostream>
 #include <string>
@@ -31,7 +34,7 @@ void showUsage(const char* programName) {
 }
 
 // 设置日志级别
-void setLogLevel(const string& level) {
+void setLogLevel(const std::string& level) {
     if (level == "DEBUG") {
         Logger::setLevel(log4cpp::Priority::DEBUG);
     } else if (level == "INFO") {
@@ -123,6 +126,42 @@ int main(int argc, char *argv[])
 		LOG_INFO("Plugins to load: " + pluginList);
 	}
 	
+	// 初始化内置类型
+	LOG_INFO("Initializing built-in types...");
+	TypeRegistry::initializeBuiltinTypes();
+	
+	// 验证内置类型注册
+	LOG_INFO("Verifying built-in type registration...");
+	TypeRegistry* globalRegistry = TypeRegistry::getGlobalInstance();
+	if (globalRegistry) {
+		LOG_INFO("Global TypeRegistry found with " + to_string(globalRegistry->getTypeCount()) + " types");
+		
+		// 检查关键类型
+		ObjectType* stringType = globalRegistry->getType("string");
+		ObjectType* intType = globalRegistry->getType("int");
+		ObjectType* boolType = globalRegistry->getType("bool");
+		
+		if (stringType) {
+			LOG_INFO("✓ String type registered: " + stringType->getTypeName());
+		} else {
+			LOG_ERROR("✗ String type NOT found in registry!");
+		}
+		
+		if (intType) {
+			LOG_INFO("✓ Int type registered: " + intType->getTypeName());
+		} else {
+			LOG_ERROR("✗ Int type NOT found in registry!");
+		}
+		
+		if (boolType) {
+			LOG_INFO("✓ Bool type registered: " + boolType->getTypeName());
+		} else {
+			LOG_ERROR("✗ Bool type NOT found in registry!");
+		}
+	} else {
+		LOG_ERROR("✗ Global TypeRegistry is null!");
+	}
+	
 	LOG_INFO("Parsing file: " + fileName);
 	Parser p;
 	Program *program = p.parse(fileName);
@@ -134,25 +173,8 @@ int main(int argc, char *argv[])
 		// Program* optimizedProgram = optimizer.optimize(program);
 		
 		LOG_INFO("Executing program");
+		// 解释器在构造函数中已经自动加载了插件，这里不需要重复加载
 		Interpreter interpreter(loadPlugins);
-		
-		// 如果启用了插件加载，加载指定的插件
-		if (loadPlugins && !pluginList.empty()) {
-			// 解析插件列表（逗号分隔）
-			stringstream ss(pluginList);
-			string plugin;
-			while (getline(ss, plugin, ',')) {
-				// 去除空格
-				plugin.erase(0, plugin.find_first_not_of(" \t"));
-				plugin.erase(plugin.find_last_not_of(" \t") + 1);
-				
-				if (!plugin.empty()) {
-					string pluginPath = "./plugins/lib" + plugin + "_plugin.so";
-					LOG_INFO("Loading plugin: " + pluginPath);
-					interpreter.loadPlugin(pluginPath);
-				}
-			}
-		}
 		
 		interpreter.visit(program);  // 直接调用visit方法，消除execute函数依赖
 		LOG_INFO("Program execution completed");

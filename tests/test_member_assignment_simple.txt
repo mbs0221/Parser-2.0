@@ -1,0 +1,22 @@
+// 测试成员赋值表达式功能
+
+// 测试1: 结构体成员赋值
+struct Person {
+    string name;
+    int age;
+}
+
+let p = Person{name: "Alice", age: 25};
+p.name = "Bob";  // 成员赋值
+p.age = 30;      // 成员赋值
+
+print("Person name: " + p.name);
+print("Person age: " + p.age);
+
+// 测试2: 数组元素赋值
+let arr = [1, 2, 3, 4, 5];
+arr[0] = 10;     // 数组元素赋值
+arr[2] = 30;     // 数组元素赋值
+
+print("Array[0]: " + arr[0]);
+print("Array[2]: " + arr[2]);

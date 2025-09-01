@@ -1,0 +1,29 @@
+// 小于等于操作符测试
+
+// 全局变量
+let globalCounter = 0;
+
+// 函数1：测试小于等于操作符
+function testLessEqual() {
+    println("小于等于测试开始");
+    
+    let i = 1;
+    while (i <= 3) {
+        println("循环次数");
+        i = i + 1;
+    }
+    
+    println("小于等于测试完成");
+}
+
+// 主函数
+function main() {
+    println("小于等于操作符测试开始");
+    
+    // 测试小于等于
+    testLessEqual();
+    
+    println("小于等于操作符测试完成");
+}
+
+main();

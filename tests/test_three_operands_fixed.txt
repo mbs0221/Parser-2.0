@@ -1,0 +1,22 @@
+function test() {
+    let a = 15;
+    let b = 3;
+    let c = 7;
+    
+    let sum = a + b* c;
+    println(sum);
+    let sum2 = a + b / c;
+    println(sum2);
+    let sum3 = a + b % c;
+    println(sum3);
+    let sum4 = a - b * c;
+    println(sum4);
+    let sum5 = a - b / c;
+    println(sum5);
+    
+    // 现在这个也应该工作了
+    let sum6 = a + b + c;
+    println(sum6);
+}
+
+test();

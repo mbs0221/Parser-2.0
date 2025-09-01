@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(Parser VERSION 2.0.0 LANGUAGES CXX)
 
 # 设置C++标准
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 设置编译选项
@@ -43,6 +43,8 @@ add_subdirectory(src/parser)
 add_subdirectory(src/interpreter)
 add_subdirectory(src/plugins)
 add_subdirectory(src/optimizer)
+add_subdirectory(src/compiler)
+add_subdirectory(src/emulator)
 add_subdirectory(src/main)
 add_subdirectory(src/tests)
 

@@ -61,9 +61,9 @@ TEST_F(InterpreterTest, ExpressionStatementStructure) {
 }
 
 // 测试变量声明结构
-TEST_F(InterpreterTest, VariableDeclarationStructure) {
+TEST_F(InterpreterTest, VariableDefinitionStructure) {
     ConstantExpression* value = new ConstantExpression(42);
-    VariableDeclaration* varDecl = new VariableDeclaration("y", "int", value);
+    VariableDefinition* varDecl = new VariableDefinition("y", "int", value);
     
     EXPECT_NE(varDecl, nullptr);
     

@@ -1,0 +1,21 @@
+struct Student {
+    string name;
+    int age;
+}
+
+function getName(self) {
+    return self.name;
+}
+
+function getAge(self) {
+    return self.age;
+}
+
+let student1 = Student("Alice", 20);
+
+println("Name: ");
+println(student1.getName());
+println("\n");
+println("Age: ");
+println(student1.getAge());
+println("\n");

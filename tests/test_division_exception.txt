@@ -1,0 +1,1 @@
+function testException() { try { println("In try block"); let x = 10; let y = 0; let z = x / y; println("This should not print"); } catch (error) { println("Caught exception: " + error); } } testException();

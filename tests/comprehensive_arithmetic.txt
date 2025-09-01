@@ -1,110 +1,110 @@
 // ==================== 算术运算综合测试 ====================
 
-print("=== 算术运算综合测试 ===
+println("=== 算术运算综合测试 ===
 ");
 
 // 1. 基本算术运算
-print("1. 基本算术运算:");
+println("1. 基本算术运算:");
 let a = 10;
 let b = 3;
-print("a = " + a + ", b = " + b);
-print("a + b = " + (a + b));
-print("a - b = " + (a - b));
-print("a * b = " + (a * b));
-print("a / b = " + (a / b));
-print("a % b = " + (a % b));
-print("
+println("a = " + a + ", b = " + b);
+println("a + b = " + (a + b));
+println("a - b = " + (a - b));
+println("a * b = " + (a * b));
+println("a / b = " + (a / b));
+println("a % b = " + (a % b));
+println("
 ");
 
 // 2. 浮点数运算
-print("2. 浮点数运算:");
+println("2. 浮点数运算:");
 let c = 10.5;
 let d = 3.2;
-print("c = " + c + ", d = " + d);
-print("c + d = " + (c + d));
-print("c - d = " + (c - d));
-print("c * d = " + (c * d));
-print("c / d = " + (c / d));
-print("
+println("c = " + c + ", d = " + d);
+println("c + d = " + (c + d));
+println("c - d = " + (c - d));
+println("c * d = " + (c * d));
+println("c / d = " + (c / d));
+println("
 ");
 
 // 3. 混合类型运算
-print("3. 混合类型运算:");
+println("3. 混合类型运算:");
 let e = 10;
 let f = 3.14;
-print("e = " + e + ", f = " + f);
-print("e + f = " + (e + f));
-print("e * f = " + (e * f));
-print("e / f = " + (e / f));
-print("
+println("e = " + e + ", f = " + f);
+println("e + f = " + (e + f));
+println("e * f = " + (e * f));
+println("e / f = " + (e / f));
+println("
 ");
 
 // 4. 位运算
-print("4. 位运算:");
+println("4. 位运算:");
 let g = 5;
 let h = 3;
-print("g = " + g + ", h = " + h);
-print("g & h = " + (g & h));
-print("g | h = " + (g | h));
-print("g ^ h = " + (g ^ h));
-print("~g = " + (~g));
-print("g << 1 = " + (g << 1));
-print("g >> 1 = " + (g >> 1));
-print("
+println("g = " + g + ", h = " + h);
+println("g & h = " + (g & h));
+println("g | h = " + (g | h));
+println("g ^ h = " + (g ^ h));
+println("~g = " + (~g));
+println("g << 1 = " + (g << 1));
+println("g >> 1 = " + (g >> 1));
+println("
 ");
 
 // 5. 比较运算
-print("5. 比较运算:");
+println("5. 比较运算:");
 let i = 10;
 let j = 5;
-print("i = " + i + ", j = " + j);
-print("i > j = " + (i > j));
-print("i < j = " + (i < j));
-print("i >= j = " + (i >= j));
-print("i <= j = " + (i <= j));
-print("i == j = " + (i == j));
-print("i != j = " + (i != j));
-print("
+println("i = " + i + ", j = " + j);
+println("i > j = " + (i > j));
+println("i < j = " + (i < j));
+println("i >= j = " + (i >= j));
+println("i <= j = " + (i <= j));
+println("i == j = " + (i == j));
+println("i != j = " + (i != j));
+println("
 ");
 
 // 6. 逻辑运算
-print("6. 逻辑运算:");
+println("6. 逻辑运算:");
 let k = true;
 let l = false;
-print("k = " + k + ", l = " + l);
-print("k && l = " + (k && l));
-print("k || l = " + (k || l));
-print("!k = " + (!k));
-print("!l = " + (!l));
-print("
+println("k = " + k + ", l = " + l);
+println("k && l = " + (k && l));
+println("k || l = " + (k || l));
+println("!k = " + (!k));
+println("!l = " + (!l));
+println("
 ");
 
 // 7. 复杂表达式
-print("7. 复杂表达式:");
+println("7. 复杂表达式:");
 let m = 15;
 let n = 3;
 let o = 7;
-print("m = " + m + ", n = " + n + ", o = " + o);
-print("m + n * o = " + (m + n * o));
-print("(m + n) * o = " + ((m + n) * o));
-print("m + n + o = " + (m + n + o));
-print("m * n + o = " + (m * n + o));
-print("~(m + n) * (o + n * m) = " + (~(m + n) * (o + n * m)));
-print("
+println("m = " + m + ", n = " + n + ", o = " + o);
+println("m + n * o = " + (m + n * o));
+println("(m + n) * o = " + ((m + n) * o));
+println("m + n + o = " + (m + n + o));
+println("m * n + o = " + (m * n + o));
+println("~(m + n) * (o + n * m) = " + (~(m + n) * (o + n * m)));
+println("
 ");
 
 // 8. 赋值运算
-print("8. 赋值运算:");
+println("8. 赋值运算:");
 let p = 10;
-print("p = " + p);
+println("p = " + p);
 p = p + 5;
-print("p = p + 5: " + p);
+println("p = p + 5: " + p);
 p = p * 2;
-print("p = p * 2: " + p);
+println("p = p * 2: " + p);
 p = p - 10;
-print("p = p - 10: " + p);
-print("
+println("p = p - 10: " + p);
+println("
 ");
 
-print("=== 算术运算测试完成 ===
+println("=== 算术运算测试完成 ===
 ");

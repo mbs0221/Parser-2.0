@@ -1,0 +1,20 @@
+# 测试单目运算符调试
+
+function add(a, b) {
+    return a + b;
+}
+
+let x = 10;
+let y = 5;
+
+# 测试不带负号的函数调用
+let test1 = add(x, y);
+print("test1 = ");
+print(test1);
+
+# 测试带负号的函数调用
+let test2 = -add(x, y);
+print("test2 = ");
+print(test2);
+
+print("调试测试完成");

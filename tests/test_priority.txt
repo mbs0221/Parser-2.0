@@ -1,0 +1,9 @@
+function test() {
+    let a = 15;
+    let b = 3;
+    let c = 7;
+    let result = a + b * c;
+    println(result);
+}
+
+test();

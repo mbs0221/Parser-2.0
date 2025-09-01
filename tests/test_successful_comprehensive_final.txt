@@ -1,0 +1,344 @@
+// Successful comprehensive test
+
+// Global variables
+let globalCounter = 0;
+let globalResult = 0;
+
+// Function 1: Calculate factorial
+function factorial(n) {
+    if (n <= 1) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+// Function 2: Check prime number
+function isPrime(num) {
+    if (num < 2) {
+        return false;
+    }
+    
+    let i = 2;
+    while (i <= num) {
+        let remainder = num % i;
+        if (remainder == 0) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+// Function 3: Exception handling test
+function testException(x, y) {
+    try {
+        println("Calculation start");
+        let result = x / y;
+        println("Calculation complete");
+        return result;
+    } catch (error) {
+        println("Exception handled");
+        return 0;
+    }
+}
+
+// Function 4: Arithmetic test
+function testArithmetic(a, b, c) {
+    let sum = a + b;
+    let product = a * b;
+    let difference = a - b;
+    let quotient = a / b;
+    let remainder = a % b;
+    
+    println("Arithmetic completed");
+    println("Sum");
+    println(sum);
+    println("Product");
+    println(product);
+    println("Difference");
+    println(difference);
+    println("Quotient");
+    println(quotient);
+    println("Remainder");
+    println(remainder);
+    
+    return sum + product;
+}
+
+// Function 5: Logic test
+function testLogic(a, b, c) {
+    let logicalAnd = a > 0 && b > 0;
+    let logicalOr = a > 10 || b > 10;
+    let logicalNot = !(a == 0);
+    
+    println("Logic completed");
+    println("Logical AND");
+    println(logicalAnd);
+    println("Logical OR");
+    println(logicalOr);
+    println("Logical NOT");
+    println(logicalNot);
+    
+    return logicalAnd;
+}
+
+// Function 6: Comparison test
+function testComparison(a, b) {
+    let equal = a == b;
+    let notEqual = a != b;
+    let lessThan = a < b;
+    let greaterThan = a > b;
+    let lessEqual = a <= b;
+    let greaterEqual = a >= b;
+    
+    println("Comparison completed");
+    println("Equal");
+    println(equal);
+    println("Not equal");
+    println(notEqual);
+    println("Less than");
+    println(lessThan);
+    println("Greater than");
+    println(greaterThan);
+    println("Less equal");
+    println(lessEqual);
+    println("Greater equal");
+    println(greaterEqual);
+    
+    return equal;
+}
+
+// Function 7: Bitwise test
+function testBitwise(a, b) {
+    let bitwiseAnd = a & b;
+    let bitwiseOr = a | b;
+    let bitwiseXor = a ^ b;
+    let leftShift = a << 2;
+    let rightShift = a >> 1;
+    
+    println("Bitwise completed");
+    println("Bitwise AND");
+    println(bitwiseAnd);
+    println("Bitwise OR");
+    println(bitwiseOr);
+    println("Bitwise XOR");
+    println(bitwiseXor);
+    println("Left shift");
+    println(leftShift);
+    println("Right shift");
+    println(rightShift);
+    
+    return bitwiseAnd;
+}
+
+// Function 8: Loop test
+function testLoops() {
+    println("Loop test start");
+    
+    // while loop
+    let sum = 0;
+    let j = 1;
+    while (j <= 5) {
+        sum = sum + j;
+        j = j + 1;
+    }
+    println("1 to 5 sum");
+    println(sum);
+    
+    // nested loop
+    let product = 1;
+    let k = 1;
+    while (k <= 3) {
+        let inner = 1;
+        let l = 1;
+        while (l <= k) {
+            inner = inner * l;
+            l = l + 1;
+        }
+        product = product * inner;
+        k = k + 1;
+    }
+    println("Nested loop result");
+    println(product);
+}
+
+// Function 9: Branch test
+function testBranches() {
+    println("Branch test start");
+    
+    let score = 85;
+    
+    if (score >= 90) {
+        println("Excellent");
+    } else if (score >= 80) {
+        println("Good");
+    } else if (score >= 70) {
+        println("Average");
+    } else if (score >= 60) {
+        println("Pass");
+    } else {
+        println("Fail");
+    }
+    
+    // nested if
+    let age = 25;
+    let income = 50000;
+    
+    if (age >= 18) {
+        if (income >= 30000) {
+            println("Adult, high income");
+        } else {
+            println("Adult, normal income");
+        }
+    } else {
+        println("Minor");
+    }
+}
+
+// Function 10: Switch test
+function testSwitch(day) {
+    switch (day) {
+        case 1:
+            println("Monday");
+            break;
+        case 2:
+            println("Tuesday");
+            break;
+        case 3:
+            println("Wednesday");
+            break;
+        case 4:
+            println("Thursday");
+            break;
+        case 5:
+            println("Friday");
+            break;
+        case 6:
+        case 7:
+            println("Weekend");
+            break;
+        default:
+            println("Invalid date");
+            break;
+    }
+}
+
+// Function 11: Struct test
+function testStructs() {
+    println("Struct test start");
+    
+    struct Person {
+        name: string,
+        age: int,
+        salary: double
+    }
+    
+    let person1 = Person {name: "John", age: 30, salary: 8000.5};
+    let person2 = Person {name: "Jane", age: 25, salary: 6000.0};
+    
+    println("Person info");
+    println(person1.name);
+    println(person1.age);
+    println(person1.salary);
+    println(person2.name);
+    println(person2.age);
+    println(person2.salary);
+}
+
+// Function 12: Array test
+function testArrays() {
+    println("Array test start");
+    
+    let numbers = [1, 2, 3, 4, 5];
+    let sum = 0;
+    let i = 0;
+    while (i < 5) {
+        sum = sum + numbers[i];
+        i = i + 1;
+    }
+    println("Array element sum");
+    println(sum);
+}
+
+// Main function
+function main() {
+    println("=== Successful comprehensive test start ===");
+    
+    // 1. Function call test
+    println("1. Function call test");
+    let fact5 = factorial(5);
+    println("5 factorial");
+    println(fact5);
+    
+    let prime7 = isPrime(7);
+    let prime8 = isPrime(8);
+    println("7 is prime");
+    println(prime7);
+    println("8 is prime");
+    println(prime8);
+    
+    // 2. Exception handling test
+    println("2. Exception handling test");
+    testException(10, 2);
+    testException(10, 0);
+    
+    // 3. Arithmetic test
+    println("3. Arithmetic test");
+    let calcResult = testArithmetic(15, 3, 7);
+    println("Final result");
+    println(calcResult);
+    
+    // 4. Logic test
+    println("4. Logic test");
+    testLogic(15, 3, 7);
+    
+    // 5. Comparison test
+    println("5. Comparison test");
+    testComparison(15, 3);
+    
+    // 6. Bitwise test
+    println("6. Bitwise test");
+    testBitwise(15, 3);
+    
+    // 7. Loop test
+    println("7. Loop test");
+    testLoops();
+    
+    // 8. Branch test
+    println("8. Branch test");
+    testBranches();
+    
+    // 9. Switch test
+    println("9. Switch test");
+    testSwitch(3);
+    testSwitch(6);
+    testSwitch(10);
+    
+    // 10. Struct test
+    println("10. Struct test");
+    testStructs();
+    
+    // 11. Array test
+    println("11. Array test");
+    testArrays();
+    
+    // 12. Global variable test
+    println("12. Global variable test");
+    globalResult = fact5 + calcResult;
+    println("Global result");
+    println(globalResult);
+    
+    // 13. String operation test
+    println("13. String operation test");
+    let str1 = "Hello";
+    let str2 = "World";
+    let combined = str1 + " " + str2;
+    println("String concatenation");
+    println(combined);
+    
+    println("=== Successful comprehensive test completed ===");
+    println("All function tests passed");
+}
+
+main();

@@ -21,6 +21,58 @@ template bool ConstantExpression<bool>::accept<bool>(ExpressionVisitor<bool>* vi
 template char ConstantExpression<char>::accept<char>(ExpressionVisitor<char>* visitor);
 template string ConstantExpression<string>::accept<string>(ExpressionVisitor<string>* visitor);
 
+// ConstantExpression模板特化实现
+template<>
+string ConstantExpression<int>::getLocation() const {
+    return to_string(value);
+}
+
+template<>
+string ConstantExpression<double>::getLocation() const {
+    return to_string(value);
+}
+
+template<>
+string ConstantExpression<bool>::getLocation() const {
+    return value ? "true" : "false";
+}
+
+template<>
+string ConstantExpression<char>::getLocation() const {
+    return string(1, value);
+}
+
+template<>
+string ConstantExpression<string>::getLocation() const {
+    return "\"" + value + "\"";
+}
+
+// 类型名称特化
+template<>
+string ConstantExpression<int>::getTypeName() const {
+    return "int";
+}
+
+template<>
+string ConstantExpression<double>::getTypeName() const {
+    return "double";
+}
+
+template<>
+string ConstantExpression<bool>::getTypeName() const {
+    return "bool";
+}
+
+template<>
+string ConstantExpression<char>::getTypeName() const {
+    return "char";
+}
+
+template<>
+string ConstantExpression<string>::getTypeName() const {
+    return "string";
+}
+
 // ==================== VariableExpression实现 ====================
 template<typename ReturnType>
 ReturnType VariableExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
@@ -36,12 +88,6 @@ ReturnType UnaryExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
 // ==================== BinaryExpression实现 ====================
 template<typename ReturnType>
 ReturnType BinaryExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
-    return visitor->visit(this);
-}
-
-// ==================== AssignExpression实现 ====================
-template<typename ReturnType>
-ReturnType AssignExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
     return visitor->visit(this);
 }
 
@@ -63,12 +109,8 @@ ReturnType CallExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
     return visitor->visit(this);
 }
 
-// ==================== MethodCallExpression实现 ====================
+// ==================== IncrementDecrementExpression实现 ====================
 template<typename ReturnType>
-ReturnType MethodCallExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
+ReturnType IncrementDecrementExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
     return visitor->visit(this);
 }
-
-
-
-

@@ -1,0 +1,93 @@
+// 基本类型方法调用测试
+println("=== 基本类型方法调用测试 ===");
+
+// 1. 字符串类型方法
+println("--- 字符串类型方法 ---");
+let str = "Hello, World!";
+println("原始字符串: ", str);
+println("字符串长度: ", length(str));
+println("转大写: ", to_upper(str));
+println("转小写: ", to_lower(str));
+println("分割字符串: ", split(str, ", "));
+
+// 2. 整数类型方法
+println("--- 整数类型方法 ---");
+let num = -42;
+println("原始数字: ", num);
+println("绝对值: ", abs(num));
+println("转字符串: ", to_string(num));
+
+// 3. 浮点数类型方法
+println("--- 浮点数类型方法 ---");
+let float_num = 3.14159;
+println("原始浮点数: ", float_num);
+println("绝对值: ", abs(float_num));
+println("转字符串: ", to_string(float_num));
+println("四舍五入: ", round(float_num));
+
+// 4. 数组类型方法
+println("--- 数组类型方法 ---");
+let arr = [1, 2, 3, 4, 5];
+println("原始数组: ", arr);
+println("数组长度: ", length(arr));
+println("数组大小: ", size(arr));
+
+// 添加元素
+push(arr, 6);
+println("添加元素后: ", arr);
+println("新长度: ", length(arr));
+
+// 插入元素
+insert(arr, 0, 0);
+println("插入元素后: ", arr);
+
+// 删除元素
+remove(arr, 1);
+println("删除元素后: ", arr);
+
+// 排序
+sort(arr);
+println("排序后: ", arr);
+
+// 清空
+clear(arr);
+println("清空后: ", arr);
+println("清空后长度: ", length(arr));
+
+// 5. 字典类型方法
+println("--- 字典类型方法 ---");
+let dict = {"name": "Alice", "age": 25, "city": "Beijing"};
+println("原始字典: ", dict);
+println("字典大小: ", size(dict));
+println("字典键: ", keys(dict));
+println("字典值: ", values(dict));
+
+// 检查键是否存在
+println("包含name键: ", has(dict, "name"));
+println("包含height键: ", has(dict, "height"));
+
+// 获取值
+println("name值: ", get(dict, "name"));
+println("age值: ", get(dict, "age"));
+
+// 添加新键值对
+set(dict, "height", 170);
+println("添加height后: ", dict);
+
+// 删除键值对
+remove(dict, "age");
+println("删除age后: ", dict);
+
+// 清空字典
+clear(dict);
+println("清空后: ", dict);
+println("清空后大小: ", size(dict));
+
+// 6. 布尔类型方法
+println("--- 布尔类型方法 ---");
+let bool_val = true;
+println("原始布尔值: ", bool_val);
+println("转字符串: ", to_string(bool_val));
+println("取反: ", not(bool_val));
+
+println("=== 基本类型方法调用测试完成 ===");

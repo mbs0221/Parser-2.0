@@ -1,0 +1,45 @@
+# 测试修正后的read函数
+
+function test_read_fixed() {
+    println("开始测试修正后的read函数...");
+    
+    # 创建测试文件
+    let filename = "test_read_fixed.txt";
+    let write_handle = open(filename, "w");
+    if (write_handle) {
+        write(write_handle, "Hello World", 1);
+        write(write_handle, "This is a test", 1);
+        close(write_handle);
+        println("测试文件创建完成");
+    }
+    
+    # 读取文件
+    let read_handle = open(filename, "r");
+    if (read_handle) {
+        println("文件打开成功");
+        
+        # 创建缓冲区
+        let buffer = "";
+        
+        # 读取第一行（11个字符 + 换行符）
+        let bytes1 = read(read_handle, buffer, 12);
+	println(bytes1);
+        println("第一行读取字节数: " + bytes1);
+        
+        # 读取第二行（14个字符 + 换行符）
+        let bytes2 = read(read_handle, buffer, 15);
+        println("第二行读取字节数: " + bytes2);
+        
+        # 尝试读取第三行（应该返回0）
+        let bytes3 = read(read_handle, buffer, 10);
+        println("第三行读取字节数: " + bytes3);
+        
+        close(read_handle);
+    } else {
+        println("无法打开文件进行读取");
+    }
+    
+    println("测试完成");
+}
+
+test_read_fixed();

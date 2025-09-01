@@ -1,0 +1,5 @@
+// 基本测试
+let x = 42;
+let y = "Hello";
+println("x = ", x);
+println("y = ", y);

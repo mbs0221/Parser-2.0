@@ -1,61 +1,19 @@
-#include "interpreter/builtin_plugin.h"
-#include "interpreter/value.h"
-#include "interpreter/type_registry.h"
-#include "parser/function.h"
+#include "interpreter/plugins/builtin_plugin.h"
+#include "interpreter/values/value.h"
+#include "interpreter/types/types.h"
+#include "parser/definition.h"
 #include <iostream>
 #include <algorithm>
 
 using namespace std;
 
-// ==================== 数组操作函数 - 通过类型系统调用方法 ====================
+// ==================== 数组操作函数 - 使用宏自动生成 ====================
 
-Value* array_push(vector<Value*>& args) {
-    if (args.size() < 2 || !args[0]) return nullptr;
-    
-    Value* arrVal = args[0];
-    ObjectType* type = arrVal->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用push方法
-    vector<Value*> methodArgs(args.begin() + 1, args.end());
-    return type->callMethod(arrVal, "push", methodArgs);
-}
-
-Value* array_pop(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* arrVal = args[0];
-    ObjectType* type = arrVal->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用pop方法
-    vector<Value*> methodArgs;
-    return type->callMethod(arrVal, "pop", methodArgs);
-}
-
-Value* array_sort(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* arrVal = args[0];
-    ObjectType* type = arrVal->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用sort方法
-    vector<Value*> methodArgs;
-    return type->callMethod(arrVal, "sort", methodArgs);
-}
-
-Value* array_length(vector<Value*>& args) {
-    if (args.size() != 1 || !args[0]) return nullptr;
-    
-    Value* val = args[0];
-    ObjectType* type = val->getValueType();
-    if (!type) return nullptr;
-    
-    // 通过类型系统调用length方法
-    vector<Value*> methodArgs;
-    return type->callMethod(val, "length", methodArgs);
-}
+// 使用宏自动生成数组函数实现
+AUTO_PLUGIN_ARRAY_FUNCTION(array_push, "push")
+AUTO_PLUGIN_ARRAY_FUNCTION(array_pop, "pop")
+AUTO_PLUGIN_ARRAY_FUNCTION(array_sort, "sort")
+AUTO_PLUGIN_FUNCTION_0(array_length, "length")
 
 // 数组操作插件类
 class ArrayPlugin : public BuiltinPlugin {
@@ -69,17 +27,13 @@ public:
         };
     }
     
-    void registerFunctions(ScopeManager& scopeManager) override {
-        // 使用辅助方法批量注册函数
-        defineBuiltinFunctions(scopeManager, getFunctionMap());
-    }
-    
-    map<string, BuiltinFunctionPtr> getFunctionMap() const override {
+protected:
+    map<string, FunctionInfo> getFunctionInfoMap() const override {
         return {
-            {"push", array_push},
-            {"pop", array_pop},
-            {"sort", array_sort},
-            {"length", array_length}
+            {"push", {array_push, {"array", "value"}, "向数组末尾添加元素"}},
+            {"pop", {array_pop, {"array"}, "从数组末尾移除并返回元素"}},
+            {"sort", {array_sort, {"array"}, "对数组进行排序"}},
+            {"length", {array_length, {"array"}, "获取数组长度"}}
         };
     }
 };

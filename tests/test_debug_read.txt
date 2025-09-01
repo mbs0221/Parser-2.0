@@ -1,0 +1,34 @@
+# 调试read函数参数
+
+function test_debug_read() {
+    println("开始调试read函数参数...");
+    
+    # 创建测试文件
+    let filename = "test_debug_read.txt";
+    let write_handle = open(filename, "w");
+    if (write_handle) {
+        write(write_handle, "Hello World", 1);
+        close(write_handle);
+        println("测试文件创建完成");
+    }
+    
+    # 读取文件
+    let read_handle = open(filename, "r");
+    if (read_handle) {
+        # 创建字符串缓冲区
+        let buffer = "initial value";
+        println("Buffer初始值: " + buffer);
+        
+        # 读取内容
+        let bytes = read(read_handle, buffer, 12);
+        println("读取的字节数: " + bytes);
+        println("读取的内容: " + buffer);
+        println("读取完成");
+        
+        close(read_handle);
+    }
+    
+    println("调试完成");
+}
+
+test_debug_read();

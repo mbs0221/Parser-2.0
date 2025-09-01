@@ -48,57 +48,8 @@ struct ConstantExpression : public Expression {
     const T& getValue() const { return value; }
 };
 
-// 特化实现
-template<>
-string ConstantExpression<int>::getLocation() const {
-    return to_string(value);
-}
-
-template<>
-string ConstantExpression<double>::getLocation() const {
-    return to_string(value);
-}
-
-template<>
-string ConstantExpression<bool>::getLocation() const {
-    return value ? "true" : "false";
-}
-
-template<>
-string ConstantExpression<char>::getLocation() const {
-    return string(1, value);
-}
-
-template<>
-string ConstantExpression<string>::getLocation() const {
-    return "\"" + value + "\"";
-}
-
-// 类型名称特化
-template<>
-string ConstantExpression<int>::getTypeName() const {
-    return "int";
-}
-
-template<>
-string ConstantExpression<double>::getTypeName() const {
-    return "double";
-}
-
-template<>
-string ConstantExpression<bool>::getTypeName() const {
-    return "bool";
-}
-
-template<>
-string ConstantExpression<char>::getTypeName() const {
-    return "char";
-}
-
-template<>
-string ConstantExpression<string>::getTypeName() const {
-    return "string";
-}
+// 包含模板特化声明
+#include "parser/expression_specializations.h"
 
 
 
@@ -152,6 +103,21 @@ struct UnaryExpression : public Expression {
     int getTypePriority() const override {
         return operand ? operand->getTypePriority() : 0;
     }
+    
+    // 获取操作名称
+    string getOperationName() const {
+        return operator_ ? operator_->getOperationName() : "";
+    }
+    
+    // 获取操作类型（枚举值）
+    int getOperationType() const {
+        return operator_ ? operator_->getOperationType() : 0;
+    }
+    
+    // 获取操作符
+    Operator* getOperator() const {
+        return operator_;
+    }
 };
 
 // 二元表达式节点
@@ -187,29 +153,24 @@ struct BinaryExpression : public Expression {
         int rightPriority = right ? right->getTypePriority() : 0;
         return max(leftPriority, rightPriority);
     }
+    
+    // 获取操作名称
+    string getOperationName() const {
+        return operator_ ? operator_->getOperationName() : "";
+    }
+    
+    // 获取操作类型（枚举值）
+    int getOperationType() const {
+        return operator_ ? operator_->getOperationType() : 0;
+    }
+    
+    // 获取操作符
+    Operator* getOperator() const {
+        return operator_;
+    }
 };
 
-// 赋值表达式节点 - 继承自BinaryExpression
-struct AssignExpression : public BinaryExpression {
-    AssignExpression(Expression* l, Expression* r) : BinaryExpression(l, r, Operator::Assign) {}
-    
-    ~AssignExpression() {
-        // 基类 BinaryExpression 的析构函数会处理 left 和 right
-        // 不需要删除 operator_，因为它是静态分配的
-    }
-    
-    string getLocation() const override {
-        return "assignment expression";
-    }
-    
-    // 重写泛型accept方法声明
-    template<typename ReturnType>
-    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
-    
-    int getTypePriority() const override {
-        return 1;  // 赋值操作优先级最低
-    }
-};
+// 赋值表达式现在直接使用BinaryExpression，不再需要单独的AssignExpression类型
 
 // 类型转换表达式 - 使用类型系统进行转换
 struct CastExpression : public Expression {
@@ -289,15 +250,19 @@ struct AccessExpression : public Expression {
     }
 };
 
-// 函数调用表达式节点
+// 函数调用表达式节点 - 统一处理所有函数调用
 struct CallExpression : public Expression {
-    string functionName;
+    Expression* callee;  // 被调用者（函数表达式）
     vector<Expression*> arguments;
     
-    CallExpression(const string& name, const vector<Expression*>& args) 
-        : functionName(name), arguments(args) {}
+    CallExpression(Expression* func, const vector<Expression*>& args) 
+        : callee(func), arguments(args) {}
     
     ~CallExpression() {
+        if (callee) {
+            delete callee;
+            callee = nullptr;
+        }
         for (Expression* arg : arguments) {
             if (arg) {
                 delete arg;
@@ -307,7 +272,7 @@ struct CallExpression : public Expression {
     }
     
     string getLocation() const override {
-        return "function call: " + functionName;
+        return "function call";
     }
     
     // 重写泛型accept方法声明
@@ -317,24 +282,35 @@ struct CallExpression : public Expression {
     int getTypePriority() const override {
         return 0;
     }
+    
+    // 获取被调用者
+    Expression* getCallee() const {
+        return callee;
+    }
+    
+    // 获取参数列表
+    const vector<Expression*>& getArguments() const {
+        return arguments;
+    }
 };
 
-// 方法调用表达式节点 - 继承自CallExpression
-struct MethodCallExpression : public CallExpression {
-    Expression* object;  // 调用方法的对象
+// ==================== 自增自减表达式 ====================
+// 自增自减表达式节点 - 继承自UnaryExpression，统一处理 ++ 和 -- 操作
+struct IncrementDecrementExpression : public UnaryExpression {
+    bool isPrefix;           // 是否为前缀操作 (++i vs i++)
+    int delta;               // 增量值：+1 表示自增，-1 表示自减
     
-    MethodCallExpression(Expression* obj, const string& methodName, const vector<Expression*>& args) 
-        : CallExpression(methodName, args), object(obj) {}
+    IncrementDecrementExpression(Expression* expr, bool prefix, int d) 
+        : UnaryExpression(expr, nullptr), isPrefix(prefix), delta(d) {}
     
-    ~MethodCallExpression() {
-        if (object) {
-            delete object;
-            object = nullptr;
-        }
+    ~IncrementDecrementExpression() {
+        // 基类UnaryExpression会处理operand的删除
     }
     
     string getLocation() const override {
-        return "method call: " + functionName;
+        string prefix = isPrefix ? "prefix" : "postfix";
+        string operation = (delta > 0) ? "increment" : "decrement";
+        return prefix + " " + operation;
     }
     
     // 重写泛型accept方法声明
@@ -342,11 +318,80 @@ struct MethodCallExpression : public CallExpression {
     ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
     
     int getTypePriority() const override {
-        return 0;
+        return isPrefix ? 6 : 2;  // 前缀优先级高，后缀优先级低
+    }
+    
+    // 是否为前缀操作
+    bool isPrefixOperation() const {
+        return isPrefix;
+    }
+    
+    // 是否为后缀操作
+    bool isPostfixOperation() const {
+        return !isPrefix;
+    }
+    
+    // 是否为自增操作
+    bool isIncrement() const {
+        return delta > 0;
+    }
+    
+    // 是否为自减操作
+    bool isDecrement() const {
+        return delta < 0;
+    }
+    
+    // 获取增量值
+    int getDelta() const {
+        return delta;
     }
 };
 
+// ==================== 三元表达式 ====================
+// 三元表达式节点 - 条件 ? 真值 : 假值，继承自BinaryExpression
+struct TernaryExpression : public BinaryExpression {
+    Expression* condition;   // 条件表达式
+    
+    TernaryExpression(Expression* cond, Expression* trueVal, Expression* falseVal) 
+        : BinaryExpression(trueVal, falseVal, nullptr), condition(cond) {}
+    
+    ~TernaryExpression() {
+        if (condition) {
+            delete condition;
+            condition = nullptr;
+        }
+        // 基类BinaryExpression会处理left和right的删除
+    }
+    
+    string getLocation() const override {
+        return "ternary expression";
+    }
+    
+    // 重写泛型accept方法声明
+    template<typename ReturnType>
+    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
+    
+    int getTypePriority() const override {
+        return 1;  // 三元运算符优先级较低，仅次于赋值
+    }
+    
+    // 获取条件表达式
+    Expression* getCondition() const {
+        return condition;
+    }
+    
+    // 获取真值表达式（继承自BinaryExpression的left）
+    Expression* getTrueValue() const {
+        return left;
+    }
+    
+    // 获取假值表达式（继承自BinaryExpression的right）
+    Expression* getFalseValue() const {
+        return right;
+    }
+};
 
+// MemberAssignExpression已移除，成员赋值通过AccessExpression和AssignExpression的组合实现
 
 // ==================== 结构体和类相关表达式 ====================
 // MemberAccessExpression已合并到AccessExpression中

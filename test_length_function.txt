@@ -1,3 +1,0 @@
-let str = "hello";
-let len = length(str);
-print(len);

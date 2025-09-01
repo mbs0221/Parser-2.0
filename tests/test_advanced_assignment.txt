@@ -1,0 +1,48 @@
+// 测试新的赋值表达式功能 - 支持成员访问和数组访问作为左操作数
+
+// 测试1: 结构体成员赋值
+struct Person {
+    string name;
+    int age;
+}
+
+Person p = Person{name: "Alice", age: 25};
+p.name = "Bob";  // 成员赋值
+p.age = 30;      // 成员赋值
+
+print("Person name: " + p.name);
+print("Person age: " + p.age);
+
+// 测试2: 数组元素赋值
+int[] arr = [1, 2, 3, 4, 5];
+arr[0] = 10;     // 数组元素赋值
+arr[2] = 30;     // 数组元素赋值
+
+print("Array[0]: " + arr[0]);
+print("Array[2]: " + arr[2]);
+
+// 测试3: 嵌套成员赋值
+struct Address {
+    string city;
+    string street;
+}
+
+struct Employee {
+    string name;
+    Address address;
+}
+
+Employee emp = Employee{name: "John", address: Address{city: "Beijing", street: "Main St"}};
+emp.address.city = "Shanghai";  // 嵌套成员赋值
+
+print("Employee city: " + emp.address.city);
+
+// 测试4: 字典元素赋值
+dict d = {"key1": "value1", "key2": "value2"};
+d["key1"] = "new_value1";  // 字典元素赋值
+d["key3"] = "value3";      // 新键赋值
+
+print("Dictionary key1: " + d["key1"]);
+print("Dictionary key3: " + d["key3"]);
+
+print("All tests completed successfully!");

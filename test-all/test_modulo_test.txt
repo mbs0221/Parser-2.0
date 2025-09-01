@@ -1,0 +1,32 @@
+// 取模运算测试
+
+// 全局变量
+let globalCounter = 0;
+
+// 函数1：测试取模运算
+function testModulo() {
+    print("取模运算测试开始");
+    
+    let num = 10;
+    let i = 2;
+    
+    while (i <= num) {
+        let remainder = num % i;
+        print("余数: " + remainder);
+        i = i + 1;
+    }
+    
+    print("取模运算测试完成");
+}
+
+// 主函数
+function main() {
+    print("取模运算测试开始");
+    
+    // 测试取模运算
+    testModulo();
+    
+    print("取模运算测试完成");
+}
+
+main();

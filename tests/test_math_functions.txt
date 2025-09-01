@@ -1,0 +1,36 @@
+// 测试数学运算函数
+function testMathOperations() {
+    let a = 10;
+    let b = 5;
+    
+    println("a + b = ", a + b);
+    println("a - b = ", a - b);
+    println("a * b = ", a * b);
+    println("a / b = ", a / b);
+    println("a % b = ", a % b);
+}
+
+function testComparisons() {
+    let x = 15;
+    let y = 10;
+    
+    if (x > y) {
+        println("x is greater than y");
+    }
+    
+    if (x >= y) {
+        println("x is greater than or equal to y");
+    }
+    
+    if (y < x) {
+        println("y is less than x");
+    }
+    
+    if (x != y) {
+        println("x is not equal to y");
+    }
+}
+
+// 执行数学测试
+testMathOperations();
+testComparisons();

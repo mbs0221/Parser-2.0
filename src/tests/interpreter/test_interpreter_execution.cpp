@@ -38,7 +38,7 @@ int main() {
         // 创建变量声明：let message = "Hello World";
         IdentifierNode* varId = new IdentifierNode(createIdentifierToken("message"));
         StringLiteral* varValue = new StringLiteral("Hello World");
-        VariableDeclaration* varDecl = new VariableDeclaration(varId, varValue);
+        VariableDefinition* varDecl = new VariableDefinition(varId, varValue);
         program->addStatement(varDecl);
         
         // 创建打印语句：print(message);
@@ -67,12 +67,12 @@ int main() {
         
         IdentifierNode* str1Id = new IdentifierNode(createIdentifierToken("str1"));
         StringLiteral* str1Value = new StringLiteral("Hello, ");
-        VariableDeclaration* str1Decl = new VariableDeclaration(str1Id, str1Value);
+        VariableDefinition* str1Decl = new VariableDefinition(str1Id, str1Value);
         program->addStatement(str1Decl);
         
         IdentifierNode* str2Id = new IdentifierNode(createIdentifierToken("str2"));
         StringLiteral* str2Value = new StringLiteral("World!");
-        VariableDeclaration* str2Decl = new VariableDeclaration(str2Id, str2Value);
+        VariableDefinition* str2Decl = new VariableDefinition(str2Id, str2Value);
         program->addStatement(str2Decl);
         
         // 创建字符串拼接表达式
@@ -82,7 +82,7 @@ int main() {
         ArithmeticExpression* concatExpr = new ArithmeticExpression(str1Expr, plusOp, str2Expr);
         
         IdentifierNode* resultId = new IdentifierNode(createIdentifierToken("result"));
-        VariableDeclaration* resultDecl = new VariableDeclaration(resultId, concatExpr);
+        VariableDefinition* resultDecl = new VariableDefinition(resultId, concatExpr);
         program->addStatement(resultDecl);
         
         // 打印结果
@@ -109,8 +109,8 @@ int main() {
         array->addElement(new StringLiteral("banana"));
         array->addElement(new StringLiteral("cherry"));
         
-        IdentifierNode* arrId = new IdentifierNode(createIdentifierToken("fruits"));
-        VariableDeclaration* arrDecl = new VariableDeclaration(arrId, array);
+        IdentifierNode* arrId = new Identifier(createIdentifierToken("fruits"));
+        VariableDefinition* arrDecl = new VariableDefinition(arrId, array);
         program->addStatement(arrDecl);
         
         // 访问数组元素：fruits[0]
@@ -119,7 +119,7 @@ int main() {
         AccessExpression* accessExpr = new AccessExpression(arrExpr, indexExpr, false);
         
         IdentifierNode* firstId = new IdentifierNode(createIdentifierToken("first"));
-        VariableDeclaration* firstDecl = new VariableDeclaration(firstId, accessExpr);
+        VariableDefinition* firstDecl = new VariableDefinition(firstId, accessExpr);
         program->addStatement(firstDecl);
         
         // 打印第一个元素
@@ -147,7 +147,7 @@ int main() {
         dict->setEntry("city", new StringLiteral("New York"));
         
         IdentifierNode* dictId = new IdentifierNode(createIdentifierToken("person"));
-        VariableDeclaration* dictDecl = new VariableDeclaration(dictId, dict);
+        VariableDefinition* dictDecl = new VariableDefinition(dictId, dict);
         program->addStatement(dictDecl);
         
         // 访问字典元素：person["name"]
@@ -156,7 +156,7 @@ int main() {
         AccessExpression* accessExpr = new AccessExpression(dictExpr, keyExpr, false);
         
         IdentifierNode* nameId = new IdentifierNode(createIdentifierToken("name"));
-        VariableDeclaration* nameDecl = new VariableDeclaration(nameId, accessExpr);
+        VariableDefinition* nameDecl = new VariableDefinition(nameId, accessExpr);
         program->addStatement(nameDecl);
         
         // 打印姓名
@@ -180,7 +180,7 @@ int main() {
         // let text = "Hello World";
         StringNode* textNode = new StringNode("Hello World");
         IdentifierNode* textId = new IdentifierNode(createIdentifierToken("text"));
-        VariableDeclaration* textDecl = new VariableDeclaration(textId, textNode);
+        VariableDefinition* textDecl = new VariableDefinition(textId, textNode);
         program->addStatement(textDecl);
         
         // let firstChar = text[0];
@@ -189,7 +189,7 @@ int main() {
         AccessExpression* accessExpr = new AccessExpression(textExpr, indexExpr, false);
         
         IdentifierNode* charId = new IdentifierNode(createIdentifierToken("firstChar"));
-        VariableDeclaration* charDecl = new VariableDeclaration(charId, accessExpr);
+        VariableDefinition* charDecl = new VariableDefinition(charId, accessExpr);
         program->addStatement(charDecl);
         
         // 打印第一个字符
@@ -213,7 +213,7 @@ int main() {
         // let condition = "true";
         StringLiteral* conditionValue = new StringLiteral("true");
         IdentifierNode* conditionId = new IdentifierNode(createIdentifierToken("condition"));
-        VariableDeclaration* conditionDecl = new VariableDeclaration(conditionId, conditionValue);
+        VariableDefinition* conditionDecl = new VariableDefinition(conditionId, conditionValue);
         program->addStatement(conditionDecl);
         
         // 创建条件语句块
@@ -244,7 +244,7 @@ int main() {
         // 全局变量
         StringLiteral* globalValue = new StringLiteral("全局变量");
         IdentifierNode* globalId = new IdentifierNode(createIdentifierToken("global"));
-        VariableDeclaration* globalDecl = new VariableDeclaration(globalId, globalValue);
+        VariableDefinition* globalDecl = new VariableDefinition(globalId, globalValue);
         program->addStatement(globalDecl);
         
         // 创建块语句
@@ -253,7 +253,7 @@ int main() {
         // 局部变量
         StringLiteral* localValue = new StringLiteral("局部变量");
         IdentifierNode* localId = new IdentifierNode(createIdentifierToken("local"));
-        VariableDeclaration* localDecl = new VariableDeclaration(localId, localValue);
+        VariableDefinition* localDecl = new VariableDefinition(localId, localValue);
         block->addStatement(localDecl);
         
         // 在块内打印局部变量
@@ -287,7 +287,7 @@ int main() {
         // 测试length函数
         StringLiteral* testStr = new StringLiteral("Hello World");
         IdentifierNode* testId = new IdentifierNode(createIdentifierToken("test"));
-        VariableDeclaration* testDecl = new VariableDeclaration(testId, testStr);
+        VariableDefinition* testDecl = new VariableDefinition(testId, testStr);
         program->addStatement(testDecl);
         
         // length(test)
@@ -297,7 +297,7 @@ int main() {
         lengthCall->addArgument(new IdentifierExpression(testId));
         
         IdentifierNode* lenId = new IdentifierNode(createIdentifierToken("len"));
-        VariableDeclaration* lenDecl = new VariableDeclaration(lenId, lengthCall);
+        VariableDefinition* lenDecl = new VariableDefinition(lenId, lengthCall);
         program->addStatement(lenDecl);
         
         // 打印长度

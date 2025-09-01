@@ -1,0 +1,12 @@
+// 简单的类定义测试
+struct TestClass {
+    int x;
+    int y;
+}
+
+function add(a, b) {
+    return a + b;
+}
+
+let obj = TestClass{x: 10, y: 20};
+let result = add(obj.x, obj.y);

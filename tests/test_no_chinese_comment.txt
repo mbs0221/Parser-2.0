@@ -1,0 +1,52 @@
+// Test without Chinese comments
+
+// Global variables
+let globalCounter = 0;
+
+// Function 1: Simple test
+function simpleTest() {
+    println("Simple test start");
+    return 42;
+}
+
+// Function 2: Arithmetic test
+function testArithmetic(a, b, c) {
+    let sum = a + b + c;
+    let product = a * b * c;
+    let difference = a - b - c;
+    let quotient = a / b;
+    let remainder = a % b;
+    
+    println("Arithmetic completed");
+    println("Sum");
+    println(sum);
+    println("Product");
+    println(product);
+    println("Difference");
+    println(difference);
+    println("Quotient");
+    println(quotient);
+    println("Remainder");
+    println(remainder);
+    
+    return sum + product;
+}
+
+// Main function
+function main() {
+    println("Debug simple test start");
+    
+    // Function call
+    let result = simpleTest();
+    println("Simple test result");
+    println(result);
+    
+    // Arithmetic operation
+    let calcResult = testArithmetic(15, 3, 7);
+    println("Arithmetic result");
+    println(calcResult);
+    
+    println("Debug simple test completed");
+}
+
+main();

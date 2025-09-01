@@ -1,0 +1,15 @@
+// 测试数学运算
+let a = 10;
+let b = 5;
+
+println("a + b = ", a + b);
+println("a - b = ", a - b);
+println("a * b = ", a * b);
+println("a / b = ", a / b);
+println("a % b = ", a % b);
+
+// 测试比较运算
+println("a > b: ", a > b);
+println("a < b: ", a < b);
+println("a == b: ", a == b);
+println("a != b: ", a != b);

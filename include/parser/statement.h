@@ -1,6 +1,7 @@
 #ifndef STATEMENT_H
 #define STATEMENT_H
 
+#include "parser/expression.h"
 #include "parser/inter.h"
 #include "parser/ast_visitor.h"
 #include <vector>
@@ -9,7 +10,7 @@
 #include <vector>
 #include <map>
 
-using namespace std;
+// using namespace std; // 已移除，使用显式std前缀
 
 // 前向声明
 class Expression;
@@ -28,9 +29,9 @@ struct Statement : public AST {
 // ==================== 基本语句 ====================
 // 导入语句
 struct ImportStatement : public Statement {
-    string moduleName;
+    std::string moduleName;
     
-    ImportStatement(const string& name) : moduleName(name) {}
+    ImportStatement(const std::string& name) : moduleName(name) {}
     
     ~ImportStatement() {
         // 不需要手动清理，string会自动管理内存
@@ -55,31 +56,7 @@ struct ExpressionStatement : public Statement {
     void accept(StatementVisitor* visitor) override;
 };
 
-// 变量声明语句
-struct VariableDeclaration : public Statement {
-    vector<pair<string, Expression*>> variables;  // 支持多个变量声明
-    
-    VariableDeclaration() {}
-    VariableDeclaration(const string& name, const string& type, Expression* value = nullptr) {
-        addVariable(name, value);
-    }
-    
-    ~VariableDeclaration() {
-        for (auto& pair : variables) {
-            if (pair.second) {
-                delete pair.second;
-                pair.second = nullptr;
-            }
-        }
-        variables.clear();
-    }
-    
-    void addVariable(const string& name, Expression* value) {
-        variables.push_back(make_pair(name, value));
-    }
-    
-    void accept(StatementVisitor* visitor) override;
-};
+
 
 // ==================== 控制流语句 ====================
 // 条件语句

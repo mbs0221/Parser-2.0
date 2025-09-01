@@ -1,5 +1,7 @@
-#include "interpreter/builtin_plugin.h"
-#include "interpreter/logger.h"
+#include "interpreter/plugins/builtin_plugin.h"
+#include "interpreter/utils/logger.h"
+#include "interpreter/values/value.h"
+#include "interpreter/scope/scope.h"
 #include <iostream>
 #include <dlfcn.h>
 #include <filesystem>
@@ -126,4 +128,99 @@ PluginInfo PluginManager::getPluginInfo(const string& pluginName) const {
         return it->second->getPluginInfo();
     }
     return PluginInfo{"", "", "", {}};
+}
+
+// ==================== BuiltinPlugin辅助方法实现 ====================
+
+void BuiltinPlugin::defineBuiltinFunction(ScopeManager& scopeManager, const string& name, BuiltinFunctionPtr func) {
+    if (func) {
+        // 创建BuiltinFunction对象并注册到作用域
+        BuiltinFunction* builtinFunc = new BuiltinFunction(name, func);
+        scopeManager.defineFunction(name, builtinFunc);
+    }
+}
+
+void BuiltinPlugin::defineBuiltinFunctions(ScopeManager& scopeManager, const map<string, BuiltinFunctionPtr>& functions) {
+    // 获取参数信息
+    map<string, vector<string>> paramMap = getFunctionParameters();
+    
+    for (const auto& pair : functions) {
+        const string& name = pair.first;
+        BuiltinFunctionPtr func = pair.second;
+        
+        // 查找参数信息
+        auto paramIt = paramMap.find(name);
+        if (paramIt != paramMap.end()) {
+            // 创建带有参数信息的BuiltinFunction对象
+            BuiltinFunction* builtinFunc = new BuiltinFunction(name, func, paramIt->second);
+            scopeManager.defineFunction(name, builtinFunc);
+        } else {
+            // 创建没有参数信息的BuiltinFunction对象
+            BuiltinFunction* builtinFunc = new BuiltinFunction(name, func);
+            scopeManager.defineFunction(name, builtinFunc);
+        }
+    }
+}
+
+// 向后兼容的默认实现
+map<string, BuiltinFunctionPtr> BuiltinPlugin::getFunctionMap() const {
+    map<string, BuiltinFunctionPtr> result;
+    map<string, FunctionInfo> funcInfoMap = getFunctionInfoMap();
+    
+    for (const auto& pair : funcInfoMap) {
+        const string& funcName = pair.first;
+        const FunctionInfo& funcInfo = pair.second;
+        result[funcName] = std::get<0>(funcInfo); // 获取函数指针
+    }
+    return result;
+}
+
+// 向后兼容的默认实现
+map<string, vector<string>> BuiltinPlugin::getFunctionParameters() const {
+    map<string, vector<string>> result;
+    map<string, FunctionInfo> funcInfoMap = getFunctionInfoMap();
+    
+    for (const auto& pair : funcInfoMap) {
+        const string& funcName = pair.first;
+        const FunctionInfo& funcInfo = pair.second;
+        result[funcName] = std::get<1>(funcInfo); // 获取参数列表
+    }
+    return result;
+}
+
+// 默认实现：从getFunctionInfoMap构建BuiltinFunction对象映射
+map<string, BuiltinFunction*> BuiltinPlugin::getFunctionObjectMap() const {
+    map<string, BuiltinFunction*> result;
+    // 调用子类实现的getFunctionInfoMap方法
+    map<string, FunctionInfo> funcInfoMap = getFunctionInfoMap();
+    
+    for (const auto& pair : funcInfoMap) {
+        const string& funcName = pair.first;
+        const FunctionInfo& funcInfo = pair.second;
+        
+        BuiltinFunctionPtr func = std::get<0>(funcInfo);      // 函数指针
+        const vector<string>& params = std::get<1>(funcInfo); // 参数列表
+        const string& description = std::get<2>(funcInfo);     // 描述
+        
+        // 创建带有完整信息的BuiltinFunction对象
+        result[funcName] = new BuiltinFunction(funcName, func, params);
+    }
+    return result;
+}
+
+// 默认实现：注册所有函数到作用域管理器
+void BuiltinPlugin::registerFunctions(ScopeManager& scopeManager) {
+    LOG_DEBUG("BuiltinPlugin::registerFunctions called");
+    
+    // 使用getFunctionObjectMap来获取带有参数信息的BuiltinFunction对象
+    map<string, BuiltinFunction*> funcObjects = getFunctionObjectMap();
+    
+    LOG_DEBUG("getFunctionObjectMap returned " + to_string(funcObjects.size()) + " functions");
+    
+    for (const auto& pair : funcObjects) {
+        const string& name = pair.first;
+        BuiltinFunction* func = pair.second;
+        LOG_DEBUG("Registering function '" + name + "' with " + to_string(func->getParameters().size()) + " parameters");
+        scopeManager.defineFunction(name, func);
+    }
 }

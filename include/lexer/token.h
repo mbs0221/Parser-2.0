@@ -39,24 +39,29 @@ enum Tag{
 	// 注释
 	COMMENT,
 	
-	// 运算符范围：300-399
-	// 算术运算符
-	PLUS = 300, MINUS, MULTIPLY, DIVIDE, MODULO,
-	
+	// 双字符运算符范围：300-399
 	// 赋值运算符
-	ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN,
+	PLUS_ASSIGN = 300, MINUS_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, MODULO_ASSIGN,
 	
 	// 比较运算符
-	LT, GT, LE, GE, EQ_EQ, NE_EQ,
+	LE, GE, EQ_EQ, NE_EQ,
 	
 	// 逻辑运算符
-	AND_AND, OR_OR, NOT,
+	AND_AND, OR_OR,
 	
 	// 位运算符
-	BIT_AND, BIT_OR, BIT_XOR, BIT_NOT, LEFT_SHIFT, RIGHT_SHIFT,
+	LEFT_SHIFT = 1001, RIGHT_SHIFT = 1002,
 	
-	// 其他运算符
-	INCREMENT, DECREMENT, DOT, ARROW, QUESTION, LBRACKET, RBRACKET, LBRACE, RBRACE, LPAREN, RPAREN, COMMA, SEMICOLON, COLON,
+	// 其他双字符运算符
+	INCREMENT, DECREMENT, ARROW, TERNARY_OP,
+	
+	// 单字符运算符使用ASCII码（保持原有ASCII值）
+	// 这些值直接对应ASCII码，不需要重新定义
+	// '+' = 43, '-' = 45, '*' = 42, '/' = 47, '%' = 37
+	// '&' = 38, '|' = 124, '^' = 94, '<' = 60, '>' = 62
+	// '~' = 126, '!' = 33, '=' = 61, '.' = 46, ',' = 44
+	// ';' = 59, ':' = 58, '(' = 40, ')' = 41, '[' = 91
+	// ']' = 93, '{' = 123, '}' = 125
 	
 	// 特殊值
 	NULL_VALUE
@@ -74,7 +79,10 @@ struct Token{
 	
 	// 获取字面值的字符串表示
 	virtual string str() const {
-		return "token";
+		if (Tag >= 32 && Tag <= 126) {
+			return string(1, (char)Tag);
+		}
+		return "token(" + to_string(Tag) + ")";
 	}
 };
 
@@ -114,7 +122,7 @@ struct Comment :Token{
 	}
 	
 	// 获取字面值的字符串表示
-	string str() const override {
+	std::string str() const override {
 		return "comment: " + content;
 	}
 };
@@ -139,11 +147,6 @@ struct Type :Word{
 	
 	// 获取字面值的字符串表示
 	string str() const override {
-		return word;
-	}
-	
-	// 转换为字符串（用于类型名称获取）
-	string toString() const {
 		return word;
 	}
 	
@@ -184,12 +187,105 @@ struct Operator :Token {
 	// 是否为左结合
 	bool isLeftAssoc() const { return isLeftAssociative; }
 	
-	// 转换为字符串
-	string toString() const { return symbol; }
-	
 	// 获取字面值的字符串表示
 	string str() const override {
 		return symbol;
+	}
+	
+	// 获取操作符对应的操作名（用于calculate方法）
+	string getOperationName() const {
+		switch (Tag) {
+			// 单字符操作符（使用ASCII码）
+			case '+': return "add";
+			case '-': return "subtract";
+			case '*': return "multiply";
+			case '/': return "divide";
+			case '%': return "modulo";
+			case '&': return "bitwiseAnd";
+			case '|': return "bitwiseOr";
+			case '^': return "bitwiseXor";
+			case '<': return "lessThan";
+			case '>': return "greaterThan";
+			case '~': return "bitwiseNot";
+			case '!': return "logicalNot";
+			
+			// 双字符操作符（枚举值）
+			case EQ_EQ: return "equals";      // ==
+			case NE_EQ: return "notEquals";   // !=
+			case 300: return "lessEqual";      // <= (LE)
+			case 301: return "greaterEqual";   // >= (GE)
+			case LEFT_SHIFT: return "leftShift";   // <<
+			case RIGHT_SHIFT: return "rightShift"; // >>
+			case AND_AND: return "logicalAnd";     // &&
+			case OR_OR: return "logicalOr";        // ||
+			case INCREMENT: return "increment";    // ++
+			case DECREMENT: return "decrement";    // --
+			default: return "";
+		}
+	}
+	
+	// 获取操作符对应的枚举类型（用于表达式计算）
+	int getOperationType() const {
+		switch (Tag) {
+			// 单字符操作符（直接返回ASCII码）
+			case '+': return '+';
+			case '-': return '-';
+			case '*': return '*';
+			case '/': return '/';
+			case '%': return '%';
+			case '&': return '&';
+			case '|': return '|';
+			case '^': return '^';
+			case '<': return '<';
+			case '>': return '>';
+			case '~': return '~';
+			case '!': return '!';
+			
+			// 双字符操作符（已经是枚举值）
+			case EQ_EQ: return EQ_EQ;      // ==
+			case NE_EQ: return NE_EQ;   // !=
+			case 300: return 300;      // <= (LE)
+			case 301: return 301;   // >= (GE)
+			case LEFT_SHIFT: return LEFT_SHIFT;   // <<
+			case RIGHT_SHIFT: return RIGHT_SHIFT; // >>
+			case AND_AND: return AND_AND;     // &&
+			case OR_OR: return OR_OR;        // ||
+			case INCREMENT: return INCREMENT;    // ++
+			case DECREMENT: return DECREMENT;    // --
+			default: return 0;
+		}
+	}
+	
+	// 获取操作符符号（提供给parser和interpreter使用）
+	string getOperatorSymbol() const {
+		switch (Tag) {
+			// 单字符操作符（使用ASCII码）
+			case '+': return "+";
+			case '-': return "-";
+			case '*': return "*";
+			case '/': return "/";
+			case '%': return "%";
+			case '&': return "&";
+			case '|': return "|";
+			case '^': return "^";
+			case '<': return "<";
+			case '>': return ">";
+			case '~': return "~";
+			case '!': return "!";
+			
+			// 双字符操作符（枚举值）
+			case EQ_EQ: return "==";
+			case NE_EQ: return "!=";
+			case 300: return "<=";      // LE
+			case 301: return ">=";      // GE
+			case LEFT_SHIFT: return "<<";
+			case RIGHT_SHIFT: return ">>";
+			case AND_AND: return "&&";
+			case OR_OR: return "||";
+			case INCREMENT: return "++";
+			case DECREMENT: return "--";
+			default: return "unknown";
+		}
 	}
 };
 

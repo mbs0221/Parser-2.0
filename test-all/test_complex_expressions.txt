@@ -1,0 +1,49 @@
+# 测试复杂混合算数表达式
+
+function add(a, b) {
+    return a + b;
+}
+
+function multiply(a, b) {
+    return a * b;
+}
+
+function power(a, b) {
+    let result = 1;
+    let i = 0;
+    while (i < b) {
+        result = result * a;
+        i = i + 1;
+    }
+    return result;
+}
+
+let x = 10;
+let y = 5;
+let z = 3;
+
+# 测试复杂嵌套表达式
+let complex1 = add(multiply(x, y), power(z, 2));  # (10 * 5) + (3^2) = 50 + 9 = 59
+println("complex1 = ");
+println(complex1);
+
+let complex2 = power(add(x, y), 2) - multiply(z, z);  # (10 + 5)^2 - (3 * 3) = 225 - 9 = 216
+println("complex2 = ");
+println(complex2);
+
+# 测试带括号的复杂表达式
+let bracket1 = (x + y) * (z + 2);  # (10 + 5) * (3 + 2) = 15 * 5 = 75
+println("bracket1 = ");
+println(bracket1);
+
+# 测试一元操作符与函数调用
+let unary1 = -add(-x, y);  # -(10 + 5) = -15
+println("unary1 = ");
+println(unary1);
+
+# 测试比较操作符与函数调用
+let compare1 = -add(x, y) > multiply(y, z);  # (10 + 5) > (5 * 3) = 15 > 15 = false
+println("compare1 = ");
+println(compare1);
+
+println("复杂表达式测试完成");

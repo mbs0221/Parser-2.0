@@ -1,5 +1,5 @@
-#include "interpreter/builtin_plugin.h"
-#include "parser/function.h"
+#include "interpreter/plugins/builtin_plugin.h"
+#include "parser/definition.h"
 
 #include <iostream>
 #include <cmath>
@@ -245,28 +245,24 @@ public:
         };
     }
     
-    void registerFunctions(ScopeManager& scopeManager) override {
-        // 使用辅助方法批量注册函数
-        defineBuiltinFunctions(scopeManager, getFunctionMap());
-    }
-    
-    map<string, BuiltinFunctionPtr> getFunctionMap() const override {
+protected:
+    map<string, FunctionInfo> getFunctionInfoMap() const override {
         return {
             // 基础数学函数
-            {"abs", math_abs},
-            {"max", math_max},
-            {"min", math_min},
-            {"pow", math_pow},
-            {"random", math_random},
+            {"abs", {math_abs, {"value"}, "计算绝对值"}},
+            {"max", {math_max, {"value", "..."}, "计算最大值"}},
+            {"min", {math_min, {"value", "..."}, "计算最小值"}},
+            {"pow", {math_pow, {"base", "exponent"}, "计算幂次"}},
+            {"random", {math_random, {}, "生成随机数"}},
             
             // 高级数学函数
-            {"sin", math_sin},
-            {"cos", math_cos},
-            {"tan", math_tan},
-            {"sqrt", math_sqrt},
-            {"log", math_log},
-            {"floor", math_floor},
-            {"ceil", math_ceil}
+            {"sin", {math_sin, {"value"}, "计算正弦值"}},
+            {"cos", {math_cos, {"value"}, "计算余弦值"}},
+            {"tan", {math_tan, {"value"}, "计算正切值"}},
+            {"sqrt", {math_sqrt, {"value"}, "计算平方根"}},
+            {"log", {math_log, {"value"}, "计算自然对数"}},
+            {"floor", {math_floor, {"value"}, "向下取整"}},
+            {"ceil", {math_ceil, {"value"}, "向上取整"}}
         };
     }
 };

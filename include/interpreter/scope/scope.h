@@ -1,213 +1,83 @@
 #ifndef SCOPE_H
 #define SCOPE_H
 
-#include "interpreter/value.h"
-#include "interpreter/builtin_type.h"
 #include <string>
 #include <map>
-#include <list>
+// #include <list>
 #include <vector>
 #include <iostream>
 #include <functional>
+#include <memory>
+#include <tuple>
+#include "interpreter/values/value.h"
 
 using namespace std;
 
 // 前向声明
-struct FunctionDefinition;
-class ReturnException;
-
-// 避免循环依赖的函数指针类型定义
-using ScopeManagerPtr = void*;
-using ExecuteFunctionPtr = Value* (*)(ScopeManagerPtr, FunctionDefinition*, vector<Value*>&);
+class TypeRegistry;
+class ObjectRegistry;
+class ObjectType;
+class ClassType;
 
 
 
-// 内置函数类型定义
-typedef Value* (*BuiltinFunctionPtr)(vector<Value*>&);
-
-// 内置函数类
-class BuiltinFunction {
-public:
-    string name;
-    BuiltinFunctionPtr func;
-    
-    BuiltinFunction(const string& funcName, BuiltinFunctionPtr funcPtr)
-        : name(funcName), func(funcPtr) {}
-    
-    ~BuiltinFunction() = default;
-    
-    // 执行函数
-    Value* call(vector<Value*>& args) {
-        return func(args);
-    }
-    
-    // 获取函数名
-    string getName() const {
-        return name;
-    }
-};
-
-// ==================== Interpreter自己的标识符类型 ====================
-// 运行时标识符基类
-class RuntimeIdentifier {
-public:
-    string name;
-    
-    RuntimeIdentifier(const string& identifierName) : name(identifierName) {}
-    virtual ~RuntimeIdentifier() = default;
-    
-    // 获取标识符类型
-    virtual string getIdentifierType() const = 0;
-};
-
-// 运行时变量 - 存储实际的Value对象
-class RuntimeVariable : public RuntimeIdentifier {
-public:
-    Value* value;
-    ObjectType* type;  // 使用interpreter的类型系统
-    
-    RuntimeVariable(const string& varName, Value* val = nullptr, ObjectType* varType = nullptr)
-        : RuntimeIdentifier(varName), value(val), type(varType) {}
-    
-    string getIdentifierType() const override {
-        return "RuntimeVariable";
-    }
-    
-    // 设置值
-    void setValue(Value* val) {
-        if (value) {
-            delete value;  // 清理旧值
-        }
-        value = val;
-    }
-    
-    // 获取值
-    Value* getValue() const {
-        return value;
-    }
-    
-    // 获取类型
-    ObjectType* getType() const {
-        return type;
-    }
-    
-    ~RuntimeVariable() {
-        if (value) {
-            delete value;
-        }
-    }
-};
-
-// 运行时函数基类 - 统一内置函数和用户函数
-class RuntimeFunction : public RuntimeIdentifier {
-public:
-    RuntimeFunction(const string& funcName) : RuntimeIdentifier(funcName) {}
-    virtual ~RuntimeFunction() = default;
-    
-    string getIdentifierType() const override {
-        return "RuntimeFunction";
-    }
-    
-    // 函数调用接口
-    // 参数列表本身不会被修改，但参数指向的值可以被修改
-    virtual Value* call(vector<Value*>& args) = 0;
-    
-    // 获取参数数量（-1表示可变参数）
-    virtual int getParameterCount() const = 0;
-    
-    // 获取函数类型
-    virtual string getFunctionType() const = 0;
-};
-
-// 内置函数包装器
-class BuiltinFunctionWrapper : public RuntimeFunction {
-private:
-    BuiltinFunction* function;
-    
-public:
-    BuiltinFunctionWrapper(const string& funcName, BuiltinFunction* func)
-        : RuntimeFunction(funcName), function(func) {}
-    
-    Value* call(vector<Value*>& args) override {
-        return function->call(args);
-    }
-    
-    int getParameterCount() const override {
-        return -1; // 内置函数通常是可变参数
-    }
-    
-    string getFunctionType() const override {
-        return "BuiltinFunction";
-    }
-    
-    BuiltinFunction* getFunction() const {
-        return function;
-    }
-};
-
-// 用户函数包装器
-class UserFunctionWrapper : public RuntimeFunction {
-private:
-    FunctionDefinition* astDefinition;  // 直接存储AST定义
-    int paramCount;
-    
-    // 使用函数指针替代直接依赖
-    ScopeManagerPtr scopeManagerPtr;
-    ExecuteFunctionPtr executeFunction;
-    
-public:
-    UserFunctionWrapper(const string& funcName, FunctionDefinition* def, int params, 
-                       ScopeManagerPtr scopeMgr, ExecuteFunctionPtr execFunc)
-        : RuntimeFunction(funcName), astDefinition(def), paramCount(params), 
-          scopeManagerPtr(scopeMgr), executeFunction(execFunc) {}
-    
-    Value* call(vector<Value*>& args) override {
-        if (!executeFunction || !astDefinition) {
-            return nullptr;
-        }
-        
-        // 通过函数指针执行，避免直接依赖
-        return executeFunction(scopeManagerPtr, astDefinition, args);
-    }
-    
-    int getParameterCount() const override {
-        return paramCount;
-    }
-    
-    string getFunctionType() const override {
-        return "UserFunction";
-    }
-};
-
-// 运行时类型定义 - 已移除，类型管理由TypeRegistry负责
-// 类型信息应该通过TypeRegistry统一管理，而不是在scope中重复存储
-
-// ==================== 作用域结构 ====================
-// 作用域结构 - 统一管理所有运行时标识符
+// ==================== Scope结构 ====================
+// 作用域结构 - 包含类型管理器和对象管理器
 struct Scope {
-    map<string, RuntimeIdentifier*> identifiers;  // 统一管理所有运行时标识符
+    // 类型管理器 - 管理当前作用域中的类型定义
+    std::unique_ptr<TypeRegistry> typeRegistry;
     
-    Scope() {}
+    // 对象管理器 - 管理当前作用域中的对象（变量、函数、实例等）
+    std::unique_ptr<ObjectRegistry> objectRegistry;
+    
+    // this指针 - 指向当前实例对象（用于类方法中）
+    Value* thisPointer;
+    
+    // 当前类上下文 - 指向当前类定义（用于类方法定义中）
+    ClassType* currentClassContext;
+    
+    // 构造函数
+    Scope();
+    
+    // 析构函数
+    ~Scope();
     
     // 清理作用域中的资源
     void cleanup();
     
     // 打印作用域内容（用于调试）
     void print() const;
+    
+    // 获取类型管理器
+    TypeRegistry* getTypeRegistry() const;
+    
+    // 获取对象管理器
+    ObjectRegistry* getObjectRegistry() const;
 };
 
-// ==================== 作用域管理器 ====================
-// 作用域管理器类 - 负责作用域的创建、销毁和查找
+// ==================== ScopeManager类 ====================
 class ScopeManager {
 private:
-    // 作用域栈 - 管理变量和函数的作用域
-    list<Scope*> scopes;
-    
-    // 当前作用域
+    std::vector<Scope*> scopes;
     Scope* currentScope;
-    
-    // 全局作用域（程序级别的变量和函数）
     Scope* globalScope;
+
+    // ==================== 私有辅助方法 ====================
+    
+    // 在作用域中直接查找可调用对象
+    Value* findCallableInScope(const std::string& name);
+    
+    // 通过函数名在作用域中查找可调用对象
+    Value* findCallableByName(const std::string& name);
+    
+    // 在单个作用域中通过函数名查找可调用对象
+    Value* findCallableByNameInScope(Scope* scope, const std::string& name);
+    
+    // 在类型系统中查找构造函数或静态方法
+    Value* findTypeConstructor(const std::string& name);
+    
+    // 在作用域中查找实例对象
+    Value* findInstanceInScopes(const std::string& name);
 
 public:
     // 构造函数和析构函数
@@ -218,44 +88,122 @@ public:
     void enterScope();
     void exitScope();
     
-    // 变量管理
-    void defineVariable(const string& name, Value* value);
-    void defineVariable(const string& name, ObjectType* type, Value* value = nullptr);
-    void updateVariable(const string& name, Value* value);
-    RuntimeVariable* lookupVariable(const string& name);
+    // ==================== 统一查询接口 ====================
     
-    // 函数管理 - 统一内置函数和用户函数
-    void defineFunction(const string& name, BuiltinFunction* function);
-    void defineUserFunction(const string& name, FunctionDefinition* funcDef, int paramCount, 
-                           ScopeManagerPtr scopeMgr, ExecuteFunctionPtr execFunc);
-    RuntimeFunction* lookupFunction(const string& name);
+    // 主要查询方法 - 按优先级查找标识符
+    Value* lookup(const std::string& name);
     
-    // 通用标识符管理
-    void defineIdentifier(const string& name, RuntimeIdentifier* identifier);
-    RuntimeIdentifier* lookupIdentifier(const string& name);
-    bool isIdentifier(const string& name) const;
+    // 类型化查询方法 - 明确指定要查找的类型
+    ObjectType* lookupType(const std::string& name);
+    Value* lookupVariable(const std::string& name);
+    Value* lookupFunction(const std::string& name);
+    Value* lookupMethod(const std::string& name);
     
-    // 便捷方法
-    void defineVariable(const string& name, const string& type, Value* value = nullptr);
+    // 批量查询方法 - 一次性获取所有匹配的标识符
+    struct LookupResult {
+        ObjectType* type = nullptr;
+        Value* variable = nullptr;
+        Value* function = nullptr;
+        Value* method = nullptr;
+        Value* instance = nullptr;
+        
+        bool hasAny() const {
+            return type || variable || function || method || instance;
+        }
+        
+        string toString() const;
+    };
     
-    // 获取当前作用域
-    Scope* getCurrentScope() const { return currentScope; }
+    LookupResult lookupAll(const std::string& name);
     
-    // 获取全局作用域
-    Scope* getGlobalScope() const { return globalScope; }
+    // ==================== 定义接口 ====================
     
-    // 获取作用域深度
-    size_t getScopeDepth() const { return scopes.size(); }
+    // 类型定义
+    void defineType(const std::string& name, ObjectType* type);
     
-    // 调试方法
+    // 变量定义
+    void defineVariable(const std::string& name, Value* value);
+    void defineVariable(const std::string& name, ObjectType* type, Value* value = nullptr);
+    void defineVariable(const std::string& name, const std::string& type, Value* value = nullptr);
+    
+    // 函数定义 - 统一接口
+    void defineFunction(const std::string& name, Value* function);
+    void defineFunction(const std::string& name, const std::vector<std::string>& parameterTypes, Value* function);
+    
+    // 方法定义
+    void defineMethod(const std::string& name, Value* method);
+    
+    // 实例定义
+    void defineInstance(const std::string& name, Value* instance);
+    
+    // ==================== 更新接口 ====================
+    
+    void updateVariable(const std::string& name, Value* value);
+    
+    // ==================== 检查接口 ====================
+    
+    bool has(const std::string& name) const;
+    bool hasVariable(const std::string& name) const;
+    bool hasFunction(const std::string& name) const;
+    bool hasType(const std::string& name) const;
+    
+    // ==================== 上下文管理 ====================
+    
+    // this指针管理
+    void setThisPointer(Value* thisPtr);
+    Value* getThisPointer() const;
+    void clearThisPointer();
+    
+    // 类上下文管理
+    void setCurrentClassContext(ClassType* classType);
+    ClassType* getCurrentClassContext() const;
+    void clearCurrentClassContext();
+    
+    // ==================== 作用域信息 ====================
+    
+    Scope* getCurrentScope() const;
+    Scope* getGlobalScope() const;
+    size_t getScopeDepth() const;
+    
+    // ==================== 调试接口 ====================
+    
     void printCurrentScope() const;
     void printAllScopes() const;
     
-    // 检查变量是否在当前作用域中定义
-    bool isVariableDefinedInCurrentScope(const string& name) const;
+    // ==================== 兼容性接口（保留但标记为过时） ====================
     
-    // 检查函数是否在当前作用域中定义
-    bool isFunctionDefinedInCurrentScope(const string& name) const;
+    // @deprecated 使用 lookup() 替代
+    Value* lookupAny(const std::string& name);
+    
+    // @deprecated 使用 lookupAll() 替代
+    std::tuple<ObjectType*, Value*, Value*, Value*> lookupIdentifier(const std::string& name);
+    
+    // @deprecated 使用 defineFunction() 替代
+    void defineCallable(const std::string& name, Value* callable);
+    Value* lookupCallable(const std::string& name);
+    bool isCallableDefinedInCurrentScope(const std::string& name) const;
+    
+    // @deprecated 使用 lookupFunction() 替代
+    Value* lookupFunction(const std::string& name, const std::vector<Value*>& args);
+    Value* lookupFunction(const FunctionSignature& signature);
+    
+    // @deprecated 使用 lookupMethod() 替代
+    Value* lookupTypeMethod(const std::string& typeName, const std::string& methodName);
+    Value* lookupTypeStaticMethod(const std::string& typeName, const std::string& methodName);
+    Value* lookupTypeInstanceMethod(const std::string& typeName, const std::string& methodName);
+    
+    // @deprecated 使用 defineFunction() 替代
+    void defineUserFunction(const std::string& name, UserFunction* userFunc);
+    void defineUserFunction(const std::string& name, const std::vector<std::string>& parameterTypes, UserFunction* userFunc);
+    
+    // @deprecated 使用 has() 替代
+    bool isIdentifier(const std::string& name) const;
+    bool isVariableDefinedInCurrentScope(const std::string& name) const;
+    bool isFunctionDefinedInCurrentScope(const std::string& name) const;
+    bool isTypeDefinedInCurrentScope(const std::string& name) const;
+    bool isInstanceDefinedInCurrentScope(const std::string& name) const;
 };
+
+
 
 #endif // SCOPE_H

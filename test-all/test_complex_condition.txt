@@ -1,0 +1,31 @@
+// 复杂条件测试
+
+// 全局变量
+let globalCounter = 0;
+
+// 函数1：测试复杂条件
+function testComplexCondition() {
+    print("复杂条件测试开始");
+    
+    let num = 10;
+    let i = 2;
+    
+    while (i * i <= num) {
+        print("条件满足");
+        i = i + 1;
+    }
+    
+    print("复杂条件测试完成");
+}
+
+// 主函数
+function main() {
+    print("复杂条件测试开始");
+    
+    // 测试复杂条件
+    testComplexCondition();
+    
+    print("复杂条件测试完成");
+}
+
+main();

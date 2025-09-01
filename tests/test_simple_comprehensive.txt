@@ -1,0 +1,109 @@
+// 简单综合测试
+
+// 全局变量
+let globalCounter = 0;
+
+// 函数1：计算阶乘
+function factorial(n) {
+    if (n <= 1) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+// 函数2：异常处理测试
+function testException(x, y) {
+    try {
+        println("计算: " + x + " / " + y);
+        let result = x / y;
+        println("结果: " + result);
+        return result;
+    } catch (error) {
+        println("异常: " + error);
+        return 0;
+    }
+}
+
+// 函数3：循环测试
+function testLoops() {
+    println("循环测试:");
+    
+    // for循环
+    for (let i = 1; i <= 3; i = i + 1) {
+        println("i = " + i);
+        globalCounter = globalCounter + 1;
+    }
+    
+    // while循环
+    let sum = 0;
+    let j = 1;
+    while (j <= 5) {
+        sum = sum + j;
+        j = j + 1;
+    }
+    println("1到5的和: " + sum);
+}
+
+// 函数4：分支测试
+function testBranches() {
+    println("分支测试:");
+    
+    let score = 85;
+    
+    if (score >= 80) {
+        println("良好");
+    } else {
+        println("需要努力");
+    }
+}
+
+// 函数5：switch测试
+function testSwitch(day) {
+    switch (day) {
+        case 1:
+            println("星期一");
+            break;
+        case 2:
+            println("星期二");
+            break;
+        default:
+            println("其他");
+            break;
+    }
+}
+
+// 主函数
+function main() {
+    println("=== 简单综合测试开始 ===");
+    
+    // 函数调用
+    let fact5 = factorial(5);
+    println("5的阶乘: " + fact5);
+    
+    // 异常处理
+    testException(10, 2);
+    testException(10, 0);
+    
+    // 循环
+    testLoops();
+    println("全局计数器: " + globalCounter);
+    
+    // 分支
+    testBranches();
+    
+    // switch
+    testSwitch(1);
+    testSwitch(2);
+    testSwitch(3);
+    
+    // 字符串操作
+    let str1 = "Hello";
+    let str2 = "World";
+    let combined = str1 + " " + str2;
+    println("字符串: " + combined);
+    
+    println("=== 测试完成 ===");
+}
+
+main();

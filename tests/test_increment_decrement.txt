@@ -1,0 +1,44 @@
+println("=== 测试自增自减操作符 ===");
+
+// 测试前缀自增
+let i = 5;
+println("初始值 i = ", i);
+let result1 = ++i;
+println("前缀自增 ++i 的结果: ", result1);
+println("自增后 i 的值: ", i);
+
+// 测试后缀自增
+let j = 10;
+println("初始值 j = ", j);
+let result2 = j++;
+println("后缀自增 j++ 的结果: ", result2);
+println("自增后 j 的值: ", j);
+
+// 测试前缀自减
+let k = 15;
+println("初始值 k = ", k);
+let result3 = --k;
+println("前缀自减 --k 的结果: ", result3);
+println("自减后 k 的值: ", k);
+
+// 测试后缀自减
+let l = 20;
+println("初始值 l = ", l);
+let result4 = l--;
+println("后缀自减 l-- 的结果: ", result4);
+println("自减后 l 的值: ", l);
+
+// 测试浮点数
+let d = 3.5;
+println("初始值 d = ", d);
+let result5 = ++d;
+println("前缀自增 ++d 的结果: ", result5);
+println("自增后 d 的值: ", d);
+
+// 测试在表达式中的使用
+let x = 1;
+let y = 2;
+let sum = ++x + y++;
+println("x = ", x, ", y = ", y, ", sum = ", sum);
+
+println("=== 测试完成 ===");

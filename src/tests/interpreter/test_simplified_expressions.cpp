@@ -76,9 +76,9 @@ TEST_F(SimplifiedExpressionsTest, StringConstant) {
 }
 
 // 测试变量声明
-TEST_F(SimplifiedExpressionsTest, VariableDeclaration) {
+TEST_F(SimplifiedExpressionsTest, VariableDefinition) {
     // 创建变量声明
-    VariableDeclaration* varDecl = new VariableDeclaration("x", "int");
+    VariableDefinition* varDecl = new VariableDefinition("x", "int");
     interpreter->visit(varDecl);
     
     // 变量应该被正确声明

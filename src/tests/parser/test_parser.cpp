@@ -71,9 +71,9 @@ TEST_F(ParserTest, ExpressionStatements) {
 }
 
 // 测试变量声明
-TEST_F(ParserTest, VariableDeclarations) {
+TEST_F(ParserTest, VariableDefinitions) {
     ConstantExpression* value = new ConstantExpression(42);
-    VariableDeclaration* varDecl = new VariableDeclaration("y", "int", value);
+    VariableDefinition* varDecl = new VariableDefinition("y", "int", value);
     
     EXPECT_NE(varDecl, nullptr);
     

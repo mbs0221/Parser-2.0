@@ -1,0 +1,18 @@
+println("=== 简单自增自减测试 ===");
+
+let a = 5;
+println("a = ", a);
+
+let b = ++a;
+println("b = ++a, a = ", a, ", b = ", b);
+
+let c = a++;
+println("c = a++, a = ", a, ", c = ", c);
+
+let d = --a;
+println("d = --a, a = ", a, ", d = ", d);
+
+let e = a--;
+println("e = a--, a = ", a, ", e = ", e);
+
+println("=== 测试完成 ===");

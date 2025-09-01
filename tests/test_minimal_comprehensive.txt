@@ -1,0 +1,95 @@
+// 最小综合测试
+
+// 全局变量
+let globalCounter = 0;
+
+// 函数1：计算阶乘
+function factorial(n) {
+    if (n <= 1) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}
+
+// 函数2：异常处理测试
+function testException(x, y) {
+    try {
+        println("计算开始");
+        let result = x / y;
+        println("计算完成");
+        return result;
+    } catch (error) {
+        println("异常处理");
+        return 0;
+    }
+}
+
+// 函数3：循环测试
+function testLoops() {
+    println("循环测试");
+    
+    // while循环
+    let sum = 0;
+    let j = 1;
+    while (j <= 3) {
+        sum = sum + j;
+        j = j + 1;
+    }
+    println("循环完成");
+}
+
+// 函数4：分支测试
+function testBranches() {
+    println("分支测试");
+    
+    let score = 85;
+    
+    if (score >= 80) {
+        println("成绩良好");
+    } else {
+        println("需要努力");
+    }
+}
+
+// 函数5：switch测试
+function testSwitch(day) {
+    switch (day) {
+        case 1:
+            println("星期一");
+            break;
+        case 2:
+            println("星期二");
+            break;
+        default:
+            println("其他");
+            break;
+    }
+}
+
+// 主函数
+function main() {
+    println("测试开始");
+    
+    // 函数调用
+    let fact5 = factorial(5);
+    println("阶乘完成");
+    
+    // 异常处理
+    testException(10, 2);
+    testException(10, 0);
+    
+    // 循环
+    testLoops();
+    
+    // 分支
+    testBranches();
+    
+    // switch
+    testSwitch(1);
+    testSwitch(2);
+    
+    println("测试完成");
+}
+
+main();

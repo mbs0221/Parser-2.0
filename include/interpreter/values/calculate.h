@@ -1,12 +1,12 @@
 #ifndef INTERPRETER_CALCULATE_H
 #define INTERPRETER_CALCULATE_H
 
-#include "interpreter/value.h"
+#include "interpreter/values/value.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
 
-using namespace std;
+// using namespace std; // 已移除，使用显式std前缀
 
 // ==================== 操作符映射 ====================
 // 从parser模块获取操作符到方法名的映射
@@ -16,14 +16,14 @@ using namespace std;
 
 // ==================== 类型转换优先级系统 ====================
 namespace TypeConversionPriority {
-    // 类型转换优先级（数值越小优先级越高）
-    static const unordered_map<string, int> CONVERSION_PRIORITY = {
+    // 类型转换优先级（数值越大优先级越高，表示类型越大）
+    static const std::unordered_map<std::string, int> CONVERSION_PRIORITY = {
         // 数值类型转换优先级
-        {"int", 1},      // 最高优先级 - 基础整数类型
+        {"bool", 1},     // 最小类型 - 布尔类型
         {"char", 2},     // 字符类型
-        {"double", 3},   // 浮点类型
-        {"bool", 4},     // 布尔类型
-        {"string", 5},   // 字符串类型
+        {"int", 3},      // 整数类型
+        {"double", 4},   // 浮点类型（最大数值类型）
+        {"string", 5},   // 字符串类型（最大基础类型）
         
         // 容器类型转换优先级
         {"array", 10},   // 数组类型
@@ -36,13 +36,13 @@ namespace TypeConversionPriority {
     };
     
     // 获取类型转换优先级
-    inline int getPriority(const string& typeName) {
+    inline int getPriority(const std::string& typeName) {
         auto it = CONVERSION_PRIORITY.find(typeName);
         return it != CONVERSION_PRIORITY.end() ? it->second : 100; // 默认低优先级
     }
     
     // 检查类型转换的合理性
-    inline bool isReasonableConversion(const string& fromType, const string& toType) {
+    inline bool isReasonableConversion(const std::string& fromType, const std::string& toType) {
         int fromPriority = getPriority(fromType);
         int toPriority = getPriority(toType);
         
@@ -51,7 +51,7 @@ namespace TypeConversionPriority {
     }
     
     // 获取最佳中间类型
-    inline string getBestIntermediateType(const string& fromType, const string& toType) {
+    inline std::string getBestIntermediateType(const std::string& fromType, const std::string& toType) {
         int fromPriority = getPriority(fromType);
         int toPriority = getPriority(toType);
         
@@ -71,58 +71,55 @@ namespace TypeConversionPriority {
 
 // ==================== 高级计算器 ====================
 
+// 前向声明
+class Interpreter;
+
 // 高级计算器 - 完全基于类型系统实现所有运算
 class Calculator {
 public:
+    // 构造函数，接收解释器依赖
+    Calculator(Interpreter* interpreter) : interpreter_(interpreter) {}
+    
     // 执行二元运算
-    static Value* executeBinaryOperation(Value* left, Value* right, int op);
+    Value* executeBinaryOperation(Value* left, Value* right, Operator* op);
     
     // 执行一元运算
-    static Value* executeUnaryOperation(Value* operand, int op);
+    Value* executeUnaryOperation(Value* operand, Operator* op);
     
-    // 智能类型转换 - 自动选择最佳转换策略
-    static Value* smartTypeConversion(Value* source, const string& targetType);
-    
-    // 基于继承关系的类型转换
-    static Value* convertUsingInheritance(Value* source, const string& targetType);
-    static Value* findCommonAncestor(ObjectType* type1, ObjectType* type2);
-    static bool canConvertTo(ObjectType* sourceType, ObjectType* targetType);
-    
-    // 智能二元运算 - 自动处理类型转换
-    static Value* smartBinaryOperation(Value* left, Value* right, int op);
-    
-    // 处理赋值操作符（复合赋值）
-    static Value* executeAssignmentOperation(Value* left, Value* right, int op);
-    
-    // 处理访问操作符（成员访问、数组访问、函数调用）
-    static Value* executeAccessOperation(Value* target, Value* index, int op);
-    
-    // 处理特殊操作符（如逗号操作符、三元操作符）
-    static Value* executeSpecialOperation(Value* left, Value* right, int op);
-    
-    // 处理访问操作符（成员访问、数组访问）
-    static Value* executeAccessOperation(Value* target, Value* index, int op);
-    static Value* executeMemberAccess(Value* target, const string& memberName);
-    static Value* executeArrayAccess(Value* target, Value* index);
-    
+    // 执行三元运算
+    Value* executeTernaryOperation(Value* condition, Value* trueValue, Value* falseValue);
+
+protected:
+    // 执行基础类型的一元运算（使用运算符重载）
+    Value* executeBasicTypeUnaryOperation(Value* operand, Operator* op);
+
+    // 执行基础类型的二元运算（使用运算符重载）
+    Value* performBasicTypeBinaryOperation(Value* left, Value* right, Operator* op);
+
+    // 执行用户类型的一元运算（使用类型系统方法）
+    Value* performUserTypeUnaryOperation(Value* operand, Operator* op);
+
+    // 执行用户类型的二元运算（使用类型系统方法）
+    Value* performUserTypeBinaryOperation(Value* left, Value* right, Operator* op);
+
+    // 辅助函数
+    // 检查是否为基础类型
+    bool isBasicType(const string& typeName);
+
+    // 确定兼容类型（选择优先级更高的类型）
+    string determineCompatibleType(Value* left, Value* right);
+
+    // 创建类型转换表达式
+    CastExpression* createCastExpression(Value* value, const string& targetTypeName);
+
+    // 获取类型名称
+    string getTypeName(Value* value);
+
+    // 检查类型转换可能性
+    bool canConvertTo(ObjectType* sourceType, ObjectType* targetType);
+
 private:
-    // 尝试类型转换后执行运算
-    static Value* tryWithTypeConversion(Value* left, Value* right, const string& methodName);
-    
-    // 尝试将值转换为指定类型
-    static Value* tryConvertValue(Value* value, const string& targetType);
-    
-    // 尝试通过通用类型进行转换
-    static Value* tryConvertThroughCommonType(Value* source, const string& targetType);
-    
-    // 智能类型转换策略
-    static Value* trySmartTypeConversion(Value* left, Value* right, const string& methodName);
-    
-    // 处理赋值操作符的特殊逻辑
-    static Value* handleAssignmentOperator(Value* left, Value* right, const string& methodName);
-    
-    // 处理访问操作符的特殊逻辑
-    static Value* handleAccessOperator(Value* target, Value* index, const string& methodName);
+    Interpreter* interpreter_; // 解释器依赖
 };
 
 #endif // INTERPRETER_CALCULATE_H 

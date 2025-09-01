@@ -1,0 +1,21 @@
+// 统一方法调用测试
+println("=== 统一方法调用测试 ===");
+
+let str = "Hello, World!";
+let num = 42;
+let arr = [1, 2, 3, 4, 5];
+
+println("字符串长度: ", length(str));
+println("数字转字符串: ", to_string(num));
+println("数组长度: ", length(arr));
+
+// 测试数组方法
+push(arr, 6);
+println("添加元素后长度: ", length(arr));
+
+// 测试字典方法
+let dict = {"name": "Alice", "age": 25};
+println("字典大小: ", size(dict));
+println("字典键: ", keys(dict));
+
+println("=== 测试完成 ===");

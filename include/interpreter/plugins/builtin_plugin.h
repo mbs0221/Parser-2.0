@@ -1,47 +1,59 @@
 #ifndef BUILTIN_PLUGIN_H
 #define BUILTIN_PLUGIN_H
 
-#include "interpreter/value.h"
-#include "parser/function.h"
-#include "interpreter/scope.h"
+#include "interpreter/values/value.h"
+#include "parser/definition.h"
+#include "interpreter/scope/scope.h"
+#include "interpreter/values/value.h"
 #include <vector>
 #include <string>
 #include <functional>
 #include <map>
 
-using namespace std;
+// using namespace std; // 已移除，使用显式std前缀
 
-// 插件函数类型定义 - 与scope.h保持一致
-// 注意：这里不再重复定义，使用scope.h中的定义
+// ==================== 内置函数类型定义 ====================
+// 内置函数指针类型定义
+typedef Value* (*BuiltinFunctionPtr)(std::vector<Value*>&);
+
+// 函数信息三元组：<函数指针, 参数列表, 描述>
+typedef std::tuple<BuiltinFunctionPtr, std::vector<std::string>, std::string> FunctionInfo;
 
 // 插件信息结构
 struct PluginInfo {
-    string name;
-    string version;
-    string description;
-    vector<string> functions;
+    std::string name;
+    std::string version;
+    std::string description;
+    std::vector<std::string> functions;
 };
 
 // 插件接口类
 class BuiltinPlugin {
-protected:
-    // 辅助方法：注册内置函数到作用域
-    void defineBuiltinFunction(ScopeManager& scopeManager, const string& name, BuiltinFunctionPtr func) {
-        scopeManager.defineFunction(name, new BuiltinFunction(name, func));
-    }
-    
-    // 辅助方法：批量注册函数
-    void defineBuiltinFunctions(ScopeManager& scopeManager, const map<string, BuiltinFunctionPtr>& functions) {
-        for (const auto& pair : functions) {
-            defineBuiltinFunction(scopeManager, pair.first, pair.second);
-        }
-    }
-
 public:
     virtual ~BuiltinPlugin() = default;
+    
+    // 获取已创建的函数对象映射
+    virtual std::map<std::string, BuiltinFunction*> getFunctionObjectMap() const;
+    
+    // 获取插件信息
     virtual PluginInfo getPluginInfo() const = 0;
-    virtual void registerFunctions(ScopeManager& scopeManager) override = 0;
-    virtual map<string, BuiltinFunctionPtr> getFunctionMap() const = 0;
+    
+    // 注册插件函数到作用域管理器
+    virtual void registerFunctions(ScopeManager& scopeManager);
+    
+    // 辅助方法：注册单个内置函数
+    void defineBuiltinFunction(ScopeManager& scopeManager, const std::string& name, BuiltinFunctionPtr func);
+    
+    // 辅助方法：批量注册内置函数
+    void defineBuiltinFunctions(ScopeManager& scopeManager, const std::map<std::string, BuiltinFunctionPtr>& functions);
+
+protected:
+    // 子类需要实现的函数映射方法 - 使用三元组简化注册
+    virtual std::map<std::string, FunctionInfo> getFunctionInfoMap() const = 0;
+    
+    // 为了向后兼容，保留原有方法（可选实现）
+    virtual std::map<std::string, BuiltinFunctionPtr> getFunctionMap() const;
+    virtual std::map<std::string, std::vector<std::string>> getFunctionParameters() const;
 };
 
 // ==================== 自动插件函数生成宏 ====================

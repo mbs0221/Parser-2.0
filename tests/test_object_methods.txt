@@ -1,0 +1,70 @@
+// 对象方法调用测试
+println("=== 对象方法调用测试 ===");
+
+// 1. 字符串类型方法
+println("--- 字符串类型方法 ---");
+let str = "Hello, World!";
+println("原始字符串: ", str);
+println("字符串长度: ", str.length());
+println("转大写: ", str.to_upper());
+println("转小写: ", str.to_lower());
+
+// 2. 数组类型方法
+println("--- 数组类型方法 ---");
+let arr = [1, 2, 3, 4, 5];
+println("原始数组: ", arr);
+println("数组长度: ", arr.length());
+println("数组大小: ", arr.size());
+
+// 添加元素
+arr.push(6);
+println("添加元素后: ", arr);
+println("新长度: ", arr.length());
+
+// 插入元素
+arr.insert(0, 0);
+println("插入元素后: ", arr);
+
+// 删除元素
+arr.remove(1);
+println("删除元素后: ", arr);
+
+// 排序
+arr.sort();
+println("排序后: ", arr);
+
+// 清空
+arr.clear();
+println("清空后: ", arr);
+println("清空后长度: ", arr.length());
+
+// 3. 字典类型方法
+println("--- 字典类型方法 ---");
+let dict = {"name": "Alice", "age": 25, "city": "Beijing"};
+println("原始字典: ", dict);
+println("字典大小: ", dict.size());
+println("字典键: ", dict.keys());
+println("字典值: ", dict.values());
+
+// 检查键是否存在
+println("包含name键: ", dict.has("name"));
+println("包含height键: ", dict.has("height"));
+
+// 获取值
+println("name值: ", dict.get("name"));
+println("age值: ", dict.get("age"));
+
+// 添加新键值对
+dict.set("height", 170);
+println("添加height后: ", dict);
+
+// 删除键值对
+dict.remove("age");
+println("删除age后: ", dict);
+
+// 清空字典
+dict.clear();
+println("清空后: ", dict);
+println("清空后大小: ", dict.size());
+
+println("=== 对象方法调用测试完成 ===");

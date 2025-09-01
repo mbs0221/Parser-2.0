@@ -1,0 +1,151 @@
+// 测试方法调用功能
+println("=== 方法调用测试 ===");
+
+// 定义结构体
+struct Person {
+    string name;
+    int age;
+    double height;
+    
+    function introduce() {
+        println("Hello, I am ", name, ", age ", age, ", height ", height);
+    }
+    
+    function getAge() {
+        return age;
+    }
+    
+    function setAge(int newAge) {
+        age = newAge;
+        println("Age updated to: ", age);
+    }
+}
+
+// 定义类
+class Student {
+    string name;
+    int grade;
+    double gpa;
+    
+    function study() {
+        println("Student ", name, " is studying");
+    }
+    
+    function getGrade() {
+        return grade;
+    }
+    
+    function setGrade(int newGrade) {
+        grade = newGrade;
+        println("Grade updated to: ", grade);
+    }
+}
+
+// 测试方法调用的函数
+function testMethodCalls() {
+    println("--- 测试方法调用 ---");
+    
+    // 创建结构体实例
+    let person = Person();
+    person.name = "Alice";
+    person.age = 25;
+    person.height = 1.75;
+    
+    // 调用结构体方法
+    person.introduce();
+    println("Person age: ", person.getAge());
+    person.setAge(26);
+    
+    // 创建类实例
+    let student = Student();
+    student.name = "Bob";
+    student.grade = 10;
+    student.gpa = 3.8;
+    
+    // 调用类方法
+    student.study();
+    println("Student grade: ", student.getGrade());
+    student.setGrade(11);
+    
+    // 在循环中调用方法
+    for (let i = 0; i < 3; i++) {
+        person.setAge(person.getAge() + 1);
+        student.setGrade(student.getGrade() + 1);
+    }
+}
+
+// 测试内置类型方法调用
+function testBuiltinMethods() {
+    println("--- 测试内置类型方法 ---");
+    
+    let str = "Hello, World!";
+    let num = 42;
+    let arr = [1, 2, 3, 4, 5];
+    
+    // 字符串方法
+    println("字符串长度: ", str.length());
+    println("转大写: ", str.to_upper());
+    println("转小写: ", str.to_lower());
+    
+    // 数字方法
+    println("数字转字符串: ", num.to_string());
+    
+    // 数组方法
+    println("数组长度: ", arr.length());
+    arr.push(6);
+    println("添加元素后长度: ", arr.length());
+    
+    // 在条件分支中调用方法
+    if (str.length() > 10) {
+        println("长字符串: ", str.to_upper());
+    } else {
+        println("短字符串: ", str.to_lower());
+    }
+}
+
+// 测试混合方法调用
+function testMixedMethodCalls() {
+    println("--- 测试混合方法调用 ---");
+    
+    let person = Person();
+    person.name = "Charlie";
+    person.age = 30;
+    person.height = 1.80;
+    
+    let student = Student();
+    student.name = "David";
+    student.grade = 12;
+    student.gpa = 3.9;
+    
+    // 混合调用不同类型的方法
+    person.introduce();
+    student.study();
+    
+    // 在循环中交替调用方法
+    for (let i = 0; i < 2; i++) {
+        if (i == 0) {
+            person.setAge(person.getAge() + 1);
+        } else {
+            student.setGrade(student.getGrade() + 1);
+        }
+    }
+    
+    // 调用返回值的函数
+    let personAge = person.getAge();
+    let studentGrade = student.getGrade();
+    println("最终年龄: ", personAge, ", 最终年级: ", studentGrade);
+}
+
+// 主函数
+function main() {
+    println("开始方法调用测试");
+    
+    testMethodCalls();
+    testBuiltinMethods();
+    testMixedMethodCalls();
+    
+    println("=== 方法调用测试完成 ===");
+}
+
+// 执行主函数
+main();

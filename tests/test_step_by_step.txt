@@ -1,0 +1,45 @@
+// 逐步测试
+
+// 全局变量
+let globalCounter = 0;
+
+// 函数1：简单测试
+function simpleTest() {
+    println("简单测试开始");
+    return 42;
+}
+
+// 函数2：检查质数
+function isPrime(num) {
+    if (num < 2) {
+        return false;
+    }
+    
+    let i = 2;
+    while (i * i <= num) {
+        if (num % i == 0) {
+            return false;
+        }
+        i = i + 1;
+    }
+    return true;
+}
+
+// 主函数
+function main() {
+    println("逐步测试开始");
+    
+    // 函数调用
+    let result = simpleTest();
+    println("简单测试结果: " + result);
+    
+    // 质数测试
+    let prime7 = isPrime(7);
+    let prime8 = isPrime(8);
+    println("7是质数: " + prime7);
+    println("8是质数: " + prime8);
+    
+    println("逐步测试完成");
+}
+
+main();

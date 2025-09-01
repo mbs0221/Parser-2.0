@@ -1,8 +1,8 @@
 #include "optimizer/ast_optimizer.h"
 #include "parser/expression.h"
 #include "parser/statement.h"
-#include "parser/function.h"
-#include "lexer/value.h"
+#include "parser/definition.h"
+#include "lexer/token.h"
 #include <iostream>
 
 using namespace std;
@@ -111,50 +111,9 @@ Value* SimpleOptimizer::visit(CallExpression* expr) {
     return nullptr;
 }
 
-Value* SimpleOptimizer::visit(MethodCallExpression* expr) {
-    if (!expr) return nullptr;
-    
-    // 方法调用暂时不优化
-    return nullptr;
-}
 
-Value* SimpleOptimizer::visit(CastExpression<Integer>* expr) {
-    if (!expr) return nullptr;
-    
-    if (expr->operand) {
-        expr->operand = optimize(expr->operand);
-    }
-    return nullptr;
-}
 
-Value* SimpleOptimizer::visit(CastExpression<Double>* expr) {
-    if (!expr) return nullptr;
-    
-    if (expr->operand) {
-        expr->operand = optimize(expr->operand);
-    }
-    return nullptr;
-}
-
-Value* SimpleOptimizer::visit(CastExpression<String>* expr) {
-    if (!expr) return nullptr;
-    
-    if (expr->operand) {
-        expr->operand = optimize(expr->operand);
-    }
-    return nullptr;
-}
-
-Value* SimpleOptimizer::visit(CastExpression<Char>* expr) {
-    if (!expr) return nullptr;
-    
-    if (expr->operand) {
-        expr->operand = optimize(expr->operand);
-    }
-    return nullptr;
-}
-
-Value* SimpleOptimizer::visit(CastExpression<Bool>* expr) {
+Value* SimpleOptimizer::visit(CastExpression* expr) {
     if (!expr) return nullptr;
     
     if (expr->operand) {
@@ -192,7 +151,7 @@ void SimpleOptimizer::visit(ExpressionStatement* stmt) {
     }
 }
 
-void SimpleOptimizer::visit(VariableDeclaration* stmt) {
+void SimpleOptimizer::visit(VariableDefinition* stmt) {
     if (!stmt) return;
     
     // 变量声明暂时不优化
@@ -314,10 +273,7 @@ void SimpleOptimizer::visit(Variable* var) {
     // 变量不需要优化
 }
 
-void SimpleOptimizer::visit(UserFunction* func) {
-    if (!func) return;
-    // 用户函数暂时不优化
-}
+
 
 // 辅助方法实现
 Expression* SimpleOptimizer::insertTypeCasts(Expression* expr) {

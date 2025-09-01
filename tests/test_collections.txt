@@ -1,0 +1,10 @@
+// 测试数组和字典操作
+let arr = [1, 2, 3, 4, 5];
+let dict = {"name": "Bob", "age": 30, "city": "New York"};
+
+println("Array length: ", count(arr));
+println("Dictionary entries: ", count(dict));
+
+// 测试字符串操作
+let str = "Hello, World!";
+println("String length: ", count(str));

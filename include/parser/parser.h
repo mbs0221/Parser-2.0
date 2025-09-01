@@ -5,7 +5,7 @@
 #include "parser/inter.h"
 #include "parser/expression.h"
 #include "parser/statement.h"
-#include "parser/function.h"
+#include "parser/definition.h"
 #include <string>
 #include <list>
 #include <map>
@@ -27,7 +27,7 @@ protected:
     // 语句解析（函数内部）
     Statement* parseStatement();
     ImportStatement* parseImportStatement();
-    VariableDeclaration* parseVariableDeclaration();
+    VariableDefinition* parseVariableDefinition();
     IfStatement* parseIfStatement();
     WhileStatement* parseWhileStatement();
     ForStatement* parseForStatement();
@@ -67,13 +67,13 @@ protected:
     StructDefinition* parseStruct();
     ClassDefinition* parseClass();
     ClassMethod* parseClassMethod(const string& visibility);
-    StructMember parseClassMember(const string& visibility);
+    ClassMember* parseClassMember(const string& visibility);
 
 private:
-    Lexer lex;
+    lexer::Lexer lex;
     int depth = 0;
     // 参数解析
-    vector<pair<string, lexer::Type*>> parseParameterList();
+    std::vector<std::pair<std::string, lexer::Type*>> parseParameterList();
 };
 
 

@@ -1,7 +1,7 @@
-#include "interpreter/builtin_plugin.h"
-#include "interpreter/value.h"
-#include "interpreter/type_registry.h"
-#include "parser/function.h"
+#include "interpreter/plugins/builtin_plugin.h"
+#include "interpreter/values/value.h"
+#include "interpreter/types/types.h"
+#include "parser/definition.h"
 
 #include <iostream>
 #include <sstream>
@@ -283,17 +283,13 @@ public:
         };
     }
     
-    void registerFunctions(ScopeManager& scopeManager) override {
-        // 使用辅助方法批量注册函数
-        defineBuiltinFunctions(scopeManager, getFunctionMap());
-    }
-    
-    map<string, BuiltinFunctionPtr> getFunctionMap() const override {
+protected:
+    map<string, FunctionInfo> getFunctionInfoMap() const override {
         return {
-            {"open", builtin_open},
-            {"close", builtin_close},
-            {"read", builtin_read},
-            {"write", builtin_write}
+            {"open", {builtin_open, {"filename", "mode"}, "打开文件，返回文件句柄"}},
+            {"close", {builtin_close, {"handle"}, "关闭文件句柄"}},
+            {"read", {builtin_read, {"handle", "length"}, "从文件读取指定长度的内容"}},
+            {"write", {builtin_write, {"handle", "content", "newline"}, "向文件写入内容"}}
         };
     }
 };

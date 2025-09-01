@@ -1,0 +1,52 @@
+// 调试简单测试
+
+// 全局变量
+let globalCounter = 0;
+
+// 函数1：简单测试
+function simpleTest() {
+    print("简单测试开始");
+    return 42;
+}
+
+// 函数2：算术运算测试
+function testArithmetic(a, b, c) {
+    let sum = a + b + c;
+    let product = a * b * c;
+    let difference = a - b - c;
+    let quotient = a / b;
+    let remainder = a % b;
+    
+    print("算术运算完成");
+    print("和");
+    print(sum);
+    print("积");
+    print(product);
+    print("差");
+    print(difference);
+    print("商");
+    print(quotient);
+    print("余数");
+    print(remainder);
+    
+    return sum + product;
+}
+
+// 主函数
+function main() {
+    print("调试简单测试开始");
+    
+    // 函数调用
+    let result = simpleTest();
+    print("简单测试结果");
+    print(result);
+    
+    // 算术运算
+    let calcResult = testArithmetic(15, 3, 7);
+    print("算术运算结果");
+    print(calcResult);
+    
+    print("调试简单测试完成");
+}
+
+main();

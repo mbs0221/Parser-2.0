@@ -1,0 +1,8 @@
+// 调试访问表达式
+println("=== 调试访问表达式 ===");
+
+let str = "Hello";
+let len = str.size();
+println("长度: ", len);
+
+println("=== 调试完成 ===");

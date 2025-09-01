@@ -12,6 +12,7 @@ set(PARSER_TEST_SOURCES
     test_ast_only.cpp
     test_str_simple.cpp
     debug_let.cpp
+    test_parser_syntax_structures.cpp
 )
 
 # 创建统一的parser测试目标

@@ -1,0 +1,34 @@
+println("测试成员函数调用功能");
+
+function testMemberFunctions() {
+    // 测试基本类型的成员函数
+    let intVal = 42;
+    let doubleVal = 3.14;
+    let strVal = "Hello World";
+
+    println("整数转字符串: ", intVal.to_string());
+    println("浮点数转整数: ", doubleVal.to_int());
+    println("字符串长度: ", strVal.length());
+    println("字符串转大写: ", strVal.to_upper());
+    println("字符串转小写: ", strVal.to_lower());
+
+    // 测试数组的成员函数
+    let numbers = [1, 2, 3, 4, 5];
+    println("数组长度: ", numbers.length());
+
+    // 测试字典的成员函数
+    let dict = {"name": "Alice", "age": 25};
+    println("字典大小: ", dict.size());
+    let keys = dict.keys();
+    println("字典键: ", keys);
+
+    // 测试条件分支中的成员函数调用
+    if (dict.has("name")) {
+        println("字典包含name键: ", dict.get("name"));
+    } else {
+        println("字典不包含name键");
+    }
+}
+
+testMemberFunctions();
+println("测试完成");

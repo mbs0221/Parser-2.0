@@ -1,0 +1,24 @@
+// 测试IncrementDecrementExpression作为UnaryExpression子类的功能
+
+// 测试前缀自增自减
+let a = 5;
+let b = 10;
+
+print("初始值: a = " + a + ", b = " + b);
+
+// 前缀自增
+let c = ++a;
+print("前缀自增后: a = " + a + ", c = " + c);
+
+// 前缀自减
+let d = --b;
+print("前缀自减后: b = " + b + ", d = " + d);
+
+// 测试后缀自增自减
+let e = a++;
+print("后缀自增后: a = " + a + ", e = " + e);
+
+let f = b--;
+print("后缀自减后: b = " + b + ", f = " + f);
+
+print("最终值: a = " + a + ", b = " + b);

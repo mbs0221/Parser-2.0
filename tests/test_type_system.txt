@@ -1,0 +1,41 @@
+// 测试类型系统
+println("=== 类型系统测试 ===");
+
+// 测试基本类型
+let intVal = 42;
+let doubleVal = 3.14;
+let charVal = 'A';
+let boolVal = true;
+let strVal = "Hello, World!";
+
+// 测试类型转换
+println("整数转字符串: ", intVal.to_string());
+println("浮点数转整数: ", doubleVal.to_int());
+println("字符转大写: ", charVal.to_upper());
+println("布尔转整数: ", boolVal.to_int());
+
+// 测试字符串方法
+println("字符串长度: ", strVal.length());
+println("转大写: ", strVal.to_upper());
+println("转小写: ", strVal.to_lower());
+println("包含'Hello': ", strVal.contains("Hello"));
+
+// 测试数组
+let arr = [1, 2, 3, 4, 5];
+println("数组长度: ", arr.length());
+arr.push(6);
+println("添加元素后长度: ", arr.length());
+let popped = arr.pop();
+println("弹出的元素: ", popped);
+println("弹出后长度: ", arr.length());
+
+// 测试字典
+let dict = {"name": "Alice", "age": 25};
+println("字典大小: ", dict.size());
+let keys = dict.keys();
+println("字典键: ", keys);
+let values = dict.values();
+println("字典值: ", values);
+println("包含键'name': ", dict.has_key("name"));
+
+println("=== 类型系统测试完成 ===");

@@ -61,9 +61,9 @@ TEST_F(InterpreterComprehensiveTest, ExpressionStatementStructure) {
 }
 
 // 测试变量声明结构
-TEST_F(InterpreterComprehensiveTest, VariableDeclarationStructure) {
+TEST_F(InterpreterComprehensiveTest, VariableDefinitionStructure) {
     ConstantExpression* value = new ConstantExpression(42);
-    VariableDeclaration* varDecl = new VariableDeclaration("y", "int", value);
+    VariableDefinition* varDecl = new VariableDefinition("y", "int", value);
     
     EXPECT_NE(varDecl, nullptr);
     

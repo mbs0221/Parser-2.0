@@ -1,0 +1,39 @@
+// 测试数组和字典操作函数
+function testArrayOperations() {
+    let arr = [1, 2, 3, 4, 5];
+    println("Array length: ", count(arr));
+    
+    // 遍历数组
+    let i = 0;
+    while (i < count(arr)) {
+        println("arr[", i, "] = ", arr[i]);
+        i = i + 1;
+    }
+}
+
+function testDictionaryOperations() {
+    let dict = {"name": "Bob", "age": 30, "city": "New York"};
+    println("Dictionary entries: ", count(dict));
+    
+    // 访问字典元素
+    println("Name: ", dict["name"]);
+    println("Age: ", dict["age"]);
+    println("City: ", dict["city"]);
+}
+
+function testStringOperations() {
+    let str = "Hello, World!";
+    println("String length: ", count(str));
+    
+    // 字符串比较
+    if (str == "Hello, World!") {
+        println("String matches");
+    } else {
+        println("String does not match");
+    }
+}
+
+// 执行集合测试
+testArrayOperations();
+testDictionaryOperations();
+testStringOperations();

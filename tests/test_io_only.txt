@@ -1,0 +1,49 @@
+# 只测试IO插件
+
+function test_io_only() {
+    println("开始IO插件测试...");
+    
+    # 测试open函数
+    let test_file = "io_test.txt";
+    let handle = open(test_file, "w");
+    if (handle) {
+        println("open函数工作正常");
+        
+        # 测试write函数
+        let write_result = write(handle, "Test content", 1);
+        if (write_result) {
+            println("write函数工作正常");
+        } else {
+            println("write函数失败");
+        }
+        
+        # 关闭文件
+        close(handle);
+        println("文件已关闭");
+        
+        # 重新打开进行读取
+        let read_handle = open(test_file, "r");
+        if (read_handle) {
+            println("重新打开文件成功");
+            
+            # 测试read函数
+            let read_result = read(read_handle);
+            if (read_result) {
+                println("read函数工作正常");
+                println("读取内容: " + read_result);
+            } else {
+                println("read函数失败");
+            }
+            
+            close(read_handle);
+        } else {
+            println("无法重新打开文件");
+        }
+    } else {
+        println("open函数失败");
+    }
+    
+    println("IO插件测试完成");
+}
+
+test_io_only();

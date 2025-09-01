@@ -1,0 +1,39 @@
+// 操作符检查测试
+
+// 全局变量
+let globalCounter = 0;
+
+// 函数1：简单测试
+function simpleTest() {
+    println("简单测试开始");
+    return 42;
+}
+
+// 函数2：简单循环测试
+function simpleLoop() {
+    println("简单循环开始");
+    
+    let i = 1;
+    while (i < 5) {
+        println("循环次数");
+        i = i + 1;
+    }
+    
+    println("简单循环完成");
+}
+
+// 主函数
+function main() {
+    println("操作符检查测试开始");
+    
+    // 函数调用
+    let result = simpleTest();
+    println("简单测试结果: " + result);
+    
+    // 简单循环
+    simpleLoop();
+    
+    println("操作符检查测试完成");
+}
+
+main();

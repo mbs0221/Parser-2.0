@@ -1,11 +1,12 @@
-#include "interpreter/interpreter.h"
+#include "interpreter/core/interpreter.h"
 #include "parser/expression.h"
-#include "parser/function.h"
+#include "parser/definition.h"
 #include "parser/inter.h"
 #include "parser/parser.h"
 #include "lexer/lexer.h"
-#include "interpreter/logger.h"
-#include "interpreter/value.h"
+#include "interpreter/utils/logger.h"
+#include "interpreter/values/value.h"
+
 
 #include <iostream>
 #include <sstream>
@@ -24,7 +25,7 @@ void Interpreter::visit(Statement* stmt) {
         visit(importStmt);
     } else if (ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt)) {
         visit(exprStmt);
-    } else if (VariableDeclaration* varDecl = dynamic_cast<VariableDeclaration*>(stmt)) {
+    } else if (VariableDefinition* varDecl = dynamic_cast<VariableDefinition*>(stmt)) {
         visit(varDecl);
     } else if (IfStatement* ifStmt = dynamic_cast<IfStatement*>(stmt)) {
         visit(ifStmt);
@@ -326,7 +327,8 @@ void Interpreter::visit(SwitchStatement* switchStmt) {
             }
             
             // 比较switch值和case值
-            Value* matches = calculate_binary_compatible(switchValue, caseValue, EQ_EQ);
+            // 直接调用操作符来判断是否相等
+            Value* matches = calculator->executeBinaryOperation(switchValue, caseValue, lexer::Operator::EQ);
             if (dynamic_cast<Bool*>(matches)->getValue()) {
                 LOG_DEBUG("Executing matching case");
                 foundMatch = true;
@@ -450,104 +452,8 @@ void Interpreter::visit(BlockStatement* block) {
     });
 }
 
-// 执行用户函数的回调函数 - 避免循环依赖
-Value* executeUserFunctionCallback(void* scopeManagerPtr, FunctionDefinition* funcDef, vector<Value*>& args) {
-    Interpreter* interpreter = static_cast<Interpreter*>(scopeManagerPtr);
-    if (!interpreter || !funcDef) {
-        return nullptr;
-    }
-    
-    return interpreter->withScope([&]() -> Value* {
-        // 绑定参数到局部变量，将AST类型名称转换为运行时类型
-        vector<string> paramNames = funcDef->getParameterNames();
-        vector<string> typeNames = funcDef->getParameterTypeNames();
-        vector<int> paramSizes = funcDef->getParameterSizes();
-        
-        LOG_DEBUG("Function call: " + to_string(paramNames.size()) + " parameters, total size: " + 
-                 to_string(funcDef->getTotalParameterSize()) + " bytes");
-        
-        for (size_t i = 0; i < paramNames.size() && i < args.size(); ++i) {
-            // 获取参数名称、类型名称和大小
-            string paramName = paramNames[i];
-            string typeName = typeNames[i];
-            int paramSize = paramSizes[i];
-            
-            LOG_DEBUG("Parameter " + to_string(i) + ": " + paramName + " (" + typeName + 
-                     ", " + to_string(paramSize) + " bytes)");
-            
-            // 将类型名称转换为运行时类型
-            ObjectType* runtimeType = nullptr;
-            if (!typeName.empty() && typeName != "auto") {
-                if (typeName == "null") {
-                    runtimeType = TypeRegistry::getInstance()->getType("null");
-                } else {
-                    runtimeType = TypeRegistry::getInstance()->getType(typeName);
-                }
-            }
-            
-            // 如果找不到运行时类型，使用默认类型
-            if (!runtimeType) {
-                runtimeType = TypeRegistry::getInstance()->getType("Int");
-            }
-            
-            // 使用运行时类型定义变量
-            // 如果参数为null，使用ObjectFactory创建对应类型的null值
-            Value* paramValue = args[i];
-            if (!paramValue && runtimeType) {
-                paramValue = ObjectFactory::createNullForTypeStatic(runtimeType);
-            }
-            interpreter->scopeManager.defineVariable(paramName, runtimeType, paramValue);
-        }
-        
-        // 执行函数体
-        Value* result = nullptr;
-        try {
-            interpreter->visit(funcDef->body);  // 直接调用visit方法
-        } catch (const ReturnException& e) {
-            result = static_cast<Value*>(e.getValue());
-        }
-        
-        return result;
-    });
-}
+// 执行用户函数的回调函数已移除 - 不再需要
 
-// 函数定义执行 - 将语法类型转换为运行时类型并注册到作用域
-void Interpreter::visit(FunctionDefinition* funcDef) {
-    if (!funcDef) return;
-    
-    string functionName = funcDef->prototype->name;
-    LOG_DEBUG("FunctionDefinition: processing function '" + functionName + "'");
-    
-    // 计算参数数量
-    int paramCount = funcDef->prototype->parameters.size();
-    
-    // 将语法函数定义转换为运行时函数并注册到作用域
-    LOG_DEBUG("FunctionDefinition: defining runtime function '" + functionName + "' with " + to_string(paramCount) + " parameters");
-    scopeManager.defineUserFunction(functionName, funcDef, paramCount, this, executeUserFunctionCallback);
-    
-    LOG_DEBUG("FunctionDefinition: function '" + functionName + "' registered in scope");
-}
+// 函数定义访问已移动到 definition_visits.cpp
 
-// 类方法执行 - 类似于函数定义，但需要考虑可见性和静态性
-void Interpreter::visit(ClassMethod* method) {
-    if (!method) return;
-    
-    string methodName = method->name;
-    string visibility = method->visibility;
-    bool isStatic = method->isStatic;
-    
-    LOG_DEBUG("ClassMethod: processing method '" + methodName + "' (visibility: " + visibility + 
-             ", static: " + (isStatic ? "true" : "false") + ")");
-    
-    // 计算参数数量
-    int paramCount = method->prototype ? method->prototype->parameters.size() : 0;
-    
-    // 类方法的处理逻辑与普通函数类似，但需要考虑可见性
-    // 在当前的实现中，我们暂时将类方法作为普通函数处理
-    // 后续可以在TypeConverter中处理类方法的绑定
-    LOG_DEBUG("ClassMethod: defining method '" + methodName + "' with " + to_string(paramCount) + " parameters");
-    
-    // 注意：类方法通常不应该直接注册到全局作用域
-    // 这里只是记录日志，实际的类方法绑定应该在TypeConverter中处理
-    LOG_DEBUG("ClassMethod: method '" + methodName + "' processed (will be bound to class in TypeConverter)");
-}
+// 类方法访问已移动到 definition_visits.cpp
