@@ -1,244 +1,327 @@
-// #include "interpreter/types/function_signature.h"
+
 #include "interpreter/values/value.h"
 #include "interpreter/types/types.h"
+#include "interpreter/scope/scope.h"
 #include <sstream>
 
 using namespace std;
 
-// ==================== FunctionSignature构造函数实现 ====================
-FunctionSignature::FunctionSignature(const string& n, const vector<string>& types) 
-    : name(n), parameterTypes(types) {
+// 基本构造函数
+FunctionSignature::FunctionSignature(const string& n, const vector<Parameter>& params) 
+    : name(n), parameters(params) {
 }
 
+// 兼容性构造函数
+FunctionSignature::FunctionSignature(const string& n, const vector<string>& types, 
+                                   const vector<string>& defaults, bool varArgs, const string& varType) 
+    : name(n) {
+    for (size_t i = 0; i < types.size(); ++i) {
+        string defaultValue = (i < defaults.size()) ? defaults[i] : "";
+        parameters.push_back(Parameter("arg" + to_string(i), types[i], defaultValue, false));
+    }
+    if (varArgs) {
+        parameters.push_back(Parameter("...", varType, "", true));
+    }
+}
+
+// 从FunctionPrototype构造
 FunctionSignature::FunctionSignature(const FunctionPrototype* prototype) {
     if (prototype) {
         name = prototype->name;
-        // 从原型中提取参数类型名称
-        parameterTypes = prototype->getParameterTypeNames();
+        const vector<pair<string, Type*>>& protoParams = prototype->parameters;
+        for (const auto& param : protoParams) {
+            string paramName = param.first;
+            string paramType = param.second ? param.second->str() : "any";
+            parameters.push_back(Parameter(paramName, paramType, "", false));
+        }
     }
 }
 
+// 从FunctionDefinition构造
 FunctionSignature::FunctionSignature(const FunctionDefinition* funcDef) {
-    if (funcDef) {
-        name = funcDef->prototype ? funcDef->prototype->name : "";
-        // 从原型中提取参数类型名称
-        if (funcDef->prototype) {
-            parameterTypes = funcDef->prototype->getParameterTypeNames();
-        }
-    }
+    FunctionSignature(funcDef->prototype);
 }
 
-// 比较函数签名是否匹配
-bool FunctionSignature::matches(const string& methodName, const vector<Value*>& args) const {
-    if (name != methodName) return false;
-    if (parameterTypes.size() != args.size()) return false;
-    
-    // 检查参数类型匹配
-    for (size_t i = 0; i < parameterTypes.size(); ++i) {
-        if (i >= args.size()) return false;
-        if (!args[i]) return false;
-        
-        ObjectType* argType = args[i]->getValueType();
-        if (!argType) return false;
-        
-        // 检查类型是否匹配（支持类型兼容性）
-        if (parameterTypes[i] != "any" && 
-            parameterTypes[i] != argType->getTypeName() &&
-            !argType->isCompatibleWith(getTypeByName(parameterTypes[i]))) {
-            return false;
-        }
-    }
-    return true;
+// 从Scope构造
+FunctionSignature::FunctionSignature(const string& funcName, class Scope* scope) 
+    : name(funcName) {
+    // 暂时不实现，因为Scope类定义不完整
 }
 
-// 辅助函数：根据类型名称获取类型对象
-ObjectType* FunctionSignature::getTypeByName(const string& typeName) const {
-    // 通过TypeRegistry获取类型
-    TypeRegistry* registry = TypeRegistry::getGlobalInstance();
-    if (registry) {
-        return registry->getType(typeName);
-    }
-    return nullptr;
-}
+
 
 // 拷贝构造函数
-FunctionSignature::FunctionSignature(const FunctionSignature& other) 
-    : name(other.name), parameterTypes(other.parameterTypes) {}
+FunctionSignature::FunctionSignature(const FunctionSignature& other)
+    : name(other.name), parameters(other.parameters) {
+}
 
 // 赋值运算符
 FunctionSignature& FunctionSignature::operator=(const FunctionSignature& other) {
     if (this != &other) {
         name = other.name;
-        parameterTypes = other.parameterTypes;
+        parameters = other.parameters;
     }
     return *this;
 }
 
-// 获取函数名
-string FunctionSignature::getName() const { 
-    return name; 
+// 基本信息方法
+string FunctionSignature::getName() const { return name; }
+const vector<Parameter>& FunctionSignature::getParameters() const { return parameters; }
+size_t FunctionSignature::getParameterCount() const { return parameters.size(); }
+
+size_t FunctionSignature::getRequiredParameterCount() const {
+    size_t count = 0;
+    for (const auto& param : parameters) {
+        if (!param.hasDefaultValue()) count++;
+    }
+    return count;
 }
 
-// 获取参数类型列表
-const vector<string>& FunctionSignature::getParameterTypes() const { 
-    return parameterTypes; 
+bool FunctionSignature::supportsVarArgs() const {
+    for (const auto& param : parameters) {
+        if (param.isVariadic()) return true;
+    }
+    return false;
 }
 
-// 获取参数数量
-size_t FunctionSignature::getParameterCount() const { 
-    return parameterTypes.size(); 
+string FunctionSignature::getVarArgsType() const {
+    for (const auto& param : parameters) {
+        if (param.isVariadic()) return param.getTypeName();
+    }
+    return "any";
 }
 
+// 兼容性方法
+vector<string> FunctionSignature::getParameterTypes() const {
+    vector<string> types;
+    for (const auto& param : parameters) {
+        types.push_back(param.getTypeName());
+    }
+    return types;
+}
 
-
-// 检查是否与另一个签名匹配（用于重载解析）
-bool FunctionSignature::matches(const FunctionSignature& other) const {
+// 检查与另一个函数签名的兼容性
+bool FunctionSignature::isCompatibleWith(const FunctionSignature& other) const {
     if (name != other.name) return false;
-    if (parameterTypes.size() != other.parameterTypes.size()) return false;
+    if (parameters.size() != other.parameters.size()) return false;
     
-    for (size_t i = 0; i < parameterTypes.size(); ++i) {
-        if (parameterTypes[i] != other.parameterTypes[i]) return false;
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        if (parameters[i].getTypeName() != other.parameters[i].getTypeName()) return false;
+    }
+    
+    return true;
+}
+
+vector<string> FunctionSignature::getDefaultValues() const {
+    vector<string> defaults;
+    for (const auto& param : parameters) {
+        defaults.push_back(param.hasDefaultValue() ? param.getDefaultValue() : "");
+    }
+    return defaults;
+}
+
+vector<string> FunctionSignature::getParameterNames() const {
+    vector<string> names;
+    for (const auto& param : parameters) {
+        names.push_back(param.getName());
+    }
+    return names;
+}
+
+// 可变参数相关方法
+size_t FunctionSignature::getFixedParameterCount() const {
+    size_t count = 0;
+    for (const auto& param : parameters) {
+        if (!param.isVariadic()) count++;
+    }
+    return count;
+}
+
+size_t FunctionSignature::getVarArgsStartIndex() const {
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        if (parameters[i].isVariadic()) return i;
+    }
+    return SIZE_MAX;
+}
+
+bool FunctionSignature::isVarArgsParameter(size_t index) const {
+    return index < parameters.size() && parameters[index].isVariadic();
+}
+
+// 参数匹配和重载解析
+bool FunctionSignature::matches(const string& methodName, const vector<Value*>& args) const {
+    return methodName == name && canAcceptArguments(args);
+}
+
+bool FunctionSignature::matches(const FunctionSignature& other) const {
+    if (name != other.name || parameters.size() != other.parameters.size()) return false;
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        if (parameters[i].getTypeName() != other.parameters[i].getTypeName()) return false;
     }
     return true;
 }
 
-// 获取签名字符串表示
+int FunctionSignature::calculateMatchScore(const vector<Value*>& args) const {
+    if (!canAcceptArguments(args)) return -1;
+    
+    int score = 0;
+    size_t checkCount = min(args.size(), parameters.size());
+    
+    for (size_t i = 0; i < checkCount; ++i) {
+        if (args[i] && !parameters[i].isVariadic()) {
+            score += getTypeCompatibilityScore(parameters[i].getTypeName(), args[i]->getValueType());
+        }
+    }
+    
+    if (supportsVarArgs() && args.size() > parameters.size()) {
+        string varArgsType = getVarArgsType();
+        for (size_t i = parameters.size(); i < args.size(); ++i) {
+            if (args[i]) {
+                score += getTypeCompatibilityScore(varArgsType, args[i]->getValueType());
+            }
+        }
+    }
+    
+    return score;
+}
+
+// 参数处理
+vector<Value*> FunctionSignature::fillDefaultArguments(const vector<Value*>& args) const {
+    vector<Value*> filledArgs = args;
+    while (filledArgs.size() < parameters.size()) {
+        size_t index = filledArgs.size();
+        if (index < parameters.size() && parameters[index].hasDefaultValue()) {
+            filledArgs.push_back(nullptr);
+        } else break;
+    }
+    return filledArgs;
+}
+
+bool FunctionSignature::canAcceptArguments(const vector<Value*>& args) const {
+    if (args.size() < getRequiredParameterCount()) return false;
+    if (!supportsVarArgs() && args.size() > parameters.size()) return false;
+    return true;
+}
+
+bool FunctionSignature::canAcceptVarArgs(const vector<Value*>& args) const {
+    if (!supportsVarArgs()) return false;
+    
+    for (size_t i = 0; i < min(args.size(), parameters.size()); ++i) {
+        if (args[i] && !parameters[i].isVariadic()) {
+            if (!isTypeCompatible(parameters[i].getTypeName(), args[i]->getValueType())) return false;
+        }
+    }
+    
+    for (size_t i = parameters.size(); i < args.size(); ++i) {
+        if (args[i]) {
+            if (!isTypeCompatible(getVarArgsType(), args[i]->getValueType())) return false;
+        }
+    }
+    
+    return true;
+}
+
+// 字符串表示和比较
 string FunctionSignature::toString() const {
     stringstream ss;
     ss << name << "(";
-    for (size_t i = 0; i < parameterTypes.size(); ++i) {
+    for (size_t i = 0; i < parameters.size(); ++i) {
         if (i > 0) ss << ", ";
-        ss << parameterTypes[i];
+        ss << parameters[i].toString();
     }
     ss << ")";
     return ss.str();
 }
 
-// 比较两个签名是否相等
 bool FunctionSignature::operator==(const FunctionSignature& other) const {
-    if (name != other.name) return false;
-    if (parameterTypes.size() != other.parameterTypes.size()) return false;
-    for (size_t i = 0; i < parameterTypes.size(); ++i) {
-        if (parameterTypes[i] != other.parameterTypes[i]) return false;
+    if (name != other.name || parameters.size() != other.parameters.size()) return false;
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        if (parameters[i] != other.parameters[i]) return false;
     }
     return true;
 }
 
-// 比较两个签名的大小（用于排序）
 bool FunctionSignature::operator<(const FunctionSignature& other) const {
     if (name != other.name) return name < other.name;
-    if (parameterTypes.size() != other.parameterTypes.size()) {
-        return parameterTypes.size() < other.parameterTypes.size();
-    }
-    for (size_t i = 0; i < parameterTypes.size(); ++i) {
-        if (parameterTypes[i] != other.parameterTypes[i]) {
-            return parameterTypes[i] < other.parameterTypes[i];
-        }
+    if (parameters.size() != other.parameters.size()) return parameters.size() < other.parameters.size();
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        if (parameters[i] != other.parameters[i]) return parameters[i].getName() < other.parameters[i].getName();
     }
     return false;
 }
 
-// 检查是否为构造函数（函数名与类型名相同）
+// 构造函数检查
 bool FunctionSignature::isConstructor() const {
-    // 构造函数通常与类型名相同
-    // 这里可以根据命名约定来判断
-    return !name.empty() && name[0] >= 'A' && name[0] <= 'Z';
+    return name.find("__init__") != string::npos || name.find("constructor") != string::npos;
 }
 
-// 检查是否为默认构造函数（无参数）
 bool FunctionSignature::isDefaultConstructor() const {
-    return isConstructor() && parameterTypes.empty();
+    return isConstructor() && parameters.empty();
 }
 
-// 检查是否为拷贝构造函数
 bool FunctionSignature::isCopyConstructor() const {
-    return isConstructor() && parameterTypes.size() == 1 && 
-           parameterTypes[0] == "const " + name + "&";
+    return isConstructor() && parameters.size() == 1 && parameters[0].getTypeName() == "self";
 }
 
-// 检查是否为移动构造函数
 bool FunctionSignature::isMoveConstructor() const {
-    return isConstructor() && parameterTypes.size() == 1 && 
-           parameterTypes[0] == name + "&&";
+    return isConstructor() && parameters.size() == 1 && parameters[0].getTypeName() == "self";
 }
 
-// 检查是否为析构函数
 bool FunctionSignature::isDestructor() const {
-    return name == "~" + name.substr(1); // 假设析构函数名为 ~TypeName
+    return name.find("__del__") != string::npos || name.find("destructor") != string::npos;
 }
 
-// 获取函数类型（普通函数、构造函数、析构函数等）
 string FunctionSignature::getFunctionType() const {
-    if (isDestructor()) return "destructor";
     if (isConstructor()) return "constructor";
+    if (isDestructor()) return "destructor";
     return "function";
 }
 
-// 打印函数签名信息
+// 调试和打印
 void FunctionSignature::print() const {
-    cout << "Function Signature: " << toString() << endl;
-    cout << "  Name: " << name << endl;
-    cout << "  Parameters: " << parameterTypes.size() << endl;
-    for (size_t i = 0; i < parameterTypes.size(); ++i) {
-        cout << "    " << i << ": " << parameterTypes[i] << endl;
+    cout << "FunctionSignature: " << name << endl;
+    cout << "  Parameters: " << parameters.size() << endl;
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        cout << "    " << i << ": " << parameters[i].toString() << endl;
     }
-    cout << "  Type: " << getFunctionType() << endl;
 }
 
-// 从函数原型创建函数签名
+// 静态工厂方法
 FunctionSignature FunctionSignature::fromPrototype(const FunctionPrototype* prototype) {
     return FunctionSignature(prototype);
 }
 
-// 从函数定义创建函数签名
 FunctionSignature FunctionSignature::fromDefinition(const FunctionDefinition* funcDef) {
     return FunctionSignature(funcDef);
 }
 
-// 从函数名和参数类型列表创建函数签名
 FunctionSignature FunctionSignature::fromTypes(const string& funcName, const vector<string>& paramTypes) {
-    return FunctionSignature(funcName, paramTypes);
+    vector<Parameter> params;
+    for (const auto& type : paramTypes) {
+        params.push_back(Parameter("arg", type, "", false));
+    }
+    return FunctionSignature(funcName, params);
 }
 
-// 从函数名和参数类型字符串创建函数签名（用于解析）
 FunctionSignature FunctionSignature::fromString(const string& signature) {
-    // 解析签名字符串，格式：functionName(type1, type2, ...)
-    size_t openParen = signature.find('(');
-    if (openParen == string::npos) {
-        return FunctionSignature(signature);
-    }
-    
-    string funcName = signature.substr(0, openParen);
-    string paramsStr = signature.substr(openParen + 1);
-    
-    // 移除结尾的 ')'
-    if (!paramsStr.empty() && paramsStr.back() == ')') {
-        paramsStr.pop_back();
-    }
-    
-    vector<string> paramTypes;
-    if (!paramsStr.empty()) {
-        // 简单的参数类型解析（按逗号分割）
-        size_t start = 0;
-        size_t pos = 0;
-        while ((pos = paramsStr.find(',', start)) != string::npos) {
-            string type = paramsStr.substr(start, pos - start);
-            // 去除前后空格
-            type.erase(0, type.find_first_not_of(" \t"));
-            type.erase(type.find_last_not_of(" \t") + 1);
-            paramTypes.push_back(type);
-            start = pos + 1;
-        }
-        
-        // 添加最后一个参数类型
-        if (start < paramsStr.length()) {
-            string type = paramsStr.substr(start);
-            type.erase(0, type.find_first_not_of(" \t"));
-            type.erase(type.find_last_not_of(" \t") + 1);
-            paramTypes.push_back(type);
-        }
-    }
-    
-    return FunctionSignature(funcName, paramTypes);
+    // 使用单参数的构造函数，传入空参数列表
+    return FunctionSignature(signature, vector<Parameter>());
 }
 
+// 私有辅助方法
+ObjectType* FunctionSignature::getTypeByName(const string& typeName) const {
+    return nullptr;
+}
+
+bool FunctionSignature::isTypeCompatible(const string& expectedType, ObjectType* actualType) const {
+    if (expectedType == "any" || expectedType.empty()) return true;
+    if (!actualType) return false;
+    return actualType->getTypeName() == expectedType;
+}
+
+int FunctionSignature::getTypeCompatibilityScore(const string& expectedType, ObjectType* actualType) const {
+    if (!isTypeCompatible(expectedType, actualType)) return -1;
+    if (expectedType == "any" || expectedType.empty()) return 0;
+    if (actualType->getTypeName() == expectedType) return 100;
+    return 50;
+}

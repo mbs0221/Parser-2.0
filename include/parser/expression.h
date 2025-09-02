@@ -81,8 +81,10 @@ struct VariableExpression : public Expression {
 struct UnaryExpression : public Expression {
     Expression* operand;
     Operator* operator_;
+    bool isPrefix;  // 是否为前缀操作（用于自增自减等操作）
     
-    UnaryExpression(Expression* expr, Operator* op) : operand(expr), operator_(op) {}
+    UnaryExpression(Expression* expr, Operator* op, bool prefix = false) 
+        : operand(expr), operator_(op), isPrefix(prefix) {}
     
     ~UnaryExpression() {
         if (operand) {
@@ -117,6 +119,16 @@ struct UnaryExpression : public Expression {
     // 获取操作符
     Operator* getOperator() const {
         return operator_;
+    }
+    
+    // 是否为前缀操作
+    bool isPrefixOperation() const {
+        return isPrefix;
+    }
+    
+    // 是否为后缀操作
+    bool isPostfixOperation() const {
+        return !isPrefix;
     }
 };
 
@@ -218,7 +230,7 @@ struct CastExpression : public Expression {
 
 
 // ==================== 访问和调用表达式 ====================
-// 访问表达式节点 - 统一处理数组/字典访问和成员访问
+// 访问表达式基类 - 使用继承和多态消除switch语句
 struct AccessExpression : public Expression {
     Expression* target;  // 目标对象/数组/字典/结构体
     Expression* key;     // 访问键（表达式形式，如数组索引或字符串常量）
@@ -226,7 +238,7 @@ struct AccessExpression : public Expression {
     AccessExpression(Expression* t, Expression* k) 
         : target(t), key(k) {}
     
-    ~AccessExpression() {
+    virtual ~AccessExpression() {
         if (target) {
             delete target;
             target = nullptr;
@@ -247,6 +259,38 @@ struct AccessExpression : public Expression {
     
     int getTypePriority() const override {
         return target ? target->getTypePriority() : 0;
+    }
+};
+
+// 成员变量访问表达式
+struct MemberAccessExpression : public AccessExpression {
+    MemberAccessExpression(Expression* t, Expression* k) 
+        : AccessExpression(t, k) {}
+    
+    string getLocation() const override {
+        return "member access expression";
+    }
+};
+
+// 方法引用获取表达式
+struct MethodReferenceExpression : public AccessExpression {
+    MethodReferenceExpression(Expression* t, Expression* k) 
+        : AccessExpression(t, k) {}
+    
+    string getLocation() const override {
+        return "method reference expression";
+    }
+};
+
+
+
+// 索引访问表达式
+struct IndexAccessExpression : public AccessExpression {
+    IndexAccessExpression(Expression* t, Expression* k) 
+        : AccessExpression(t, k) {}
+    
+    string getLocation() const override {
+        return "index access expression";
     }
 };
 
@@ -295,57 +339,7 @@ struct CallExpression : public Expression {
 };
 
 // ==================== 自增自减表达式 ====================
-// 自增自减表达式节点 - 继承自UnaryExpression，统一处理 ++ 和 -- 操作
-struct IncrementDecrementExpression : public UnaryExpression {
-    bool isPrefix;           // 是否为前缀操作 (++i vs i++)
-    int delta;               // 增量值：+1 表示自增，-1 表示自减
-    
-    IncrementDecrementExpression(Expression* expr, bool prefix, int d) 
-        : UnaryExpression(expr, nullptr), isPrefix(prefix), delta(d) {}
-    
-    ~IncrementDecrementExpression() {
-        // 基类UnaryExpression会处理operand的删除
-    }
-    
-    string getLocation() const override {
-        string prefix = isPrefix ? "prefix" : "postfix";
-        string operation = (delta > 0) ? "increment" : "decrement";
-        return prefix + " " + operation;
-    }
-    
-    // 重写泛型accept方法声明
-    template<typename ReturnType>
-    ReturnType accept(ExpressionVisitor<ReturnType>* visitor);
-    
-    int getTypePriority() const override {
-        return isPrefix ? 6 : 2;  // 前缀优先级高，后缀优先级低
-    }
-    
-    // 是否为前缀操作
-    bool isPrefixOperation() const {
-        return isPrefix;
-    }
-    
-    // 是否为后缀操作
-    bool isPostfixOperation() const {
-        return !isPrefix;
-    }
-    
-    // 是否为自增操作
-    bool isIncrement() const {
-        return delta > 0;
-    }
-    
-    // 是否为自减操作
-    bool isDecrement() const {
-        return delta < 0;
-    }
-    
-    // 获取增量值
-    int getDelta() const {
-        return delta;
-    }
-};
+// 自增自减表达式现在通过UnaryExpression统一处理，不再需要单独的IncDecExpression类
 
 // ==================== 三元表达式 ====================
 // 三元表达式节点 - 条件 ? 真值 : 假值，继承自BinaryExpression

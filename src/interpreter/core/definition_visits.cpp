@@ -16,31 +16,31 @@ void Interpreter::visit(FunctionPrototype* funcProto) {
     string functionName = funcProto->name;
     LOG_DEBUG("FunctionPrototype: processing prototype '" + functionName + "'");
 
-    // 提取参数名称列表
-    vector<string> paramNames;
+    // 直接创建Parameter数组，而不是提取参数名称列表
+    vector<Parameter> paramArray;
     if (!funcProto->parameters.empty()) {
         for (const auto& param : funcProto->parameters) {
-            paramNames.push_back(param.first);
+            string paramName = param.first;
+            string paramType = param.second ? param.second->str() : "any";
+            paramArray.push_back(Parameter(paramName, paramType, "", false));
         }
     }
 
-    // 创建用户函数（暂时没有函数体，在 FunctionDefinition 中设置）
-    UserFunction* userFunc = new UserFunction(functionName, paramNames, nullptr);
+    // 创建用户函数（使用Parameter数组，暂时没有函数体，在 FunctionDefinition 中设置）
+    UserFunction* userFunc = new UserFunction(functionName, paramArray, nullptr);
     if (userFunc) {
         // 解释器自己设置函数执行器（减少依赖注入）
         FunctionExecutor* executor = new InterpreterFunctionExecutor(this);
         userFunc->setExecutor(executor);
         
-            // 根据上下文决定函数的归属
-    if (scopeManager.getCurrentClassContext()) {
-        // 在类定义中，注册为类方法（使用函数签名）
-        scopeManager.getCurrentClassContext()->addUserMethod(funcProto, userFunc);
-        LOG_DEBUG("FunctionPrototype: function '" + functionName + "' registered as class method with signature");
-    } else {
-        // 不在类定义中，注册到作用域（使用函数名）
-        scopeManager.defineUserFunction(functionName, userFunc);
-        LOG_DEBUG("FunctionPrototype: function '" + functionName + "' registered to scope with signature");
-    }
+        // 创建函数签名，用于精确的函数查找和注册
+        FunctionSignature funcSignature(functionName, paramArray);
+        LOG_DEBUG("FunctionPrototype: created function signature: " + funcSignature.toString());
+        
+        // 根据上下文决定函数的归属
+        // scope-manager会自动处理类方法和普通函数的注册
+        scopeManager.defineFunction(functionName, userFunc);
+        LOG_DEBUG("FunctionPrototype: function '" + functionName + "' registered with signature: " + funcSignature.toString());
     } else {
         LOG_ERROR("FunctionPrototype: failed to create function '" + functionName + "'");
     }
@@ -59,6 +59,10 @@ void Interpreter::visit(FunctionDefinition* funcDef) {
     LOG_DEBUG("FunctionDefinition: processing function definition '" + functionName + "'");
 
     // 第一步：检查函数是否已经定义（支持前向声明）
+    // 创建函数签名用于精确查找
+    FunctionSignature funcSignature(funcDef->prototype);
+    LOG_DEBUG("FunctionDefinition: looking for function with signature: " + funcSignature.toString());
+    
     Value* funcValue = scopeManager.lookupFunction(functionName);
     UserFunction* userFunc = dynamic_cast<UserFunction*>(funcValue);
     
@@ -72,12 +76,25 @@ void Interpreter::visit(FunctionDefinition* funcDef) {
         userFunc = dynamic_cast<UserFunction*>(funcValue);
     } else {
         LOG_DEBUG("FunctionDefinition: function '" + functionName + "' already exists, using existing definition");
+        // 可以在这里验证函数签名是否匹配
+        if (userFunc->getSignature().isCompatibleWith(funcSignature)) {
+            LOG_DEBUG("FunctionDefinition: function signature matches existing definition");
+        } else {
+            LOG_WARN("FunctionDefinition: function signature differs from existing definition");
+        }
     }
     
-    // 第二步：设置函数体
+    // 第二步：设置函数体（不执行，只存储）
     if (userFunc) {
+        // 重要：只设置函数体，不执行
+        // 函数体中的语句只有在函数被调用时才会执行
         userFunc->setFunctionBody(funcDef->body);
-        LOG_DEBUG("FunctionDefinition: function body set for '" + functionName + "'");
+        LOG_DEBUG("FunctionDefinition: function body set for '" + functionName + "' (not executed)");
+        
+        // 可选：验证函数体的语法（但不执行）
+        if (funcDef->body) {
+            LOG_DEBUG("FunctionDefinition: function body syntax validated for '" + functionName + "'");
+        }
     } else {
         LOG_ERROR("FunctionDefinition: failed to find or create function '" + functionName + "'");
     }
@@ -85,273 +102,81 @@ void Interpreter::visit(FunctionDefinition* funcDef) {
     LOG_DEBUG("FunctionDefinition: function definition processing completed");
 }
 
-// 统一的成员处理函数
-void Interpreter::processMemberPrototypes(ObjectType* type, const vector<ClassMember*>& members) {
-    for (const auto& member : members) {
-        // 添加成员到类型
-        ObjectType* memberType = scopeManager.lookupType(member->type);
-        if (memberType) {
-            // 转换visibility字符串为VisibilityType
-            VisibilityType visibility = VIS_PUBLIC;
-            if (member->visibility == "private") {
-                visibility = VIS_PRIVATE;
-            } else if (member->visibility == "protected") {
-                visibility = VIS_PROTECTED;
-            }
-            
-            // 只有ClassType才有addMember方法
-            if (ClassType* classType = dynamic_cast<ClassType*>(type)) {
-                classType->addMember(member->name, memberType, visibility);
-                
-                // 如果有默认值，设置初始值
-                if (member->defaultValue) {
-                    Value* initialValue = visit(member->defaultValue);
-                    if (initialValue) {
-                        classType->setMemberInitialValue(member->name, initialValue);
-                        LOG_DEBUG("Set initial value for member '" + member->name + "': " + initialValue->toString());
-                    }
-                }
-            }
-        }
-    }
-}
-
-// 统一的类型定义处理（结构体和类共用）
-void Interpreter::processStructDefinition(StructDefinition* structDef) {
+// StructDefinition 访问：处理结构体定义
+void Interpreter::visit(StructDefinition* structDef) {
     if (!structDef) return;
     LOG_DEBUG("Processing struct definition: " + structDef->name);
 
-    // 第一步：创建类型
-    ObjectType* type = nullptr;
+    // 创建结构体类型
+    ObjectType* type = new StructType(structDef->name);
+    scopeManager.defineType(structDef->name, type);
     
-    // 现在StructDefinition继承ClassDefinition，所以可以直接访问members
-    if (ClassDefinition* classDef = dynamic_cast<ClassDefinition*>(structDef)) {
-        // 检查是否是真正的类定义（有方法或基类）
-        if (!classDef->methods.empty() || !classDef->baseClass.empty()) {
-            // 创建类类型
-            if (!classDef->baseClass.empty()) {
-                // 查找基类类型
-                ObjectType* baseType = scopeManager.lookupType(classDef->baseClass);
-                if (baseType) {
-                    type = new ClassType(classDef->name, baseType);
-                } else {
-                    type = new ClassType(classDef->name);
-                }
-            } else {
-                type = new ClassType(classDef->name);
-            }
-            scopeManager.defineType(classDef->name, type);
-            
-            if (type) {
-                // 设置当前类上下文
-                scopeManager.setCurrentClassContext(dynamic_cast<ClassType*>(type));
-                
-                // 处理类方法
-                for (auto* method : classDef->methods) {
-                    if (!method) continue;
-                    visit(method);
-                }
-                
-                // 清除类上下文
-                scopeManager.clearCurrentClassContext();
-            }
-        } else {
-            // 没有方法和基类，创建结构体类型
-            type = new StructType(structDef->name);
-            scopeManager.defineType(structDef->name, type);
-        }
-    } else {
-        // 创建结构体类型
-        type = new StructType(structDef->name);
-        scopeManager.defineType(structDef->name, type);
+    // 在当前作用域中注册__struct__变量，标识当前是结构体上下文
+    if (Scope* currentScope = scopeManager.getCurrentScope()) {
+        currentScope->setVariable("__struct__", new String(structDef->name));
+        LOG_DEBUG("Registered __struct__ = '" + structDef->name + "' in current scope");
     }
     
-    if (type) {
-        // 第二步：处理成员原型（包括初始值）
-        processMemberPrototypes(type, structDef->members);
-
-                string typeType = (dynamic_cast<ClassDefinition*>(structDef) &&
-                          (!structDef->methods.empty() || !structDef->baseClass.empty()) ? "class" : "struct");
-        LOG_DEBUG("Successfully created " + typeType + " '" + structDef->name + "' with " +
-                 to_string(structDef->members.size()) + " members");
-    } else {
-                string typeType = (dynamic_cast<ClassDefinition*>(structDef) &&
-                          (!structDef->methods.empty() || !structDef->baseClass.empty()) ? "class" : "struct");
-        LOG_ERROR("Failed to create " + typeType + " '" + structDef->name + "'");
+    // 处理结构体中的所有语句
+    for (auto* stmt : structDef->statements) {
+        if (!stmt) continue;
+        visit(stmt);  // 使用访问者模式访问每个语句
     }
+    
+    LOG_DEBUG("Successfully created struct '" + structDef->name + "' with " +
+             to_string(structDef->statements.size()) + " statements");
 }
 
-// StructDefinition 访问：创建类型并由解释器设置成员初始值
-void Interpreter::visit(StructDefinition* structDef) {
-    processStructDefinition(structDef);
-}
-
-// ClassMethod 访问：创建方法函数对象并设置函数体
-void Interpreter::visit(ClassMethod* method) {
-    if (!method || !method->prototype) {
-        LOG_ERROR("ClassMethod: Invalid method definition");
-        return;
-    }
-    
-    string methodName = method->name;
-    string visibility = method->visibility;
-    bool isStatic = method->isStatic;
-    
-    LOG_DEBUG("ClassMethod: processing method '" + methodName + "' (visibility: " + visibility + 
-             ", static: " + (isStatic ? "true" : "false") + ")");
-    
-    // 第一步：检查方法是否已经定义（支持前向声明）
-    UserFunction* methodFunc = nullptr;
-    if (scopeManager.getCurrentClassContext()) {
-        ClassType* currentClass = scopeManager.getCurrentClassContext();
-        
-        if (isStatic) {
-            // 检查静态方法是否已存在
-            if (currentClass->getStaticMethods().find(methodName) != currentClass->getStaticMethods().end()) {
-                methodFunc = currentClass->getStaticMethods().at(methodName);
-                LOG_DEBUG("ClassMethod: static method '" + methodName + "' already exists, using existing definition");
-            }
-        } else {
-            // 检查实例方法是否已存在
-            if (currentClass->getUserFunctionMethods().find(methodName) != currentClass->getUserFunctionMethods().end()) {
-                methodFunc = currentClass->getUserFunctionMethods().at(methodName);
-                LOG_DEBUG("ClassMethod: instance method '" + methodName + "' already exists, using existing definition");
-            }
-        }
-    }
-    
-    if (!methodFunc) {
-        // 如果方法未定义，先访问原型创建方法
-        LOG_DEBUG("ClassMethod: method '" + methodName + "' not found, creating from prototype");
-        visit(method->prototype);
-        
-        // 重新查找刚创建的方法
-        if (scopeManager.getCurrentClassContext()) {
-            ClassType* currentClass = scopeManager.getCurrentClassContext();
-            if (isStatic) {
-                if (currentClass->getStaticMethods().find(methodName) != currentClass->getStaticMethods().end()) {
-                    methodFunc = currentClass->getStaticMethods().at(methodName);
-                }
-            } else {
-                if (currentClass->getUserFunctionMethods().find(methodName) != currentClass->getUserFunctionMethods().end()) {
-                    methodFunc = currentClass->getUserFunctionMethods().at(methodName);
-                }
-            }
-        }
-    }
-    
-    // 第二步：设置函数体
-    if (methodFunc) {
-        methodFunc->setFunctionBody(method->body);
-        LOG_DEBUG("ClassMethod: function body set for " + string(isStatic ? "static " : "instance ") + 
-                 "method '" + methodName + "'");
-    } else {
-        LOG_ERROR("ClassMethod: failed to find or create method '" + methodName + "'");
-    }
-    
-    LOG_DEBUG("ClassMethod: method '" + methodName + "' processing completed");
-}
-
-// ClassDefinition 访问：创建类型并由解释器设置成员初始值
+// ClassDefinition 访问：处理类定义
 void Interpreter::visit(ClassDefinition* classDef) {
-    processStructDefinition(classDef);
-}
-
-// 重载的processStructDefinition方法，接受ClassDefinition*
-void Interpreter::processStructDefinition(ClassDefinition* classDef) {
     if (!classDef) return;
     LOG_DEBUG("Processing class definition: " + classDef->name);
 
-    // 第一步：创建类型
+    // 创建类类型
     ObjectType* type = nullptr;
-    
-    // 检查是否是真正的类定义（有方法或基类）
-    if (!classDef->methods.empty() || !classDef->baseClass.empty()) {
-        // 创建类类型
-        if (!classDef->baseClass.empty()) {
-            // 查找基类类型
-            ObjectType* baseType = scopeManager.lookupType(classDef->baseClass);
-            if (baseType) {
-                type = new ClassType(classDef->name, baseType);
-            } else {
-                type = new ClassType(classDef->name);
-            }
+    if (!classDef->baseClass.empty()) {
+        // 查找基类类型
+        ObjectType* baseType = scopeManager.lookupType(classDef->baseClass);
+        if (baseType) {
+            type = new ClassType(classDef->name, baseType);
         } else {
             type = new ClassType(classDef->name);
         }
-        
-        if (type) {
-            // 注册类型到作用域
-            scopeManager.defineType(classDef->name, type);
-            
-            // 设置当前类上下文
-            scopeManager.setCurrentClassContext(dynamic_cast<ClassType*>(type));
-            
-            // 处理类方法
-            for (auto* method : classDef->methods) {
-                if (!method) continue;
-                visit(method);
-            }
-            
-            // 清除类上下文
-            scopeManager.clearCurrentClassContext();
-        }
     } else {
-        // 没有方法和基类，创建结构体类型
-        type = new StructType(classDef->name);
-        scopeManager.defineType(classDef->name, type);
+        type = new ClassType(classDef->name);
     }
     
-    if (type) {
-        // 第二步：处理成员原型（包括初始值）
-        processMemberPrototypes(type, classDef->members);
-
-        string typeType = (!classDef->methods.empty() || !classDef->baseClass.empty()) ? "class" : "struct";
-        LOG_DEBUG("Successfully created " + typeType + " '" + classDef->name + "' with " +
-                 to_string(classDef->members.size()) + " members");
-    } else {
-        string typeType = (!classDef->methods.empty() || !classDef->baseClass.empty()) ? "class" : "struct";
-        LOG_ERROR("Failed to create " + typeType + " '" + classDef->name + "'");
+    // 注册类型到作用域
+    scopeManager.defineType(classDef->name, type);
+    
+    // 在当前作用域中注册__class__变量，标识当前是类上下文
+    if (Scope* currentScope = scopeManager.getCurrentScope()) {
+        currentScope->setVariable("__class__", new String(classDef->name));
+        LOG_DEBUG("Registered __class__ = '" + classDef->name + "' in current scope");
     }
+    
+    // 处理类体中的所有语句（包括方法和成员）
+    for (auto* stmt : classDef->statements) {
+        if (!stmt) continue;
+        visit(stmt);  // 使用访问者模式访问每个语句
+    }
+    
+    LOG_DEBUG("Successfully created class '" + classDef->name + "' with " +
+             to_string(classDef->statements.size()) + " statements");
 }
 
-// ClassMember 访问：处理类成员
-void Interpreter::visit(ClassMember* member) {
-    if (!member) return;
+// VisibilityStatement 访问：设置当前可见性
+void Interpreter::visit(VisibilityStatement* visStmt) {
+    if (!visStmt) return;
     
-    LOG_DEBUG("ClassMember: processing member '" + member->name + "'");
+    LOG_DEBUG("VisibilityStatement: setting visibility to '" + visStmt->visibility + "'");
     
-    // 获取成员类型
-    ObjectType* memberType = scopeManager.lookupType(member->type);
-    if (memberType) {
-        // 转换visibility字符串为VisibilityType
-        VisibilityType visibility = VIS_PUBLIC;
-        if (member->visibility == "private") {
-            visibility = VIS_PRIVATE;
-        } else if (member->visibility == "protected") {
-            visibility = VIS_PROTECTED;
-        }
-        
-        // 添加到当前类上下文
-        if (scopeManager.getCurrentClassContext()) {
-            ClassType* currentClass = scopeManager.getCurrentClassContext();
-            currentClass->addMember(member->name, memberType, visibility);
-            
-            // 如果有默认值，设置初始值
-            if (member->defaultValue) {
-                Value* initialValue = visit(member->defaultValue);
-                if (initialValue) {
-                    currentClass->setMemberInitialValue(member->name, initialValue);
-                    LOG_DEBUG("Set initial value for member '" + member->name + "': " + initialValue->toString());
-                }
-            }
-            
-            LOG_DEBUG("ClassMember: member '" + member->name + "' added to class successfully");
-        } else {
-            LOG_ERROR("ClassMember: no current class context for member '" + member->name + "'");
-        }
+    if (Scope* currentScope = scopeManager.getCurrentScope()) {
+        // 将当前可见性设置到作用域中
+        currentScope->setVariable("__visibility__", new String(visStmt->visibility));
+        LOG_DEBUG("VisibilityStatement: visibility '" + visStmt->visibility + "' set in current scope");
     } else {
-        LOG_ERROR("ClassMember: failed to find type '" + member->type + "' for member '" + member->name + "'");
+        LOG_ERROR("VisibilityStatement: no current scope available");
     }
 }
 
@@ -392,10 +217,9 @@ void Interpreter::visit(VariableDefinition* decl) {
             LOG_DEBUG("VariableDefinition: created default value for '" + varName + "': " + initValue->toString());
         }
         
-        // 在作用域中定义变量
-        LOG_DEBUG("VariableDefinition: defining variable '" + varName + "' in scope");
+        // scope-manager会自动处理类成员和普通变量的注册
         scopeManager.defineVariable(varName, initValue);
-        // 注意：defineVariable返回void，所以不能用于if条件
+        LOG_DEBUG("VariableDefinition: variable '" + varName + "' defined");
         
         LOG_DEBUG("Successfully defined variable: " + varName + " = " + initValue->toString());
     }

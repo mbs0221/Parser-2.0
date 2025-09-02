@@ -95,7 +95,7 @@ Value* Interpreter::visit(ConstantExpression<bool>* expr) {
         return nullptr;
     }
     
-            LOG_DEBUG("Evaluating boolean constant: " + std::string(expr->value ? "true" : "false"));
+    LOG_DEBUG("Evaluating boolean constant: " + std::string(expr->value ? "true" : "false"));
     return new Bool(expr->value);
 }
 
@@ -160,11 +160,12 @@ Value* Interpreter::visit(CastExpression* castExpr) {
         methodName[2] = toupper(methodName[2]);
     }
     
-    // 检查是否有对应的转换方法
-    if (valueType->hasMethod(methodName)) {
-        // 调用类型系统注册的转换方法
-        std::vector<Value*> convertArgs;
-        Value* result = valueType->callMethod(operandValue, methodName, convertArgs);
+    // 使用通用的方法调用机制进行转换方法调用
+    if (valueType->supportsMethods()) {
+        // 调用转换方法（转换方法通常不需要参数）
+        std::vector<Value*> emptyArgs;
+        Value* result = callMethodOnInstance(operandValue, methodName, emptyArgs);
+        
         if (result) {
             return result;
         }
@@ -282,92 +283,188 @@ Value* Interpreter::visit(BinaryExpression* binary) {
     }
 }
 
-// 访问表达式求值 - 直接使用ScopeManager的统一接口
+// 访问表达式求值 - 使用访问者模式分发到具体的子类
 Value* Interpreter::visit(AccessExpression* access) {
     if (!access || !access->target || !access->key) return nullptr;
     
+    // 根据表达式类型分发到具体的 visit 方法
+    if (auto* memberAccess = dynamic_cast<MemberAccessExpression*>(access)) {
+        return visit(memberAccess);
+    } else if (auto* methodRef = dynamic_cast<MethodReferenceExpression*>(access)) {
+        return visit(methodRef);
+    } else if (auto* indexAccess = dynamic_cast<IndexAccessExpression*>(access)) {
+        return visit(indexAccess);
+    } else {
+        // 默认处理，保持向后兼容
+        reportError("Unknown access expression type");
+        return nullptr;
+    }
+}
+
+// MemberAccessExpression 访问实现
+Value* Interpreter::visit(MemberAccessExpression* expr) {
+    if (!expr || !expr->target || !expr->key) return nullptr;
+    
     // 求值目标
-    Value* target = visit(access->target);
-    if (!target) return nullptr;
+    Value* targetValue = visit(expr->target);
+    if (!targetValue) return nullptr;
     
     // 求值键
-    Value* key = visit(access->key);
-    if (!key) return nullptr;
+    Value* keyValue = visit(expr->key);
+    if (!keyValue) return nullptr;
     
     // 获取成员名称
-    string memberName = extractMemberName(key);
+    string memberName = extractMemberName(keyValue);
     if (memberName.empty()) return nullptr;
     
-    // 情况1: 目标没有运行时类型，尝试作为类型名称处理（静态访问）
-    if (!target->getValueType()) {
-        // 如果target已经是ClassMethodValue，说明之前已经找到了方法，直接返回
-        if (ClassMethodValue* classMethod = dynamic_cast<ClassMethodValue*>(target)) {
-            cout << "DEBUG: AccessExpression: target is already a ClassMethodValue, returning it" << endl;
-            return classMethod;
-        }
-        
-        // 如果target已经是MethodValue，说明之前已经找到了方法，直接返回
-        if (MethodValue* method = dynamic_cast<MethodValue*>(target)) {
-            cout << "DEBUG: AccessExpression: target is already a MethodValue, returning it" << endl;
-            return method;
-        }
-        
-        if (String* typeNameStr = dynamic_cast<String*>(target)) {
+    // 检查目标是否为类型名称（静态访问）
+    if (!targetValue->getValueType()) {
+        if (String* typeNameStr = dynamic_cast<String*>(targetValue)) {
             string typeName = typeNameStr->getValue();
-            cout << "DEBUG: AccessExpression: target is String, typeName: '" + typeName + "'" << endl;
             
-            // 使用统一接口查找类型方法
-            Value* typeMethod = scopeManager.lookupTypeMethod(typeName, memberName);
-            if (typeMethod) {
-                cout << "DEBUG: AccessExpression: found type method '" + memberName + "' in type '" + typeName + "'" << endl;
-                return typeMethod;
-            }
-            
-            // 如果找不到方法，尝试查找类型本身
+            // 查找类型
             ObjectType* type = scopeManager.lookupType(typeName);
-            if (type) {
-                cout << "DEBUG: AccessExpression: found type '" + typeName + "'" << endl;
-                return new String(typeName);
+            if (!type) {
+                reportError("Type '" + typeName + "' not found");
+                return nullptr;
             }
             
-            cout << "DEBUG: AccessExpression: no static method/static member '" + memberName + "' found in type '" + typeName + "'" << endl;
-            Interpreter::reportError("Static member '" + memberName + "' not found in type '" + typeName + "'");
+            // 检查是否为类类型
+            if (ClassType* classType = dynamic_cast<ClassType*>(type)) {
+                // 静态成员访问
+                if (classType->hasStaticMember(memberName)) {
+                    return classType->accessStaticMember(memberName);
+                } else if (classType->hasMember(memberName)) {
+                    // 实例成员，返回默认值
+                    return classType->getMemberInitialValue(memberName);
+                }
+                
+                reportError("Member '" + memberName + "' not found in class '" + typeName + "'");
+                return nullptr;
+            }
+            
+            reportError("Type '" + typeName + "' is not a class type");
             return nullptr;
         }
         
-        cout << "DEBUG: AccessExpression: target is not String, cannot access object without runtime type" << endl;
-        Interpreter::reportError("Cannot access object without runtime type");
+        reportError("Cannot access member without runtime type");
         return nullptr;
     }
     
-    // 情况2: 目标有运行时类型，处理实例成员访问
-    ObjectType* targetType = target->getValueType();
-    
-    // 使用统一接口查找方法
-    Value* method = scopeManager.lookupMethod(memberName);
-    if (method) {
-        return method;
-    }
+    // 实例成员访问
+    ObjectType* targetType = targetValue->getValueType();
     
     // 检查成员变量
     if (targetType->hasMember(memberName)) {
-        Value* memberValue = targetType->accessMember(target, memberName);
+        Value* memberValue = targetType->accessMember(targetValue, memberName);
         if (memberValue) {
             return memberValue;
         }
-        Interpreter::reportError("Failed to access member variable '" + memberName + "'");
+        reportError("Failed to access member variable '" + memberName + "'");
         return nullptr;
     }
     
-    // 如果是类类型，检查静态成员
-    if (ClassType* classType = dynamic_cast<ClassType*>(targetType)) {
-        if (classType->hasStaticMethodName(memberName)) {
-            return new ClassMethodValue(classType, memberName);
+    reportError("Member '" + memberName + "' not found in type '" + targetType->getTypeName() + "'");
+    return nullptr;
+}
+
+// MethodReferenceExpression 访问实现
+Value* Interpreter::visit(MethodReferenceExpression* expr) {
+    if (!expr || !expr->target || !expr->key) return nullptr;
+    
+    // 求值目标
+    Value* targetValue = visit(expr->target);
+    if (!targetValue) return nullptr;
+    
+    // 求值键
+    Value* keyValue = visit(expr->key);
+    if (!keyValue) return nullptr;
+    
+    // 获取成员名称
+    string memberName = extractMemberName(keyValue);
+    if (memberName.empty()) return nullptr;
+    
+    // 统一处理：让MethodReference自动判断是静态还是实例方法
+    if (!targetValue->getValueType()) {
+        // 目标没有运行时类型，尝试作为类型名称处理
+        if (String* typeNameStr = dynamic_cast<String*>(targetValue)) {
+            string typeName = typeNameStr->getValue();
+            
+            // 查找类型（让MethodReference处理类型不存在的情况）
+            ObjectType* type = scopeManager.lookupType(typeName);
+            
+            // 创建静态方法引用
+            return new StaticMethodReference(type, memberName);
         }
+        
+        reportError("Cannot access method without runtime type");
+        return nullptr;
     }
     
-    Interpreter::reportError("Member '" + memberName + "' not found in type '" + targetType->getTypeName() + "'");
-    return nullptr;
+    // 目标有运行时类型，创建MethodReference并传递实例
+    ObjectType* targetType = targetValue->getValueType();
+    LOG_DEBUG("MethodReference: targetValue type: " + (targetType ? targetType->getTypeName() : "nullptr"));
+    
+    // 创建实例方法引用
+    return new InstanceMethodReference(targetType, targetValue, memberName);
+}
+
+// IndexAccessExpression 访问实现
+Value* Interpreter::visit(IndexAccessExpression* expr) {
+    if (!expr || !expr->target || !expr->key) return nullptr;
+    
+    // 求值目标
+    Value* target = visit(expr->target);
+    if (!target) return nullptr;
+    
+    // 求值键
+    Value* key = visit(expr->key);
+    if (!key) return nullptr;
+    
+    // 目标必须有运行时类型
+    if (!target->getValueType()) {
+        reportError("Cannot access element without runtime type");
+        return nullptr;
+    }
+    
+    ObjectType* targetType = target->getValueType();
+    
+    // 检查是否支持方法调用
+    if (!targetType->supportsMethods()) {
+        reportError("Type '" + targetType->getTypeName() + "' does not support method calls");
+        return nullptr;
+    }
+    
+    // 根据目标类型选择合适的访问方法
+    string methodName = "get";  // 默认使用get方法
+    vector<Value*> args;
+    
+    // 检查是否为数字索引访问（数组、字符串）
+    if (Integer* intKey = dynamic_cast<Integer*>(key)) {
+        // 数字索引：数组[0]、字符串[0]
+        args = {key};
+    } else if (String* strKey = dynamic_cast<String*>(key)) {
+        // 字符串键：字典["key"]
+        args = {key};
+    } else {
+        // 其他类型，转换为字符串
+        args = {new String(key->toString())};
+    }
+    
+    // 使用新的方法调用机制
+    Value* result = callMethodOnInstance(target, methodName, args);
+    
+    // 清理临时参数（只清理我们创建的临时参数）
+    if (dynamic_cast<String*>(key) == nullptr && args.size() > 0) {
+        delete args[0];
+    }
+    
+    if (!result) {
+        reportError("Method '" + methodName + "' not found or failed on type '" + targetType->getTypeName() + "'");
+        return nullptr;
+    }
+    
+    return result;
 }
 
 // 提取成员名称的辅助方法
@@ -384,18 +481,31 @@ string Interpreter::extractMemberName(Value* key) {
     }
     
     // 检查是否有toString方法
-    if (!keyType->hasMethod("toString")) {
+    if (!keyType->supportsMethods()) {
         Interpreter::reportError("Access key type does not support conversion to string");
         return "";
     }
     
-    // 调用toString方法
+    IMethodSupport* methodSupport = dynamic_cast<IMethodSupport*>(keyType);
+    if (!methodSupport || !methodSupport->hasUserMethod("toString")) {
+        Interpreter::reportError("Access key type does not support conversion to string");
+        return "";
+    }
+    
+    // 调用toString方法 - 使用scope机制
     vector<Value*> convertArgs;
-    Value* convertedStringKey = keyType->callMethod(key, "toString", convertArgs);
-    if (convertedStringKey) {
-        string result = dynamic_cast<String*>(convertedStringKey)->getValue();
-        delete convertedStringKey;
-        return result;
+    Function* toStringMethod = methodSupport->findUserMethod("toString", convertArgs);
+    if (toStringMethod) {
+        Scope tempScope;
+        tempScope.setArgument("argc", new Integer(convertArgs.size()));
+        tempScope.setArgument("args", new Array(convertArgs));
+        Value* convertedStringKey = toStringMethod->call(&tempScope);
+        
+        if (convertedStringKey) {
+            string result = dynamic_cast<String*>(convertedStringKey)->getValue();
+            delete convertedStringKey;
+            return result;
+        }
     }
     
     Interpreter::reportError("Failed to convert access key to string");
@@ -428,7 +538,7 @@ Value* Interpreter::visit(CallExpression* call) {
     
     // 检查是否为可调用对象
     LOG_DEBUG("CallExpression: checking if callee is callable");
-    LOG_DEBUG("CallExpression: callee type: " + (callee->getValueType() ? callee->getValueType()->getTypeName() : "nullptr"));
+
     LOG_DEBUG("CallExpression: callee builtin type: " + callee->getBuiltinTypeName());
     LOG_DEBUG("CallExpression: callee toString: " + callee->toString());
     
@@ -446,24 +556,52 @@ Value* Interpreter::visit(CallExpression* call) {
         if (!func->isCallable()) {
             Interpreter::reportError("Function is not callable");
         } else {
-            // 检查参数数量（使用函数的参数验证方法）
-            if (!func->validateArguments(evaluatedArgs)) {
-                size_t expectedParams = func->getParameters().size();
-                Interpreter::reportError("Function expects " + to_string(expectedParams) + " arguments, but got " + to_string(evaluatedArgs.size()));
+            // 对于 MethodReference，也需要使用scope来管理参数
+            if (MethodReference* methodRef = dynamic_cast<MethodReference*>(func)) {
+                // 检查是否为实例方法引用
+                if (InstanceMethodReference* instanceMethodRef = dynamic_cast<InstanceMethodReference*>(methodRef)) {
+                    // 实例方法调用，使用 InstanceMethodCall 来设置 this 指针
+                    InstanceMethodCall functionCall(scopeManager.getCurrentScope(), 
+                                                   instanceMethodRef->getTargetInstance(), 
+                                                   methodRef, evaluatedArgs);
+                    result = functionCall.execute();
+                } else {
+                    // 静态方法调用，使用 BasicFunctionCall
+                    BasicFunctionCall functionCall(scopeManager.getCurrentScope(), func, evaluatedArgs);
+                    result = functionCall.execute();
+                }
             } else {
-                // 使用新的函数调用架构
-                BasicFunctionCall functionCall(scopeManager.getCurrentScope(), func, evaluatedArgs);
-                result = functionCall.execute();
+                // 其他函数类型，使用参数验证
+                if (!func->validateArguments(evaluatedArgs)) {
+                    size_t expectedParams = func->getParameters().size();
+                    Interpreter::reportError("Function expects " + to_string(expectedParams) + " arguments, but got " + to_string(evaluatedArgs.size()));
+                } else {
+                    // 使用新的函数调用架构
+                    BasicFunctionCall functionCall(scopeManager.getCurrentScope(), func, evaluatedArgs);
+                    result = functionCall.execute();
+                }
             }
         }
     } else {
         // 其他可调用对象（通过类型系统的方法调用）
         ObjectType* funcType = callee->getValueType();
-        if (funcType) {
-            vector<Value*> methodArgs = evaluatedArgs;
-            result = funcType->callMethod(callee, "call", methodArgs);
+        if (funcType && funcType->supportsMethods()) {
+            IMethodSupport* methodSupport = dynamic_cast<IMethodSupport*>(funcType);
+            if (methodSupport && methodSupport->hasUserMethod("call")) {
+                vector<Value*> methodArgs = evaluatedArgs;
+                Function* callMethod = methodSupport->findUserMethod("call", methodArgs);
+                if (callMethod) {
+                    // 使用scope机制调用方法
+                    Scope tempScope;
+                    tempScope.setArgument("argc", new Integer(methodArgs.size()));
+                    tempScope.setArgument("args", new Array(methodArgs));
+                    result = callMethod->call(&tempScope);
+                }
+            } else {
+                Interpreter::reportError("Function object does not support method calls");
+            }
         } else {
-            Interpreter::reportError("Function object has no type information");
+            Interpreter::reportError("Function object has no type information or does not support method calls");
         }
     }
     

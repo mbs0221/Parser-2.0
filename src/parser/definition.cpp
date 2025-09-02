@@ -26,12 +26,12 @@ void StructDefinition::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-// ClassMethod类的accept方法实现
-void ClassMethod::accept(StatementVisitor* visitor) {
+// ClassDefinition类的accept方法实现
+void ClassDefinition::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }
 
-// ClassDefinition类的accept方法实现
-void ClassDefinition::accept(StatementVisitor* visitor) {
+// VisibilityStatement类的accept方法实现
+void VisibilityStatement::accept(StatementVisitor* visitor) {
     visitor->visit(this);
 }

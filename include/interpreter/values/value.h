@@ -467,6 +467,14 @@ public:
     // 字典特有操作
     void setEntry(const std::string& key, Value* value);
     Value* getEntry(const std::string& key) const;
+    
+    // 泛型版本的 getEntry，返回指定类型
+    template<typename T>
+    T* getEntry(const std::string& key) const {
+        Value* value = getEntry(key);
+        return dynamic_cast<T*>(value);
+    }
+    
     void removeEntry(const std::string& key);
     bool hasKey(const std::string& key) const;
 
@@ -535,24 +543,90 @@ public:
     const std::map<std::string, class Function*>& getMethods() const;
 };
 
+// 前向声明
+class FunctionSignature;
+
+// ==================== Parameter类 ====================
+// 封装函数参数的信息，包括名称、类型和默认值
+class Parameter {
+private:
+    std::string name;           // 参数名称
+    std::string typeName;       // 参数类型名称
+    std::string defaultValue;   // 默认值（字符串形式）
+    bool hasDefault;            // 是否有默认值
+    bool isVarArgs;             // 是否为可变参数
+
+public:
+    // 构造函数
+    Parameter(const std::string& paramName, 
+              const std::string& paramType = "any", 
+              const std::string& defaultVal = "", 
+              bool varArgs = false);
+    
+    // 拷贝构造函数
+    Parameter(const Parameter& other);
+    
+    // 赋值运算符
+    Parameter& operator=(const Parameter& other);
+    
+    // 析构函数
+    ~Parameter() = default;
+    
+    // 获取参数信息
+    std::string getName() const { return name; }
+    std::string getTypeName() const { return typeName; }
+    std::string getDefaultValue() const { return defaultValue; }
+    bool hasDefaultValue() const { return hasDefault; }
+    bool isVariadic() const { return isVarArgs; }
+    
+    // 设置参数信息
+    void setTypeName(const std::string& type) { typeName = type; }
+    void setDefaultValue(const std::string& value) { defaultValue = value; hasDefault = true; }
+    void setVarArgs(bool varArgs) { isVarArgs = varArgs; }
+    
+    // 字符串表示
+    std::string toString() const;
+    
+    // 比较操作
+    bool operator==(const Parameter& other) const;
+    bool operator!=(const Parameter& other) const;
+    
+    // 类型兼容性检查
+    bool isTypeCompatible(const std::string& actualType) const;
+    bool isTypeCompatible(ObjectType* actualType) const;
+};
+
 // ==================== 函数基类 ====================
 class Function : public Value {
 protected:
     std::string name;
-    std::vector<std::string> parameters;
+    std::vector<Parameter> parameters;  // 使用Parameter对象替代简单的字符串列表
 public:
-    Function(const std::string& funcName, const std::vector<std::string>& params = {});
+    Function(const std::string& funcName, const std::vector<Parameter>& params = {});
     virtual ~Function() = default;
     std::string getName() const;
-    const std::vector<std::string>& getParameters() const;
-    // 获取参数列表（用于参数绑定）
-    virtual const std::vector<std::string>& getParameterList() const;
+    const std::vector<Parameter>& getParameters() const;
+    
+    // 兼容性方法：获取参数名称列表
+    std::vector<std::string> getParameterNames() const;
+    
+    // 兼容性方法：获取参数类型列表
+    std::vector<std::string> getParameterTypes() const;
+    
+    // 兼容性方法：获取带默认值的参数
+    std::vector<std::string> getParametersWithDefaults() const;
+
     // 纯虚函数：函数调用
-    virtual Value* call(std::vector<Value*> args) = 0;
+    // 函数调用接口 - 使用scope机制
+    virtual Value* call(class Scope* scope) = 0;
     // 新增：参数验证
     bool validateArguments(const std::vector<Value*>& args) const;
-    // 新增：获取函数签名
-    std::string getSignature() const;
+    // 纯虚函数：获取函数签名 - 让子类实现
+    virtual FunctionSignature getSignature() const = 0;
+    // 设置参数列表（用于动态更新参数）
+    void setParameters(const std::vector<Value*>& args);
+    // 设置参数类型（新增：用于类型匹配）
+    void setParameterTypes(const std::vector<std::string>& types);
     // 重写类型检查方法
     bool isCallable() const override;
     std::string toString() const override;
@@ -565,80 +639,75 @@ public:
 // ==================== 内置函数类型 ====================
 class BuiltinFunction : public Function {
 private:
-    std::function<Value*(std::vector<Value*>)> func;
+    std::function<Value*(class Scope*)> scopeFunc;             // 通过作用域获取this和参数
+    std::vector<std::string> parameterNames;                   // 参数名称列表
+    
 public:
+    // 构造函数：通过作用域获取this和参数（使用Parameter对象）
     BuiltinFunction(const std::string& funcName, 
-                    std::function<Value*(std::vector<Value*>)> f,
-                    const std::vector<std::string>& params = {});
+                    std::function<Value*(class Scope*)> f,
+                    const std::vector<Parameter>& params = {});
     
-    // 新增：接受函数指针的构造函数
+    // 兼容性构造函数：接受字符串参数列表
     BuiltinFunction(const std::string& funcName, 
-                    Value* (*f)(std::vector<Value*>&),
-                    const std::vector<std::string>& params = {});
+                    std::function<Value*(class Scope*)> f,
+                    const std::vector<std::string>& paramNames);
     
-    // 函数调用
-    Value* call(std::vector<Value*> args) override;
+    // C风格函数原型构造函数：直接解析完整函数原型
+    BuiltinFunction(std::function<Value*(class Scope*)> f,
+                    const char* functionPrototype);
+    
+    // C风格可变参数构造函数：支持混合固定参数和可变参数
+    BuiltinFunction(const std::string& funcName, 
+                    std::function<Value*(class Scope*)> f,
+                    const std::vector<Parameter>& fixedParams,
+                    bool supportsVarArgs = false);
+    
+    // 函数调用 - 使用scope机制（自动带缓存）
+    Value* call(class Scope* scope) override;
     // 获取函数类型信息
     std::string getFunctionType() const override;
     // 重写clone方法
     Value* clone() const override;
     // 检查是否为内置函数
     bool isBuiltinFunction() const;
-};
+    // 实现函数签名计算
+    FunctionSignature getSignature() const override;
+    
 
-// ==================== 方法引用类型 ====================
-class MethodValue : public Function {
+    
+    // 检查是否为新式接口（现在所有接口都是新式的）
+    bool isNewStyle() const { return true; }
+    
+    // ==================== 可变参数支持 ====================
+    // 检查是否支持可变参数
+    bool supportsVarArgs() const;
+    
+    // 设置可变参数支持
+    void setVarArgsSupport(bool support);
+    
+    // 获取可变参数名称（如果支持）
+    std::string getVarArgsName() const;
+    
+    // 设置可变参数名称
+    void setVarArgsName(const std::string& name);
+    
+    // 解析C风格函数原型（包括函数名和参数）
+    void parseCFormatParams(const char* functionPrototype);
+    
+    // 获取参数的默认值
+    std::string getParamDefaultValue(const std::string& paramName) const;
+    
+    // 检查参数是否有默认值
+    bool hasParamDefaultValue(const std::string& paramName) const;
+    
+    // 获取所有带默认值的参数
+    std::vector<std::string> getParamsWithDefaults() const;
+    
 private:
-    ObjectType* targetType;      // 目标对象的类型
-    Value* target;               // 目标对象实例
-    std::string methodName;      // 方法名称
-public:
-    MethodValue(ObjectType* type, Value* instance, const std::string& name);
-    virtual ~MethodValue() = default;
-    
-    // 获取目标类型
-    ObjectType* getTargetType() const;
-    // 获取目标实例
-    Value* getTarget() const;
-    // 获取方法名称
-    std::string getMethodName() const;
-    
-    // 函数调用 - 直接调用类型系统的方法
-    Value* call(std::vector<Value*> args) override;
-    // 获取函数类型信息
-    std::string getFunctionType() const override;
-    // 重写getTypeName方法
-    std::string getTypeName() const;
-    // 重写clone方法
-    Value* clone() const override;
-    // 重写toString方法
-    std::string toString() const override;
-};
-
-// ==================== 类方法引用类型 ====================
-class ClassMethodValue : public Function {
-private:
-    ObjectType* targetType;      // 目标类型
-    std::string methodName;      // 方法名称
-public:
-    ClassMethodValue(ObjectType* type, const std::string& name);
-    virtual ~ClassMethodValue() = default;
-    
-    // 获取目标类型
-    ObjectType* getTargetType() const;
-    // 获取方法名称
-    std::string getMethodName() const;
-    
-    // 函数调用 - 调用类型的类方法（不需要实例）
-    Value* call(std::vector<Value*> args) override;
-    // 获取函数类型信息
-    std::string getFunctionType() const override;
-    // 重写getTypeName方法
-    std::string getTypeName() const;
-    // 重写clone方法
-    Value* clone() const override;
-    // 重写toString方法
-    std::string toString() const override;
+    bool varArgsSupport;                 // 是否支持可变参数
+    std::string varArgsName;            // 可变参数名称（如 "args", "rest" 等）
+    std::map<std::string, std::string> paramDefaults;  // 参数默认值映射
 };
 
 // ==================== 用户函数类型 ====================
@@ -647,11 +716,12 @@ private:
     class Statement* functionBody;        // 函数体语句
     class FunctionExecutor* executor;     // 函数执行器（依赖注入）
 public:
+    // 构造函数：只接受Parameter数组
     UserFunction(const std::string& funcName, 
-                 const std::vector<std::string>& params,
+                 const std::vector<Parameter>& params,
                  class Statement* body = nullptr);
-    // 函数调用
-    Value* call(std::vector<Value*> args) override;
+    // 函数调用 - 使用scope机制
+    Value* call(class Scope* scope) override;
     // 获取函数类型信息
     std::string getFunctionType() const override;
     // 重写clone方法
@@ -666,6 +736,93 @@ public:
     void setExecutor(class FunctionExecutor* exec);
     // 检查是否为内置函数
     bool isBuiltinFunction() const;
+    // 实现函数签名计算
+    FunctionSignature getSignature() const override;
+
+};
+
+// ==================== 方法引用类型 ====================
+// 抽象基类：表示对某个类型的方法的引用
+// 设计模式：父类执行call，子类查找对应匹配的函数
+class MethodReference : public Function {
+protected:
+    class ObjectType* targetType;      // 目标类型
+    std::string methodName;            // 方法名称
+    Function* cachedFunction;          // 缓存的函数
+    
+public:
+    // 构造函数：基类只需要类型和方法名
+    MethodReference(class ObjectType* type, const std::string& name);
+    virtual ~MethodReference() = default;
+    
+    // 获取目标类型
+    class ObjectType* getTargetType() const;
+    // 获取方法名称
+    std::string getMethodName() const;
+    
+    // 函数调用 - 父类实现统一的调用逻辑，子类负责查找匹配函数
+    Value* call(class Scope* scope);
+    
+    // 实现Function基类的纯虚函数
+    FunctionSignature getSignature() const override;
+    
+    // 获取函数类型信息
+    std::string getFunctionType() const override;
+    // 重写getTypeName方法
+    std::string getTypeName() const;
+    // 重写getValueType方法
+    ObjectType* getValueType() const;
+    // 重写clone方法
+    Value* clone() const override;
+    // 重写toString方法
+    std::string toString() const override;
+
+protected:
+    // 抽象方法：子类必须实现，负责根据函数签名查找最佳匹配的方法
+    virtual Function* findBestMatch(const FunctionSignature& callSignature) const = 0;
+};
+
+// ==================== 实例方法引用类型 ====================
+// 专门用于实例方法的方法引用
+class InstanceMethodReference : public MethodReference {
+private:
+    Value* targetInstance;             // 目标实例
+    
+public:
+    // 构造函数：需要类型、实例和方法名
+    InstanceMethodReference(class ObjectType* type, Value* instance, const std::string& name);
+    virtual ~InstanceMethodReference() = default;
+    // 获取目标实例
+    Value* getTargetInstance() const;
+    // 是否为静态方法（实例方法引用永远返回false）
+    bool isStaticMethod() const;
+    // 重写clone方法
+    Value* clone() const override;
+    // 重写toString方法
+    std::string toString() const override;
+    
+protected:
+    // 实现抽象方法：根据函数签名查找最佳匹配的实例方法
+    Function* findBestMatch(const FunctionSignature& callSignature) const override;
+};
+
+// ==================== 静态方法引用类型 ====================
+// 专门用于静态方法的方法引用
+class StaticMethodReference : public MethodReference {
+public:
+    // 构造函数：需要类型和方法名
+    StaticMethodReference(class ObjectType* type, const std::string& name);
+    virtual ~StaticMethodReference() = default;
+    // 是否为静态方法（静态方法引用永远返回true）
+    bool isStaticMethod() const;
+    // 重写clone方法
+    Value* clone() const override;
+    // 重写toString方法
+    std::string toString() const override;
+    
+protected:
+    // 实现抽象方法：根据函数签名查找最佳匹配的静态方法
+    Function* findBestMatch(const FunctionSignature& callSignature) const override;
 };
 
 // ==================== FunctionSignature类 ====================
@@ -673,62 +830,91 @@ public:
 class FunctionSignature {
 private:
     std::string name;
-    std::vector<std::string> parameterTypes;  // 参数类型名称列表
+    std::vector<Parameter> parameters;        // 直接管理Parameter数组
+    
 public:
     // 构造函数
-    FunctionSignature(const std::string& n, const std::vector<std::string>& types = {});
+    FunctionSignature(const std::string& n, const std::vector<Parameter>& params = {});
+    
+    // 兼容性构造函数（保持向后兼容）
+    FunctionSignature(const std::string& n, const std::vector<std::string>& types = {}, 
+                     const std::vector<std::string>& defaults = {}, bool varArgs = false, 
+                     const std::string& varType = "any");
+    
     // 从FunctionPrototype构造的构造函数
     FunctionSignature(const FunctionPrototype* prototype);
     // 从FunctionDefinition构造的构造函数
     FunctionSignature(const FunctionDefinition* funcDef);
+    // 从Scope创建函数签名的构造函数
+    FunctionSignature(const std::string& funcName, class Scope* scope);
+    // 从C风格字符串原型创建函数签名的构造函数（字符串本身包含函数名）
+    // 格式：funcName(param1, param2=default, ...)
+    FunctionSignature(const std::string& cPrototype);
     // 拷贝构造函数
     FunctionSignature(const FunctionSignature& other);
     // 赋值运算符
     FunctionSignature& operator=(const FunctionSignature& other);
     // 析构函数
     ~FunctionSignature() = default;
-    // 获取函数名
+    
+    // 基本信息
     std::string getName() const;
-    // 获取参数类型列表
-    const std::vector<std::string>& getParameterTypes() const;
-    // 获取参数数量
+    const std::vector<Parameter>& getParameters() const;
     size_t getParameterCount() const;
-    // 比较函数签名是否匹配
+    size_t getRequiredParameterCount() const;  // 必需参数数量（不包括默认参数）
+    bool supportsVarArgs() const;
+    std::string getVarArgsType() const;
+    
+    // 兼容性方法（保持向后兼容）
+    std::vector<std::string> getParameterTypes() const;
+    std::vector<std::string> getDefaultValues() const;
+    std::vector<std::string> getParameterNames() const;
+    
+    // 可变参数相关方法
+    size_t getFixedParameterCount() const;  // 获取固定参数数量
+    size_t getVarArgsStartIndex() const;    // 获取可变参数开始位置
+    bool isVarArgsParameter(size_t index) const;  // 检查指定位置是否为可变参数
+    
+    // 参数匹配和重载解析
     bool matches(const std::string& methodName, const std::vector<Value*>& args) const;
-    // 检查是否与另一个签名匹配（用于重载解析）
     bool matches(const FunctionSignature& other) const;
-    // 获取签名字符串表示
+    int calculateMatchScore(const std::vector<Value*>& args) const;  // 计算匹配分数
+    
+    // 新增：检查与另一个函数签名的兼容性
+    bool isCompatibleWith(const FunctionSignature& other) const;
+    
+    // 参数处理
+    std::vector<Value*> fillDefaultArguments(const std::vector<Value*>& args) const;
+    bool canAcceptArguments(const std::vector<Value*>& args) const;
+    bool canAcceptVarArgs(const std::vector<Value*>& args) const;  // 专门用于可变参数函数
+    
+    // 字符串表示和比较
     std::string toString() const;
-    // 比较两个签名是否相等
     bool operator==(const FunctionSignature& other) const;
-    // 比较两个签名的大小（用于排序）
     bool operator<(const FunctionSignature& other) const;
-    // 检查是否为构造函数（函数名与类型名相同）
+    
+    // 构造函数检查
     bool isConstructor() const;
-    // 检查是否为默认构造函数（无参数）
     bool isDefaultConstructor() const;
-    // 检查是否为拷贝构造函数
     bool isCopyConstructor() const;
-    // 检查是否为移动构造函数
     bool isMoveConstructor() const;
-    // 检查是否为析构函数
     bool isDestructor() const;
-    // 获取函数类型（普通函数、构造函数、析构函数等）
     std::string getFunctionType() const;
-    // 打印函数签名信息
+    
+    // 调试和打印
     void print() const;
+    
     // ==================== 静态工厂方法 ====================
-    // 从函数原型创建函数签名
     static FunctionSignature fromPrototype(const FunctionPrototype* prototype);
-    // 从函数定义创建函数签名
     static FunctionSignature fromDefinition(const FunctionDefinition* funcDef);
-    // 从函数名和参数类型列表创建函数签名
     static FunctionSignature fromTypes(const std::string& funcName, const std::vector<std::string>& paramTypes);
-    // 从函数名和参数类型字符串创建函数签名（用于解析）
     static FunctionSignature fromString(const std::string& signature);
+    
 private:
-    // 辅助函数：根据类型名称获取类型对象
+    // 辅助函数
     class ObjectType* getTypeByName(const std::string& typeName) const;
+    bool isTypeCompatible(const std::string& expectedType, ObjectType* actualType) const;
+    int getTypeCompatibilityScore(const std::string& expectedType, ObjectType* actualType) const;
 };
 
 // 函数签名哈希函数（用于unordered_map）
@@ -772,6 +958,10 @@ public:
     const std::map<std::string, Value*>& getInstanceObjects() const { return instanceObjects; }
     // 获取对象数量统计
     size_t getVariableCount() const { return variableObjects.size(); }
+    // 获取所有变量名称（按定义顺序）
+    std::vector<std::string> getVariableNames() const;
+    // 获取所有变量值（按定义顺序）
+    std::vector<Value*> getAllVariablesInOrder() const;
     size_t getCallableCount() const { return callableObjects.size(); }
     size_t getInstanceCount() const { return instanceObjects.size(); }
     size_t getTotalObjectCount() const { return variableObjects.size() + callableObjects.size() + instanceObjects.size(); }

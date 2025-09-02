@@ -1,0 +1,42 @@
+// 测试成员运算、成员函数调用和静态类方法调用
+
+// 定义一个简单的类
+class Calculator {
+    int value;
+    
+    // 实例方法
+    int add(int x) {
+        return value + x;
+    }
+    
+    int multiply(int x) {
+        return value * x;
+    }
+    
+    // 静态方法
+    static int sum(int a, int b) {
+        return a + b;
+    }
+    
+    static int product(int a, int b) {
+        return a * b;
+    }
+}
+
+// 创建实例
+Calculator calc = Calculator();
+calc.value = 10;
+
+// 测试实例方法调用
+int result1 = calc.add(5);        // 应该返回 15
+int result2 = calc.multiply(3);    // 应该返回 30
+
+// 测试静态方法调用
+int sum_result = Calculator.sum(10, 20);      // 应该返回 30
+int prod_result = Calculator.product(4, 5);   // 应该返回 20
+
+// 测试成员变量访问
+int current_value = calc.value;    // 应该返回 10
+
+// 测试链式调用
+int final_result = Calculator.sum(calc.add(5), calc.multiply(2));  // 应该返回 25

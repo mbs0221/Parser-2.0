@@ -83,3 +83,25 @@ void ObjectRegistry::print() const {
         cout << "  " << pair.first << " -> " << (pair.second ? pair.second->toString() : "null") << endl;
     }
 }
+
+// ==================== 有序参数管理实现 ====================
+
+// 按顺序获取所有变量（按定义顺序）
+std::vector<Value*> ObjectRegistry::getAllVariablesInOrder() const {
+    std::vector<Value*> orderedVars;
+    // std::map保证插入顺序，所以直接遍历即可
+    for (const auto& pair : variableObjects) {
+        orderedVars.push_back(pair.second);
+    }
+    return orderedVars;
+}
+
+// 获取所有变量名称（按定义顺序）
+std::vector<std::string> ObjectRegistry::getVariableNames() const {
+    std::vector<std::string> names;
+    // std::map保证插入顺序，所以直接遍历即可
+    for (const auto& pair : variableObjects) {
+        names.push_back(pair.first);
+    }
+    return names;
+}

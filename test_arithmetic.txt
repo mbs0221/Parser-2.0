@@ -1,0 +1,29 @@
+// 测试整数算术运算
+int a = 10;
+int b = 5;
+
+// 基本算术运算
+int sum = a + b;      // 15
+int diff = a - b;     // 5
+int product = a * b;  // 50
+int quotient = a / b; // 2
+int remainder = a % b; // 0
+
+// 比较运算
+bool greater = a > b;   // true
+bool less = a < b;      // false
+bool equal = a == b;    // false
+bool notEqual = a != b; // true
+
+// 输出结果
+print("a = " + a);
+print("b = " + b);
+print("a + b = " + sum);
+print("a - b = " + diff);
+print("a * b = " + product);
+print("a / b = " + quotient);
+print("a % b = " + remainder);
+print("a > b = " + greater);
+print("a < b = " + less);
+print("a == b = " + equal);
+print("a != b = " + notEqual);

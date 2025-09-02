@@ -159,7 +159,7 @@ Value* AccessHandler::handleClassStaticAccess(ClassType* classType, const string
     // 检查静态方法
     if (classType->hasStaticMethodName(memberName)) {
         LOG_DEBUG("AccessHandler: found static method '" + memberName + "' in class type");
-        return new ClassMethodValue(classType, memberName);
+        return new MethodReference(classType, memberName);
     }
     
     // 检查静态变量（如果实现了的话）

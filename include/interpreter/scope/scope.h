@@ -10,6 +10,7 @@
 #include <memory>
 #include <tuple>
 #include "interpreter/values/value.h"
+#include "interpreter/types/types.h"
 
 using namespace std;
 
@@ -30,11 +31,10 @@ struct Scope {
     // 对象管理器 - 管理当前作用域中的对象（变量、函数、实例等）
     std::unique_ptr<ObjectRegistry> objectRegistry;
     
-    // this指针 - 指向当前实例对象（用于类方法中）
-    Value* thisPointer;
+    // 参数作用域标识 - 标识当前作用域是否专门用于参数绑定
+    bool isParameterScope;
     
-    // 当前类上下文 - 指向当前类定义（用于类方法定义中）
-    ClassType* currentClassContext;
+
     
     // 构造函数
     Scope();
@@ -42,8 +42,7 @@ struct Scope {
     // 析构函数
     ~Scope();
     
-    // 清理作用域中的资源
-    void cleanup();
+
     
     // 打印作用域内容（用于调试）
     void print() const;
@@ -53,6 +52,125 @@ struct Scope {
     
     // 获取对象管理器
     ObjectRegistry* getObjectRegistry() const;
+    
+    // ==================== 变量访问接口 ====================
+    // 获取变量值（基础版本）
+    Value* getVariable(const std::string& name) const;
+    
+    // 获取变量值并转换为指定类型（泛型版本）
+    template<typename T>
+    T* getVariable(const std::string& name) const {
+        Value* value = getVariable(name);
+        if (value) {
+            return dynamic_cast<T*>(value);
+        }
+        return nullptr;
+    }
+    
+    // 获取变量值并转换为指定类型，带默认值
+    template<typename T>
+    T* getVariable(const std::string& name, T* defaultValue) const {
+        T* result = getVariable<T>(name);
+        return result ? result : defaultValue;
+    }
+    
+    // 设置变量值到当前作用域
+    void setVariable(const std::string& name, Value* value);
+    
+    // 设置变量值到当前作用域（类型化版本）
+    template<typename T>
+    void setVariable(const std::string& name, T* value) {
+        setVariable(name, static_cast<Value*>(value));
+    }
+    
+    // ==================== 统一参数访问接口 ====================
+    // 获取函数参数并转换为指定类型（语义化方法）
+    template<typename T>
+    T* getArgument(const std::string& name) const {
+        return getVariable<T>(name);
+    }
+    
+    // 获取函数参数并转换为指定类型，带默认值
+    template<typename T>
+    T* getArgument(const std::string& name, T* defaultValue) const {
+        T* result = getArgument<T>(name);
+        return result ? result : defaultValue;
+    }
+    
+    // 设置函数参数到当前作用域（统一绑定方式）
+    void setArgument(const std::string& name, Value* value);
+    
+    // 设置函数参数到当前作用域（类型化版本）
+    template<typename T>
+    void setArgument(const std::string& name, T* value) {
+        setArgument(name, static_cast<Value*>(value));
+    }
+    
+    // ==================== 位置参数访问 ====================
+    // 按索引获取参数（基于名称查找）
+    Value* getArgumentByIndex(size_t index) const;
+    
+    // 按索引获取参数（类型化版本）
+    template<typename T>
+    T* getArgumentByIndex(size_t index) const {
+        Value* value = getArgumentByIndex(index);
+        if (value) {
+            return dynamic_cast<T*>(value);
+        }
+        return nullptr;
+    }
+    
+    // 获取所有参数（按顺序）
+    std::vector<Value*> getAllArguments() const;
+    
+    // 获取参数数量
+    size_t getArgumentCount() const;
+    
+    // 获取参数名称列表（用于函数原型匹配）
+    std::vector<std::string> getParameterNames() const;
+    
+    // 获取kwargs字典（可变参数支持）
+    Dict* getKwargs() const;
+    
+    // 检查是否有kwargs
+    bool hasKwargs() const;
+    
+    // 获取args数组（位置可变参数支持）
+    Array* getArgs() const;
+    
+    // 检查是否有args
+    bool hasArgs() const;
+    
+    // ==================== 可变参数支持 ====================
+    // 注意：旧的setVarArgs机制已被新的*args和**kwargs机制替代
+    // 新的机制提供更灵活和Python风格的可变参数支持
+    
+    // 检查是否有可变参数（兼容性方法）
+    bool hasVarArgs() const;
+    
+    // ==================== 实例访问接口 ====================
+    // 获取当前实例（this指针）
+    template<typename T>
+    T* getThis() const {
+        return getVariable<T>("this");
+    }
+    
+    // 获取当前实例（instance别名）
+    template<typename T>
+    T* getInstance() const {
+        return getVariable<T>("instance");
+    }
+    
+    // 获取当前实例，带类型检查
+    template<typename T>
+    T* requireThis() const {
+        T* instance = getThis<T>();
+        if (!instance) {
+            // 可以在这里添加错误处理逻辑
+            // 比如抛出异常或记录错误日志
+        }
+        return instance;
+    }
 };
 
 // ==================== ScopeManager类 ====================
@@ -78,6 +196,23 @@ private:
     
     // 在作用域中查找实例对象
     Value* findInstanceInScopes(const std::string& name);
+    
+    // ==================== 自动上下文管理辅助方法 ====================
+    
+    // 检查是否在类定义上下文中
+    bool isInClassContext() const;
+    
+    // 获取当前可见性
+    VisibilityType getCurrentVisibility() const;
+    
+    // 自动注册为类方法
+    void registerAsClassMethod(const std::string& name, Function* function);
+    
+    // 自动注册为类成员
+    void registerAsClassMember(const std::string& name, Value* value);
+    
+    // 自动注册为结构体成员
+    void registerAsStructMember(const std::string& name, Value* value);
 
 public:
     // 构造函数和析构函数
@@ -121,13 +256,13 @@ public:
     // 类型定义
     void defineType(const std::string& name, ObjectType* type);
     
-    // 变量定义
+    // 变量定义 - 自动处理类成员和普通变量
     void defineVariable(const std::string& name, Value* value);
     void defineVariable(const std::string& name, ObjectType* type, Value* value = nullptr);
     void defineVariable(const std::string& name, const std::string& type, Value* value = nullptr);
     
-    // 函数定义 - 统一接口
-    void defineFunction(const std::string& name, Value* function);
+    // 函数定义 - 统一接口，自动处理类方法和普通函数
+    void defineFunction(const std::string& name, Function* function);
     void defineFunction(const std::string& name, const std::vector<std::string>& parameterTypes, Value* function);
     
     // 方法定义
@@ -149,15 +284,9 @@ public:
     
     // ==================== 上下文管理 ====================
     
-    // this指针管理
-    void setThisPointer(Value* thisPtr);
-    Value* getThisPointer() const;
-    void clearThisPointer();
+
     
-    // 类上下文管理
-    void setCurrentClassContext(ClassType* classType);
-    ClassType* getCurrentClassContext() const;
-    void clearCurrentClassContext();
+
     
     // ==================== 作用域信息 ====================
     

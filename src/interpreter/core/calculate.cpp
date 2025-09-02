@@ -289,24 +289,10 @@ Value* Calculator::executeBinaryOperation(Value* left, Value* right, Operator* o
     }
     // 第一步：确定兼容类型（选择优先级更高的类型）
     string targetTypeName = determineCompatibleType(left, right);
+    LOG_DEBUG("Target type name: " + targetTypeName);
     // 第二步：类型转换
-    Value* convertedLeft = nullptr;
-    Value* convertedRight = nullptr;
-    // 创建类型转换表达式
-    CastExpression* leftCastExpr = createCastExpression(left, targetTypeName);
-    CastExpression* rightCastExpr = createCastExpression(right, targetTypeName);
-    if (leftCastExpr) {
-        convertedLeft = interpreter_->visit(leftCastExpr);
-        delete leftCastExpr;
-    } else {
-        convertedLeft = left->clone(); // 如果不需要转换，直接克隆
-    }
-    if (rightCastExpr) {
-        convertedRight = interpreter_->visit(rightCastExpr);
-        delete rightCastExpr;
-    } else {
-        convertedRight = right->clone(); // 如果不需要转换，直接克隆
-    }
+    Value* convertedLeft = tryConvertValue(left, targetTypeName);
+    Value* convertedRight = tryConvertValue(right, targetTypeName);
     if (!convertedLeft || !convertedRight) {
         // 清理转换后的操作数
         if (convertedLeft) delete convertedLeft;
@@ -317,15 +303,16 @@ Value* Calculator::executeBinaryOperation(Value* left, Value* right, Operator* o
             if (!operation.empty()) {
                 // 尝试调用左操作数类型注册的运算方法
                 ObjectType* leftType = left->getValueType();
-                if (leftType && leftType->hasMethod(operation)) {
-                    vector<Value*> args = {right};
-                    return leftType->callMethod(left, operation, args);
+                if (leftType && leftType->supportsMethods()) {
+                    Value* result = callMethodWithReference(leftType, left, operation, {right});
+                    if (result) return result;
                 }
+                
                 // 尝试调用右操作数类型注册的运算方法
                 ObjectType* rightType = right->getValueType();
-                if (rightType && rightType->hasMethod(operation)) {
-                    vector<Value*> args = {left};
-                    return rightType->callMethod(right, operation, args);
+                if (rightType && rightType->supportsMethods()) {
+                    Value* result = callMethodWithReference(rightType, right, operation, {left});
+                    if (result) return result;
                 }
             }
         }
@@ -337,17 +324,19 @@ Value* Calculator::executeBinaryOperation(Value* left, Value* right, Operator* o
     }
     // 第三步：具体计算
     Value* result = nullptr;
-    // 检查是否为用户自定义类型（非基础类型）
-    if (!isBasicType(targetTypeName)) {
-        // 用户自定义类型：调用类型系统注册的运算方法
-        result = performUserTypeBinaryOperation(convertedLeft, convertedRight, op);
-    } else {
-        // 基础类型：使用模板方法
-        result = performBasicTypeBinaryOperation(convertedLeft, convertedRight, op);
+    
+    // 执行类型转换
+    if (convertedLeft && convertedRight) {
+        // 检查是否为用户自定义类型（非基础类型）
+        if (!isBasicType(targetTypeName)) {
+            // 用户自定义类型：调用类型系统注册的运算方法
+            result = performUserTypeBinaryOperation(convertedLeft, convertedRight, op);
+        } else {
+            // 基础类型：使用模板方法
+            result = performBasicTypeBinaryOperation(convertedLeft, convertedRight, op);
+        }
     }
-    // 清理转换后的操作数
-    delete convertedLeft;
-    delete convertedRight;
+    
     return result;
 }
 
@@ -359,23 +348,18 @@ Value* Calculator::executeUnaryOperation(Value* operand, Operator* op) {
     // 第一步：确定目标类型（对于一元运算，通常保持原类型）
     string targetTypeName = getTypeName(operand);
     // 第二步：类型转换（如果需要的话）
-    Value* convertedOperand = nullptr;
-    CastExpression* castExpr = createCastExpression(operand, targetTypeName);
-    if (castExpr) {
-        convertedOperand = interpreter_->visit(castExpr);
-        delete castExpr;
-    } else {
-        convertedOperand = operand->clone(); // 如果不需要转换，直接克隆
-    }
+    Value* convertedOperand = tryConvertValue(operand, targetTypeName);
+    LOG_DEBUG("Converted operand: " + convertedOperand->toString());
     if (!convertedOperand) {
         // 如果转换失败，尝试用户定义类型的一元运算
         if (op) {
             string operation = op->getOperationName();
             if (!operation.empty()) {
                 ObjectType* operandType = operand->getValueType();
-                if (operandType && operandType->hasMethod(operation)) {
-                    vector<Value*> args = {};
-                    return operandType->callMethod(operand, operation, args);
+                if (operandType && operandType->supportsMethods()) {
+                    // 使用callMethodWithReference优化方法调用
+                    Value* result = callMethodWithReference(operandType, operand, operation, {});
+                    if (result) return result;
                 }
             }
         }
@@ -404,21 +388,13 @@ Value* Calculator::executeTernaryOperation(Value* condition, Value* trueValue, V
     if (!condition || !trueValue || !falseValue) {
         throw runtime_error("Null operands for ternary operation");
     }
-    // 使用类型系统将条件转换为布尔值
-    ObjectType* conditionType = condition->getValueType();
-    if (!conditionType) {
-        throw runtime_error("Condition has no runtime type");
-    }
-    // 检查是否有toBool方法
-    if (!conditionType->hasMethod("toBool")) {
-        throw runtime_error("Condition type does not support conversion to boolean");
-    }
-    // 调用类型注册的toBool方法
-    vector<Value*> convertArgs;
-    Value* boolCondition = conditionType->callMethod(condition, "toBool", convertArgs);
+    // 使用tryConvertValue将条件转换为布尔值
+    Value* boolCondition = tryConvertValue(condition, "bool");
+    
     if (!boolCondition) {
         throw runtime_error("Failed to convert condition to boolean");
     }
+    
     // 根据条件选择返回值
     if (dynamic_cast<Bool*>(boolCondition)->getValue()) {
         delete boolCondition;
@@ -429,53 +405,25 @@ Value* Calculator::executeTernaryOperation(Value* condition, Value* trueValue, V
     }
 }
 
-// 创建类型转换表达式
-CastExpression* Calculator::createCastExpression(Value* value, const string& targetTypeName) {
-    if (!value) return nullptr;
-    string currentTypeName = getTypeName(value);
+// 私有辅助方法：使用callMethodOnValue调用value的转换方法
+Value* Calculator::tryConvertValue(Value* sourceValue, const string& targetTypeName) {
+    if (!sourceValue) return nullptr;
+    
+    string currentTypeName = getTypeName(sourceValue);
+    
     // 如果已经是目标类型，不需要转换
     if (currentTypeName == targetTypeName) {
-        return nullptr;
+        return sourceValue; // 不需要转换
     }
-    // 根据value的类型创建对应的常量表达式
-    Expression* operandExpr = nullptr;
-    if (Integer* intValue = dynamic_cast<Integer*>(value)) {
-        operandExpr = new ConstantExpression<int>(intValue->getValue());
-    } else if (Double* doubleValue = dynamic_cast<Double*>(value)) {
-        operandExpr = new ConstantExpression<double>(doubleValue->getValue());
-    } else if (Bool* boolValue = dynamic_cast<Bool*>(value)) {
-        operandExpr = new ConstantExpression<bool>(boolValue->getValue());
-    } else if (Char* charValue = dynamic_cast<Char*>(value)) {
-        operandExpr = new ConstantExpression<char>(charValue->getValue());
-    } else if (String* stringValue = dynamic_cast<String*>(value)) {
-        operandExpr = new ConstantExpression<string>(stringValue->getValue());
-    } else {
-        // 对于用户自定义类型，不支持自动转换
-        // 在实际编程中，不同类型之间的转换通常需要显式定义
-        return nullptr;
-    }
-    // 创建Cast表达式
-    return new CastExpression(operandExpr, targetTypeName);
-}
 
-// 检查类型是否可以转换
-bool Calculator::canConvertTo(ObjectType* sourceType, ObjectType* targetType) {
-    if (!sourceType || !targetType) return false;
-    // 检查是否为子类型关系
-    if (sourceType->isSubtypeOf(targetType)) {
-        return true;
-    }
-    // 检查是否有对应的转换方法
-    string targetTypeName = targetType->getTypeName();
-    string methodName = "to" + targetTypeName;
+    // 使用callMethodOnValue调用value的转换方法
+    // 例如：调用 toInt(), toDouble(), toBool(), toString() 等方法
     // 首字母大写
+    string methodName = "to" + targetTypeName;
     if (!methodName.empty() && methodName.length() > 2) {
         methodName[2] = toupper(methodName[2]);
     }
-    if (sourceType->hasMethod(methodName)) {
-        return true;
-    }
-    return false;
+    return interpreter_->callMethodOnInstance(sourceValue, methodName, {});
 }
 
 // 确定兼容类型（选择优先级更高的类型）
@@ -498,49 +446,50 @@ bool Calculator::isBasicType(const string& typeName) {
     return basicTypes.find(typeName) != basicTypes.end();
 }
 
-// 执行用户自定义类型的二元运算（使用类型系统方法）
+// 私有辅助方法：使用Interpreter的通用方法调用机制
+Value* Calculator::callMethodWithReference(ObjectType* targetType, Value* targetInstance, 
+                                         const string& methodName, const vector<Value*>& args) {
+    if (!targetType || !targetInstance) return nullptr;
+    
+    // 使用Interpreter的通用方法调用机制
+    return interpreter_->callMethodOnInstance(targetInstance, methodName, args);
+}
+
+// 执行用户自定义类型的二元运算（使用MethodReference优化）
 Value* Calculator::performUserTypeBinaryOperation(Value* left, Value* right, Operator* op) {
     if (!left || !right || !op) return nullptr;
+    
     // 获取两个操作数的类型
     ObjectType* leftType = left->getValueType();
     ObjectType* rightType = right->getValueType();
     if (!leftType || !rightType) return nullptr;
+    
     // 策略1：优先尝试左操作数类型的方法
-    if (leftType->hasMethod(op->getOperationName())) {
-        vector<Value*> args = {right};
-        Value* result = leftType->callMethod(left, op->getOperationName(), args);
-        if (result) return result;
-    }
+    Value* result = callMethodWithReference(leftType, left, op->getOperationName(), {right});
+    if (result) return result;
+    
     // 策略2：如果左操作数类型没有方法，尝试右操作数类型的方法
-    if (rightType->hasMethod(op->getOperationName())) {
-        vector<Value*> args = {left};
-        Value* result = rightType->callMethod(right, op->getOperationName(), args);
-        if (result) return result;
-    }
+    result = callMethodWithReference(rightType, right, op->getOperationName(), {left});
+    if (result) return result;
+    
     // 策略3：如果两个类型都没有方法，尝试查找专门的混合类型运算方法
     // 例如：MyClass + int 可能需要特殊的处理
     string mixedMethodName = op->getOperationName() + "With" + rightType->getTypeName();
-    if (leftType->hasMethod(mixedMethodName)) {
-        vector<Value*> args = {right};
-        Value* result = leftType->callMethod(left, mixedMethodName, args);
-        if (result) return result;
-    }
-    return nullptr;
+    result = callMethodWithReference(leftType, left, mixedMethodName, {right});
+    
+    return result;
 }
 
-// 执行用户自定义类型的一元运算（使用类型系统方法）
+// 执行用户自定义类型的一元运算（使用MethodReference优化）
 Value* Calculator::performUserTypeUnaryOperation(Value* operand, Operator* op) {
     if (!operand || !op) return nullptr;
+    
     // 获取操作数的类型
     ObjectType* operandType = operand->getValueType();
     if (!operandType) return nullptr;
-    // 检查是否有对应的单目运算方法
-    if (operandType->hasMethod(op->getOperationName())) {
-        // 调用类型系统注册的单目运算方法
-        vector<Value*> args = {};
-        return operandType->callMethod(operand, op->getOperationName(), args);
-    }
-    return nullptr;
+    
+    // 使用辅助方法调用一元运算方法
+    return callMethodWithReference(operandType, operand, op->getOperationName(), {});
 }
 
 // 宏定义：简化基础类型二元运算的代码

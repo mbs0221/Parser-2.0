@@ -3,8 +3,6 @@
 #include "interpreter/values/value.h"
 #include "interpreter/utils/logger.h"
 #include "interpreter/core/function_call.h"
-// #include "interpreter/values/method_value.h"
-// #include "interpreter/values/class_method_value.h"
 
 #include <iostream>
 
@@ -23,7 +21,7 @@ ScopeManager::~ScopeManager() {
     // 清理所有作用域
     for (Scope* scope : scopes) {
         if (scope) {
-            scope->cleanup();
+            
             delete scope;
         }
     }
@@ -42,15 +40,13 @@ void ScopeManager::exitScope() {
         scopes.pop_back();
         
         if (scope) {
-            scope->cleanup();
+            
             delete scope;
         }
         
         currentScope = scopes.back();
     }
 }
-
-// ==================== 私有辅助方法实现 ====================
 
 // ==================== 统一查询接口实现 ====================
 
@@ -133,13 +129,7 @@ Value* ScopeManager::lookupVariable(const string& name) {
     }
     
     // 如果变量不存在，检查是否有this指针，尝试访问实例成员
-    Value* thisPtr = getThisPointer();
-    if (thisPtr) {
-        ObjectType* objectType = thisPtr->getValueType();
-        if (objectType && objectType->hasMethodName(name)) {
-            return objectType->accessMember(thisPtr, name);
-        }
-    }
+    // 现在使用this变量绑定，不再需要getThisPointer
     
     return nullptr;
 }
@@ -168,15 +158,18 @@ Value* ScopeManager::lookupTypeMethod(const string& typeName, const string& meth
     }
     
     // 检查静态方法
-    if (type->hasStaticMethodName(methodName)) {
-        LOG_DEBUG("ScopeManager::lookupTypeMethod: found static method '" + methodName + "' in type '" + typeName + "'");
-        return new ClassMethodValue(type, methodName);
-    }
-    
-    // 检查实例方法
-    if (type->hasMethodName(methodName)) {
-        LOG_DEBUG("ScopeManager::lookupTypeMethod: found instance method '" + methodName + "' in type '" + typeName + "'");
-        return new MethodValue(type, nullptr, methodName);
+    if (type->supportsMethods()) {
+        IMethodSupport* methodSupport = dynamic_cast<IMethodSupport*>(type);
+        if (methodSupport && methodSupport->hasStaticMethod(methodName)) {
+            LOG_DEBUG("ScopeManager::lookupTypeMethod: found static method '" + methodName + "' in type '" + typeName + "'");
+            return new StaticMethodReference(type, methodName);
+        }
+        
+        // 检查实例方法
+        if (methodSupport && methodSupport->hasUserMethod(methodName)) {
+            LOG_DEBUG("ScopeManager::lookupTypeMethod: found instance method '" + methodName + "' in type '" + typeName + "'");
+            return new InstanceMethodReference(type, nullptr, methodName);
+        }
     }
     
     LOG_DEBUG("ScopeManager::lookupTypeMethod: method '" + methodName + "' not found in type '" + typeName + "'");
@@ -263,14 +256,15 @@ Value* ScopeManager::lookupFunction(const string& name) {
     
     // 3. 尝试在类型系统中查找同名类型（构造函数）
     ObjectType* type = TypeRegistry::getGlobalInstance()->getType(name);
-    if (type) {
-        if (type->hasStaticMethodName(name)) {
+    if (type && type->supportsMethods()) {
+        IMethodSupport* methodSupport = dynamic_cast<IMethodSupport*>(type);
+        if (methodSupport && methodSupport->hasStaticMethod(name)) {
             LOG_DEBUG("Found constructor: " + name);
-            return new ClassMethodValue(type, name);
+            return new StaticMethodReference(type, name);
         }
-        if (type->hasMethodName(name)) {
+        if (methodSupport && methodSupport->hasUserMethod(name)) {
             LOG_DEBUG("Found instance method: " + name);
-            return new MethodValue(type, nullptr, name);
+            return new InstanceMethodReference(type, nullptr, name);
         }
     }
     
@@ -279,23 +273,8 @@ Value* ScopeManager::lookupFunction(const string& name) {
 }
 
 Value* ScopeManager::lookupMethod(const string& name) {
-    // 查找当前类上下文中的方法
-    ClassType* currentClass = getCurrentClassContext();
-    if (currentClass) {
-        if (currentClass->hasMethodName(name)) {
-            return new MethodValue(currentClass, nullptr, name);
-        }
-    }
-    
-    // 查找this指针指向对象的方法
-    Value* thisPtr = getThisPointer();
-    if (thisPtr) {
-        ObjectType* objectType = thisPtr->getValueType();
-        if (objectType && objectType->hasMethodName(name)) {
-            return new MethodValue(objectType, thisPtr, name);
-        }
-    }
-    
+    // 现在使用this变量绑定，不再需要getCurrentClassContext和getThis
+    // 方法查找通过其他机制处理
     return nullptr;
 }
 
@@ -363,8 +342,16 @@ void ScopeManager::defineVariable(const string& name, Value* value) {
 }
 
 void ScopeManager::defineVariable(const string& name, ObjectType* type, Value* value) {
-    if (currentScope && currentScope->objectRegistry) {
-        currentScope->objectRegistry->defineVariable(name, value);
+    // 自动处理类成员和普通变量的注册
+    if (isInClassContext()) {
+        // 在类定义中，注册为类成员
+        registerAsClassMember(name, value);
+    } else {
+        // 不在类定义中，注册为普通变量
+        if (currentScope && currentScope->objectRegistry) {
+            currentScope->objectRegistry->defineVariable(name, value);
+            LOG_DEBUG("ScopeManager: variable '" + name + "' registered as regular variable");
+        }
     }
 }
 
@@ -373,9 +360,19 @@ void ScopeManager::defineVariable(const string& name, const string& type, Value*
     defineVariable(name, typeObj, value);
 }
 
-void ScopeManager::defineFunction(const string& name, Value* function) {
-    if (currentScope && currentScope->objectRegistry && function) {
-        currentScope->objectRegistry->defineCallable(name, function);
+void ScopeManager::defineFunction(const string& name, Function* function) {
+    if (!function) return;
+    
+    // 自动处理类方法和普通函数的注册
+    if (isInClassContext()) {
+        // 在类定义中，注册为类方法
+        registerAsClassMethod(name, function);
+    } else {
+        // 不在类定义中，注册为普通函数
+        if (currentScope && currentScope->objectRegistry) {
+            currentScope->objectRegistry->defineCallable(name, function);
+            LOG_DEBUG("ScopeManager: function '" + name + "' registered as regular function");
+        }
     }
 }
 
@@ -458,47 +455,11 @@ bool ScopeManager::hasType(const string& name) const {
 
 // ==================== 上下文管理实现 ====================
 
-void ScopeManager::setThisPointer(Value* thisPtr) {
-    if (currentScope) {
-        currentScope->thisPointer = thisPtr;
-        LOG_DEBUG("Set this pointer for current scope");
-    }
-}
 
-Value* ScopeManager::getThisPointer() const {
-    if (currentScope) {
-        return currentScope->thisPointer;
-    }
-    return nullptr;
-}
 
-void ScopeManager::clearThisPointer() {
-    if (currentScope) {
-        currentScope->thisPointer = nullptr;
-        LOG_DEBUG("Cleared this pointer for current scope");
-    }
-}
 
-void ScopeManager::setCurrentClassContext(ClassType* classType) {
-    if (currentScope) {
-        currentScope->currentClassContext = classType;
-        LOG_DEBUG("Set current class context for current scope");
-    }
-}
 
-ClassType* ScopeManager::getCurrentClassContext() const {
-    if (currentScope) {
-        return currentScope->currentClassContext;
-    }
-    return nullptr;
-}
 
-void ScopeManager::clearCurrentClassContext() {
-    if (currentScope) {
-        currentScope->currentClassContext = nullptr;
-        LOG_DEBUG("Cleared current class context for current scope");
-    }
-}
 
 // ==================== 作用域信息实现 ====================
 
@@ -545,4 +506,168 @@ string ScopeManager::LookupResult::toString() const {
     if (result.back() == ',') result.pop_back();
     result += "}";
     return result;
+}
+
+// ==================== 用户函数定义实现 ====================
+
+void ScopeManager::defineUserFunction(const string& name, UserFunction* userFunc) {
+    if (currentScope && currentScope->objectRegistry && userFunc) {
+        currentScope->objectRegistry->defineCallable(name, userFunc);
+    }
+}
+
+void ScopeManager::defineUserFunction(const string& name, const vector<string>& parameterTypes, UserFunction* userFunc) {
+    if (currentScope && currentScope->objectRegistry && userFunc) {
+        currentScope->objectRegistry->defineCallable(name, userFunc);
+    }
 } 
+
+// ==================== 自动上下文管理辅助方法实现 ====================
+
+bool ScopeManager::isInClassContext() const {
+    if (!currentScope) return false;
+    
+    // 检查当前作用域中是否有__class__变量
+    if (String* classNameValue = currentScope->getVariable<String>("__class__")) {
+        return true;
+    }
+    
+    // 检查当前作用域中是否有__struct__变量
+    if (String* structNameValue = currentScope->getVariable<String>("__struct__")) {
+        return true;
+    }
+    
+    return false;
+}
+
+VisibilityType ScopeManager::getCurrentVisibility() const {
+    if (!currentScope) return VIS_PUBLIC;
+    
+    // 获取当前可见性
+    if (String* visibilityValue = currentScope->getVariable<String>("__visibility__")) {
+        string visStr = visibilityValue->getValue();
+        if (visStr == "private") {
+            return VIS_PRIVATE;
+        } else if (visStr == "protected") {
+            return VIS_PROTECTED;
+        }
+    }
+    
+    return VIS_PUBLIC; // 默认可见性
+}
+
+void ScopeManager::registerAsClassMethod(const string& name, Function* function) {
+    if (!function) return;
+    
+    // 获取当前类名或结构体名
+    String* classNameValue = currentScope->getVariable<String>("__class__");
+    String* structNameValue = currentScope->getVariable<String>("__struct__");
+    
+    string typeName;
+    if (classNameValue) {
+        typeName = classNameValue->getValue();
+    } else if (structNameValue) {
+        typeName = structNameValue->getValue();
+    } else {
+        LOG_ERROR("ScopeManager: no __class__ or __struct__ variable found when registering class/struct method");
+        return;
+    }
+    
+    ObjectType* type = lookupType(typeName);
+    if (!type) {
+        LOG_ERROR("ScopeManager: failed to find type '" + typeName + "'");
+        return;
+    }
+    
+    ClassType* currentClass = dynamic_cast<ClassType*>(type);
+    if (!currentClass) {
+        LOG_ERROR("ScopeManager: type '" + typeName + "' is not a ClassType or StructType");
+        return;
+    }
+    
+    // 获取当前可见性
+    VisibilityType visibility = getCurrentVisibility();
+    
+    // 添加到类或结构体中
+    currentClass->addUserMethod(function, visibility);
+    
+    string typeType = classNameValue ? "class" : "struct";
+    LOG_DEBUG("ScopeManager: function '" + name + "' registered as " + typeType + " method in " + typeType + " '" + typeName + 
+             "' with visibility '" + (visibility == VIS_PUBLIC ? "public" : visibility == VIS_PRIVATE ? "private" : "protected") + "'");
+}
+
+void ScopeManager::registerAsClassMember(const string& name, Value* value) {
+    if (!value) return;
+    
+    // 获取当前类名或结构体名
+    String* classNameValue = currentScope->getVariable<String>("__class__");
+    String* structNameValue = currentScope->getVariable<String>("__struct__");
+    
+    string typeName;
+    if (classNameValue) {
+        typeName = classNameValue->getValue();
+    } else if (structNameValue) {
+        typeName = structNameValue->getValue();
+    } else {
+        LOG_ERROR("ScopeManager: no __class__ or __struct__ variable found when registering class/struct member");
+        return;
+    }
+    
+    ObjectType* type = lookupType(typeName);
+    if (!type) {
+        LOG_ERROR("ScopeManager: failed to find type '" + typeName + "'");
+        return;
+    }
+    
+    ClassType* currentClass = dynamic_cast<ClassType*>(type);
+    if (!currentClass) {
+        LOG_ERROR("ScopeManager: type '" + typeName + "' is not a ClassType or StructType");
+        return;
+    }
+    
+    // 获取当前可见性
+    VisibilityType visibility = getCurrentVisibility();
+    
+    // 添加到类或结构体中
+    currentClass->addMember(name, value->getValueType(), visibility);
+    
+    // 如果有初始值，设置初始值
+    currentClass->setMemberInitialValue(name, value);
+    
+    string typeType = classNameValue ? "class" : "struct";
+    LOG_DEBUG("ScopeManager: variable '" + name + "' registered as " + typeType + " member in " + typeType + " '" + typeName + 
+             "' with visibility '" + (visibility == VIS_PUBLIC ? "public" : visibility == VIS_PRIVATE ? "private" : "protected") + "'");
+}
+
+void ScopeManager::registerAsStructMember(const string& name, Value* value) {
+    if (!value) return;
+    
+    // 获取当前结构体名
+    String* structNameValue = currentScope->getVariable<String>("__struct__");
+    if (!structNameValue) {
+        LOG_ERROR("ScopeManager: no __struct__ variable found when registering struct member");
+        return;
+    }
+    
+    string structName = structNameValue->getValue();
+    ObjectType* type = lookupType(structName);
+    if (!type) {
+        LOG_ERROR("ScopeManager: failed to find struct type '" + structName + "'");
+        return;
+    }
+    
+    StructType* currentStruct = dynamic_cast<StructType*>(type);
+    if (!currentStruct) {
+        LOG_ERROR("ScopeManager: type '" + structName + "' is not a StructType");
+        return;
+    }
+    
+    // 结构体成员默认都是 public，不需要考虑 visibility
+    // 添加到结构体中（StructType会自动强制为公有）
+    currentStruct->addMember(name, value->getValueType(), VIS_PUBLIC);
+    
+    // 如果有初始值，设置初始值
+    currentStruct->setMemberInitialValue(name, value);
+    
+    LOG_DEBUG("ScopeManager: variable '" + name + "' registered as struct member in struct '" + structName + "' (public)");
+}

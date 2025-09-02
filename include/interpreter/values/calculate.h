@@ -115,10 +115,19 @@ protected:
     // 获取类型名称
     string getTypeName(Value* value);
 
-    // 检查类型转换可能性
-    bool canConvertTo(ObjectType* sourceType, ObjectType* targetType);
+
 
 private:
+    // 私有辅助方法：尝试将值转换为指定类型
+    Value* tryConvertValue(Value* sourceValue, const std::string& targetTypeName);
+    
+    // 私有辅助方法：使用MethodReference和InstanceMethodCall调用实例方法
+    Value* callMethodWithReference(ObjectType* targetType, Value* targetInstance, 
+                                 const std::string& methodName, const std::vector<Value*>& args);
+    
+    // 私有辅助方法：将值转换为指定类型
+    Value* convertValueToType(Value* value, const std::string& targetTypeName);
+    
     Interpreter* interpreter_; // 解释器依赖
 };
 

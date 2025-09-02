@@ -23,6 +23,7 @@
 #include "parser/expression.h"
 #include "parser/definition.h"
 #include "parser/inter.h"
+#include "parser/parser.h"
 
 using namespace std;
 
@@ -37,6 +38,9 @@ Interpreter::Interpreter() {
     // 初始化计算器实例
     calculator = new Calculator(this);
     
+    // 初始化解析器实例
+    parser = new Parser();
+    
     // 创建初始作用域
     scopeManager.enterScope();
     
@@ -46,50 +50,59 @@ Interpreter::Interpreter() {
     LOG_DEBUG("Interpreter initialized successfully");
 }
 
-// 解释器构造函数（可选择是否加载插件）
-Interpreter::Interpreter(bool loadPlugins) {
-    // 初始化类型系统 - 使用全局注册表实例
-    typeRegistry = TypeRegistry::getGlobalInstance();
+// 通用的实例方法调用辅助函数
+Value* Interpreter::callMethodOnInstance(Value* instance, const std::string& methodName, const std::vector<Value*>& args) {
+    if (!instance) return nullptr;
     
-    // 验证内置类型是否正确注册
-    if (typeRegistry) {
-        LOG_DEBUG("TypeRegistry initialized with " + to_string(typeRegistry->getTypeCount()) + " types");
-        
-        // 检查关键类型是否已注册
-        ObjectType* stringType = typeRegistry->getType("string");
-        ObjectType* intType = typeRegistry->getType("int");
-        ObjectType* boolType = typeRegistry->getType("bool");
-        
-        if (stringType) {
-            LOG_DEBUG("String type found: " + stringType->getTypeName());
-        } else {
-            LOG_DEBUG("WARNING: String type not found in registry!");
-        }
-        
-        if (intType) {
-            LOG_DEBUG("Int type found: " + intType->getTypeName());
-        } else {
-            LOG_DEBUG("WARNING: Int type not found in registry!");
-        }
-        
-        if (boolType) {
-            LOG_DEBUG("Bool type found: " + boolType->getTypeName());
-        } else {
-            LOG_DEBUG("WARNING: Bool type not found in registry!");
-        }
-    } else {
-        LOG_DEBUG("ERROR: TypeRegistry is null!");
-    }
+    ObjectType* instanceType = instance->getValueType();
+    if (!instanceType || !instanceType->supportsMethods()) return nullptr;
     
-    // 使用简化构造函数 - 只需要TypeRegistry
-    objectFactory = new ObjectFactory(typeRegistry);
+    // 1. 创建实例方法引用，自动查询匹配的方法
+    MethodReference* methodRef = new InstanceMethodReference(instanceType, instance, methodName);
+    if (!methodRef) return nullptr;
     
-    // 初始化计算器实例
-    calculator = new Calculator(this);
-    
-    // 创建初始作用域
+    // 2. 进入新作用域
     scopeManager.enterScope();
     
+    // 3. 通过实例方法调用执行方法
+    InstanceMethodCall methodCall(scopeManager.getCurrentScope(), instance, methodRef, args);
+
+    // 3. 执行方法
+    Value* result = methodCall.execute();
+    
+    // 退出作用域
+    scopeManager.exitScope();
+    
+    delete methodRef;
+    return result;
+}
+
+// 通用的静态类方法调用辅助函数
+Value* Interpreter::callMethodOnClass(ClassType* classType, const std::string& methodName, const std::vector<Value*>& args) {
+    if (!classType) return nullptr;
+    
+    if (!classType->supportsMethods()) return nullptr;
+    
+    // 1. 创建静态方法引用，自动查询匹配的静态方法
+    MethodReference* methodRef = new StaticMethodReference(classType, methodName);
+    if (!methodRef) return nullptr;
+    
+    // 2. 进入新作用域
+    scopeManager.enterScope();
+    StaticMethodCall methodCall(scopeManager.getCurrentScope(), classType, methodRef, args);
+
+    // 3. 执行方法
+    Value* result = methodCall.execute();
+    
+    // 退出作用域
+    scopeManager.exitScope();
+    
+    delete methodRef;
+    return result;
+}
+
+// 解释器构造函数（可选择是否加载插件）
+Interpreter::Interpreter(bool loadPlugins) : Interpreter() {
     if (loadPlugins) {
         // 自动加载插件目录中的插件
         loadDefaultPlugins();
@@ -110,6 +123,11 @@ Interpreter::~Interpreter() {
     if (calculator) {
         delete calculator;
         calculator = nullptr;
+    }
+    
+    if (parser) {
+        delete parser;
+        parser = nullptr;
     }
     
     // pluginManager是对象，会自动析构，不需要delete
@@ -149,4 +167,34 @@ std::string Interpreter::getValueTypeName(Value* value) {
     
     // 如果valueType为空，返回unknown（这种情况不应该发生）
     return "unknown";
+}
+
+// ==================== 解析和执行方法 ====================
+
+// 解析和执行代码文件
+Value* Interpreter::parseAndExecute(const std::string& filename) {
+    if (!parser) {
+        reportError("Parser not initialized");
+        return nullptr;
+    }
+    
+    try {
+        // 使用解析器解析文件
+        Program* program = parser->parse(filename);
+        if (!program) {
+            reportError("Failed to parse file: " + filename);
+            return nullptr;
+        }
+        
+        // 执行解析后的程序
+        visit(program);
+        
+        // 清理解析后的程序
+        delete program;
+        
+        return new String("File executed successfully");
+    } catch (const std::exception& e) {
+        reportError("Exception during parsing/execution: " + std::string(e.what()));
+        return nullptr;
+    }
 }

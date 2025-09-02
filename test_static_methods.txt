@@ -1,0 +1,2 @@
+let str = string.fromInt(42);
+println(str);

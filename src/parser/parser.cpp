@@ -425,16 +425,16 @@ Expression* Parser::parsePrimary() {
                 lex.matchOperator(); // 消费 ++
                 Expression* operand = parsePrimary();
                 operand = parsePostfix(operand);
-                // 创建前缀自增表达式，继承自UnaryExpression
-                return new IncrementDecrementExpression(operand, true, 1); // true表示前缀，1表示自增
+                // 创建前缀自增表达式，使用UnaryExpression
+                return new UnaryExpression(operand, Operator::Increment, true); // true表示前缀
             }
         case DECREMENT: // 前缀自减 --
             {
                 lex.matchOperator(); // 消费 --
                 Expression* operand = parsePrimary();
                 operand = parsePostfix(operand);
-                // 创建前缀自减表达式，继承自UnaryExpression
-                return new IncrementDecrementExpression(operand, true, -1); // true表示前缀，-1表示自减
+                // 创建前缀自减表达式，使用UnaryExpression
+                return new UnaryExpression(operand, Operator::Decrement, true); // true表示前缀
             }
         case ID: // 标识符
             {
@@ -488,10 +488,10 @@ Expression* Parser::parsePostfix(Expression* expr) {
                     cout << "[PARSER DEBUG] Member name: '" << memberName << "'" << endl;
                     
                     if (lex.token()->Tag == '(') {
-                        // 方法调用：先创建 AccessExpression，再创建 CallExpression
-                        // 这样 str.length() 会被解析为 CallExpression(AccessExpression(str, "length"), [])
-                        Expression* methodRef = new AccessExpression(expr, new ConstantExpression<string>(memberName));
-                        cout << "[PARSER DEBUG] Created AccessExpression for method: '" << memberName << "'" << endl;
+                        // 方法调用：先创建 MethodReferenceExpression，再创建 CallExpression
+                        // 这样 str.length() 会被解析为 CallExpression(MethodReferenceExpression(str, "length"), [])
+                        Expression* methodRef = new MethodReferenceExpression(expr, new ConstantExpression<string>(memberName));
+                        cout << "[PARSER DEBUG] Created MethodReferenceExpression for method: '" << memberName << "'" << endl;
                         
                         lex.matchToken('(');
                         vector<Expression*> arguments;
@@ -509,8 +509,8 @@ Expression* Parser::parsePostfix(Expression* expr) {
                         cout << "[PARSER DEBUG] Created CallExpression for method call: '" << memberName << "()'" << endl;
                     } else {
                         // 成员访问
-                        cout << "[PARSER DEBUG] Creating AccessExpression for member: '" << memberName << "'" << endl;
-                        expr = new AccessExpression(expr, new ConstantExpression<string>(memberName));
+                        cout << "[PARSER DEBUG] Creating MemberAccessExpression for member: '" << memberName << "'" << endl;
+                        expr = new MemberAccessExpression(expr, new ConstantExpression<string>(memberName));
                     }
                 }
                 break;
@@ -521,7 +521,7 @@ Expression* Parser::parsePostfix(Expression* expr) {
                     lex.matchToken('[');
                     Expression* index = parseExpressionWithPrecedence(0);
                     lex.matchToken(']');
-                    expr = new AccessExpression(expr, index);
+                    expr = new IndexAccessExpression(expr, index);
                 }
                 break;
                 
@@ -535,16 +535,16 @@ Expression* Parser::parsePostfix(Expression* expr) {
             case INCREMENT: // 后缀自增 ++
                 {
                     lex.matchOperator(); // 消费 ++
-                    // 创建后缀自增表达式，继承自UnaryExpression
-                    expr = new IncrementDecrementExpression(expr, false, 1); // false表示后缀，1表示自增
+                    // 创建后缀自增表达式，使用UnaryExpression
+                    expr = new UnaryExpression(expr, Operator::Increment, false); // false表示后缀
                 }
                 break;
                 
             case DECREMENT: // 后缀自减 --
                 {
                     lex.matchOperator(); // 消费 --
-                    // 创建后缀自减表达式，继承自UnaryExpression
-                    expr = new IncrementDecrementExpression(expr, false, -1); // false表示后缀，-1表示自减
+                    // 创建后缀自减表达式，使用UnaryExpression
+                    expr = new UnaryExpression(expr, Operator::Decrement, false); // false表示后缀
                 }
                 break;
                 
@@ -789,18 +789,31 @@ StructDefinition* Parser::parseStruct() {
     string structName = lex.matchIdentifier();
 	lex.match('{');
     
-    vector<ClassMember*> members;
+    vector<Statement*> statements;
     
     while (lex.token()->Tag != '}') {
-        // 结构体成员默认为public
-        ClassMember* member = parseClassMember("public");
-        members.push_back(member);
+        if (lex.token()->Tag == PUBLIC || lex.token()->Tag == PRIVATE || lex.token()->Tag == PROTECTED) {
+            // 创建可见性声明语句，添加到statements中
+            Visibility* visibilityToken = static_cast<Visibility*>(lex.token());
+            string visibility = visibilityToken->toString();
+            lex.move(); // 消费访问修饰符
+            
+            // 创建VisibilityStatement并添加到statements中
+            VisibilityStatement* visStmt = new VisibilityStatement(visibility);
+            statements.push_back(visStmt);
+            
+            // 继续解析后续的成员，使用新的访问修饰符
+            continue;
+        } else {
+            // 结构体成员默认为public，当作普通变量定义处理
+            VariableDefinition* varDef = parseVariableDefinition();
+            statements.push_back(varDef);
+        }
     }
     
 	lex.match('}');
     
-    // 现在StructDefinition继承ClassDefinition，所以需要传递空的基类和方法列表
-    return new StructDefinition(structName, members);
+    return new StructDefinition(structName, statements);
 }
 
 // 解析类定义
@@ -820,75 +833,42 @@ ClassDefinition* Parser::parseClass() {
     
     lex.match('{');
     
-    vector<ClassMember*> members;
-    vector<ClassMethod*> methods;
-    
-    // 当前访问修饰符，默认为public
-    string currentVisibility = "public";
+    vector<Statement*> statements;
     
     while (lex.token()->Tag != '}') {
         if (lex.token()->Tag == PUBLIC || lex.token()->Tag == PRIVATE || lex.token()->Tag == PROTECTED) {
-            // 更新当前访问修饰符
+            // 创建可见性声明语句，添加到statements中
             Visibility* visibilityToken = static_cast<Visibility*>(lex.token());
-            currentVisibility = visibilityToken->toString();
+            string visibility = visibilityToken->toString();
             lex.move(); // 消费访问修饰符
+            
+            // 创建VisibilityStatement并添加到statements中
+            VisibilityStatement* visStmt = new VisibilityStatement(visibility);
+            statements.push_back(visStmt);
             
             // 继续解析后续的成员，使用新的访问修饰符
             continue;
         } else if (lex.token()->Tag == FUNCTION) {
-            // 解析方法，使用当前访问修饰符
-            ClassMethod* method = parseClassMethod(currentVisibility);
-            methods.push_back(method);
+            // 解析方法，当作普通函数定义处理
+            // 在类定义中，函数会自动注册为类方法
+            FunctionDefinition* funcDef = parseFunction();
+            statements.push_back(funcDef);
         } else {
-            // 解析成员变量，使用当前访问修饰符
-            ClassMember* member = parseClassMember(currentVisibility);
-            members.push_back(member);
+            // 解析成员变量，当作普通变量定义处理
+            // 在类定义中，变量会自动注册为类成员
+            VariableDefinition* varDef = parseVariableDefinition();
+            statements.push_back(varDef);
         }
     }
     
     lex.match('}');
     
-    return new ClassDefinition(className, baseClass, members, methods);
+    return new ClassDefinition(className, baseClass, statements);
 }
 
-// 解析类成员变量
-ClassMember* Parser::parseClassMember(const string& visibility) {
-    // 解析类型和名称
-    Type* memberType = lex.matchType();
-    string memberName = lex.matchIdentifier();
-    Expression* defaultValue = nullptr;
-    
-    if (lex.token()->Tag == '=') {
-        lex.match('=');
-        defaultValue = parseExpression();
-    }
-    
-    lex.match(';');
-    
-    return new ClassMember(memberName, memberType->str(), visibility, defaultValue);
-}
 
-// 解析类方法
-ClassMethod* Parser::parseClassMethod(const string& visibility) {
-    lex.match(FUNCTION);
-    
-    // 解析方法名
-    string methodName = lex.matchIdentifier();
-    
-    // 解析参数列表
-    lex.match('('); 
-    vector<pair<string, Type*>> parameters = parseParameterList();
-    lex.match(')');
-    
-    // 创建函数原型
-    FunctionPrototype* prototype = new FunctionPrototype(methodName, parameters, nullptr);
-    
-    // 解析方法体
-    BlockStatement* body = parseBlock();
-    
-    // 返回带有可见性的ClassMethod
-    return new ClassMethod(prototype, body, visibility, false);
-}
+
+
 
 // 解析参数列表
 vector<pair<string, Type*>> Parser::parseParameterList() {

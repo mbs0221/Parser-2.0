@@ -1,0 +1,61 @@
+// 测试Interface的函数签名支持
+
+// 定义一个接口
+interface Drawable {
+    // 方法原型 - 支持重载
+    void draw();
+    void draw(int x, int y);
+    void draw(int x, int y, int width, int height);
+    void draw(string color);
+    
+    // 获取信息的方法
+    int getWidth();
+    int getHeight();
+    string getColor();
+}
+
+// 实现接口的类
+class Rectangle : Drawable {
+    int width;
+    int height;
+    string color;
+    
+    // 实现接口方法
+    void draw() {
+        // 默认绘制
+    }
+    
+    void draw(int x, int y) {
+        // 在指定位置绘制
+    }
+    
+    void draw(int x, int y, int w, int h) {
+        // 在指定位置和尺寸绘制
+    }
+    
+    void draw(string c) {
+        // 用指定颜色绘制
+        color = c;
+    }
+    
+    int getWidth() { return width; }
+    int getHeight() { return height; }
+    string getColor() { return color; }
+}
+
+// 测试接口方法调用
+Rectangle rect = Rectangle();
+rect.width = 100;
+rect.height = 50;
+
+// 测试重载方法调用
+rect.draw();                    // 调用无参数版本
+rect.draw(10, 20);             // 调用两参数版本
+rect.draw(10, 20, 100, 50);    // 调用四参数版本
+rect.draw("red");               // 调用字符串参数版本
+
+// 测试接口方法调用
+Drawable drawable = rect;
+int w = drawable.getWidth();    // 应该返回 100
+int h = drawable.getHeight();   // 应该返回 50
+string c = drawable.getColor(); // 应该返回 "red"

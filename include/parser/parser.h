@@ -66,8 +66,6 @@ protected:
     // 结构体和类解析
     StructDefinition* parseStruct();
     ClassDefinition* parseClass();
-    ClassMethod* parseClassMethod(const string& visibility);
-    ClassMember* parseClassMember(const string& visibility);
 
 private:
     lexer::Lexer lex;

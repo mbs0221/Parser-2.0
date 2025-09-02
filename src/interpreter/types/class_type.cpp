@@ -13,14 +13,9 @@ ClassType::ClassType(const string& name, bool isPrimitive, bool isMutable, bool 
     registerMemberAccess();
 }
 
-void ClassType::addMember(const string& name, ObjectType* type, VisibilityType visibility, Value* initialValue) {
+void ClassType::addMember(const string& name, ObjectType* type, VisibilityType visibility) {
     memberTypes[name] = type;
     memberVisibility[name] = visibility;
-    
-    // 如果提供了初始值，存储它
-    if (initialValue) {
-        setMemberInitialValue(name, initialValue);
-    }
     
     // 注册成员访问方法
     registerMemberAccessMethod(name, type);
@@ -32,37 +27,87 @@ void ClassType::addStaticMember(const string& name, ObjectType* type, Value* val
     staticMemberVisibility[name] = visibility;
 }
 
-void ClassType::addUserMethod(const string& name, UserFunction* userFunc, VisibilityType visibility) {
-    userFunctionMethods[name] = userFunc;
-    memberVisibility[name] = visibility;
+void ClassType::addUserMethod(Function* func, VisibilityType visibility) {
+    if (!func) return;
     
-    // 注册用户方法
-    registerMethod(name, [userFunc](Value* instance, vector<Value*>& args) -> Value* {
-        return userFunc->call(args);
-    });
-}
-
-void ClassType::addUserMethod(const FunctionPrototype* prototype, UserFunction* userFunc) {
-    if (prototype && userFunc) {
-        addUserMethod(prototype->name, userFunc, VIS_PUBLIC);
+    // 从Function获取函数签名
+    FunctionSignature signature = func->getSignature();
+    
+    // 直接存储到函数签名映射，支持所有Function类型
+    userFunctionMethods[signature] = func;
+    
+    // 更新名称到签名的映射
+    string methodName = signature.getName();
+    methodNameToSignatures[methodName].push_back(signature);
+    
+    // 设置可见性
+    if (memberVisibility.find(methodName) == memberVisibility.end()) {
+        memberVisibility[methodName] = visibility;
     }
 }
 
-void ClassType::addStaticMethod(const string& name, UserFunction* userFunc, VisibilityType visibility) {
-    staticMethods[name] = userFunc;
-    staticMemberVisibility[name] = visibility;
+void ClassType::addStaticMethod(Function* func, VisibilityType visibility) {
+    if (!func) return;
     
-    // 注册静态方法
-    registerMethod(name, [userFunc](Value* instance, vector<Value*>& args) -> Value* {
-        return userFunc->call(args);
-    });
-}
-
-void ClassType::addStaticMethod(const FunctionPrototype* prototype, UserFunction* userFunc) {
-    if (prototype && userFunc) {
-        addStaticMethod(prototype->name, userFunc, VIS_PUBLIC);
+    // 从Function获取函数签名
+    FunctionSignature signature = func->getSignature();
+    // 直接存储到函数签名映射
+    staticMethods[signature] = dynamic_cast<UserFunction*>(func);
+    
+    // 更新名称到签名的映射
+    string methodName = signature.getName();
+    staticMethodNameToSignatures[methodName].push_back(signature);
+    
+    // 设置可见性
+    if (staticMemberVisibility.find(methodName) == staticMemberVisibility.end()) {
+        staticMemberVisibility[methodName] = visibility;
     }
 }
+
+// ==================== Trait 支持实现 ====================
+// 暂时注释掉，专注于基础功能
+/*
+void ClassType::addTrait(ITrait* trait) {
+    if (trait && !hasTrait(trait->getName())) {
+        traits.push_back(trait);
+    }
+}
+
+void ClassType::removeTrait(const string& traitName) {
+    traits.erase(
+        remove_if(traits.begin(), traits.end(),
+            [&traitName](ITrait* trait) { return trait->getName() == traitName; }),
+        traits.end()
+    );
+}
+
+bool ClassType::hasTrait(const string& traitName) const {
+    return any_of(traits.begin(), traits.end(),
+        [&traitName](ITrait* trait) { return trait->getName() == traitName; });
+}
+
+ITrait* ClassType::getTrait(const string& traitName) const {
+    auto it = find_if(traits.begin(), traits.end(),
+        [&traitName](ITrait* trait) { return trait->getName() == traitName; });
+    return (it != traits.end()) ? *it : nullptr;
+}
+
+const vector<ITrait*>& ClassType::getTraits() const {
+    return traits;
+}
+
+bool ClassType::supportsStringOperations() const {
+    return hasTrait("StringOperations");
+}
+
+bool ClassType::supportsArrayOperations() const {
+    return hasTrait("ArrayOperations");
+}
+
+bool ClassType::supportsDictOperations() const {
+    return hasTrait("DictOperations");
+}
+*/
 
 void ClassType::setMemberInitialValue(const string& memberName, Value* initialValue) {
     // 如果已有初始值，先删除旧的
@@ -103,12 +148,7 @@ void ClassType::setAllMemberInitialValues(const map<string, Value*>& initialValu
 map<string, function<Value*(Value*, vector<Value*>&)>> ClassType::getMethods() const {
     map<string, function<Value*(Value*, vector<Value*>&)>> allMethods;
     
-    // 添加从ObjectType基类继承的方法
-    const map<FunctionSignature, function<Value*(Value*, vector<Value*>&)>>& baseMethods = ObjectType::getMethods();
-    for (const auto& pair : baseMethods) {
-        allMethods[pair.first.getName()] = pair.second;
-    }
-    
+    // 返回空的方法映射，因为ClassType使用新的函数签名系统
     return allMethods;
 }
 
@@ -161,7 +201,9 @@ Value* ClassType::createDefaultValue() {
 }
 
 void ClassType::registerMemberAccessMethod(const string& memberName, ObjectType* memberType) {
-    // 注册成员访问方法
+    // 注册成员访问方法 - 暂时注释掉，因为registerMethod方法不存在
+    // TODO: 实现成员访问方法注册
+    /*
     registerMethod("get_" + memberName, [this, memberName](Value* instance, vector<Value*>& args) -> Value* {
         if (instance && instance->getValueType() == this) {
             // 这里应该调用实例的成员访问方法
@@ -180,11 +222,18 @@ void ClassType::registerMemberAccessMethod(const string& memberName, ObjectType*
         }
         return nullptr;
     });
+    */
 }
 
 // 获取静态方法映射
-const map<string, UserFunction*>& ClassType::getStaticMethods() const {
+const map<FunctionSignature, Function*>& ClassType::getStaticMethods() const {
     return staticMethods;
+}
+
+// 重写hasStaticMethodName方法，检查ClassType特有的静态方法存储
+bool ClassType::hasStaticMethodName(const string& methodName) const {
+    // 使用新的函数签名系统检查
+    return hasStaticMethod(methodName);
 }
 
 // 获取静态成员类型映射
@@ -224,7 +273,7 @@ map<string, ObjectType*> ClassType::getMemberTypes() const {
     return memberTypes;
 }
 
-const map<string, UserFunction*>& ClassType::getUserFunctionMethods() const {
+const map<FunctionSignature, Function*>& ClassType::getUserFunctionMethods() const {
     return userFunctionMethods;
 }
 
@@ -239,6 +288,18 @@ Value* ClassType::getStaticMemberValue(const string& name) const {
 
 void ClassType::setStaticMemberValue(const string& name, Value* value) {
     staticMemberValues[name] = value;
+}
+
+bool ClassType::hasStaticMember(const string& name) const {
+    return staticMemberValues.find(name) != staticMemberValues.end();
+}
+
+Value* ClassType::accessStaticMember(const string& name) const {
+    auto it = staticMemberValues.find(name);
+    if (it != staticMemberValues.end()) {
+        return it->second;
+    }
+    return nullptr;
 }
 
 // 成员初始值查询方法
@@ -256,4 +317,118 @@ bool ClassType::hasMemberInitialValue(const string& memberName) const {
 
 const map<string, Value*>& ClassType::getAllMemberInitialValues() const {
     return memberInitialValues;
+}
+
+// ==================== 函数签名支持的新方法实现 ====================
+// 这些方法已经在上面的 addUserMethod(Function*) 和 addStaticMethod(Function*) 中实现
+
+Function* ClassType::findUserMethod(const FunctionSignature& signature) const {
+    auto it = userFunctionMethods.find(signature);
+    if (it != userFunctionMethods.end()) {
+        return it->second;
+    } else {
+        return nullptr;
+    }
+}
+
+Function* ClassType::findStaticMethod(const FunctionSignature& signature) const {
+    auto it = staticMethods.find(signature);
+    return (it != staticMethods.end()) ? it->second : nullptr;
+}
+
+Function* ClassType::findUserMethod(const string& name, const vector<Value*>& args) const {
+    auto it = methodNameToSignatures.find(name);
+    if (it == methodNameToSignatures.end()) {
+        return nullptr;
+    }
+    
+    // 使用匹配分数系统找到最佳匹配
+    Function* bestMatch = nullptr;
+    int bestScore = -1;
+    
+    for (const FunctionSignature& signature : it->second) {
+        int score = signature.calculateMatchScore(args);
+        if (score > bestScore) {
+            bestScore = score;
+            bestMatch = findUserMethod(signature);
+        }
+    }
+    
+    return bestMatch;
+}
+
+Function* ClassType::findStaticMethod(const string& name, const vector<Value*>& args) const {
+    auto it = staticMethodNameToSignatures.find(name);
+    if (it == staticMethodNameToSignatures.end()) {
+        return nullptr;
+    }
+    
+    // 使用匹配分数系统找到最佳匹配
+    Function* bestMatch = nullptr;
+    int bestScore = -1;
+    
+    for (const FunctionSignature& signature : it->second) {
+        int score = signature.calculateMatchScore(args);
+        if (score > bestScore) {
+            bestScore = score;
+            bestMatch = findStaticMethod(signature);
+        }
+    }
+    
+    return bestMatch;
+}
+
+vector<FunctionSignature> ClassType::getUserMethodOverloads(const string& name) const {
+    auto it = methodNameToSignatures.find(name);
+    return (it != methodNameToSignatures.end()) ? it->second : vector<FunctionSignature>();
+}
+
+vector<FunctionSignature> ClassType::getStaticMethodOverloads(const string& name) const {
+    auto it = staticMethodNameToSignatures.find(name);
+    return (it != staticMethodNameToSignatures.end()) ? it->second : vector<FunctionSignature>();
+}
+
+bool ClassType::hasUserMethod(const string& name) const {
+    return methodNameToSignatures.find(name) != methodNameToSignatures.end();
+}
+
+bool ClassType::hasStaticMethod(const string& name) const {
+    return staticMethodNameToSignatures.find(name) != staticMethodNameToSignatures.end();
+}
+
+map<string, Function*> ClassType::getUserFunctionMethodsByName() const {
+    map<string, Function*> result;
+    for (const auto& pair : userFunctionMethods) {
+        result[pair.first.getName()] = pair.second;
+    }
+    return result;
+}
+
+map<string, Function*> ClassType::getStaticMethodsByName() const {
+    map<string, Function*> result;
+    for (const auto& pair : staticMethods) {
+        result[pair.first.getName()] = pair.second;
+    }
+    return result;
+}
+
+// ==================== 缺失方法的实现 ====================
+
+// 重写 ObjectType 的 registerMemberAccess 方法
+void ClassType::registerMemberAccess() {
+    // 为所有成员注册访问方法
+    for (const auto& member : memberTypes) {
+        registerMemberAccessMethod(member.first, member.second);
+    }
+}
+
+void ClassType::registerSubscriptAccess() {
+    // 注册下标访问方法（如果需要的话）
+    // 这个方法可以根据需要实现
+}
+
+Value* ClassType::createValueWithArgs(const vector<Value*>& args) {
+    // 创建带参数的值的默认实现
+    // 子类可以重写这个方法
+    return createDefaultValue();
 }

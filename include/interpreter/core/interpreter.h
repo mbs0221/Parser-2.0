@@ -25,6 +25,9 @@
 
 using namespace std;
 
+// 前向声明
+class Parser;
+
 // 解释器类 - 负责AST的求值和作用域管理
 class Interpreter : public ASTVisitor<Value*> {
 public:
@@ -42,9 +45,22 @@ public:
     
     // 计算器实例
     Calculator* calculator;
+    
+    // 解析器实例
+    Parser* parser;
 
     // 调用栈（用于调试和错误报告）
     std::vector<std::string> callStack;
+
+public:
+    // 通用的实例方法调用辅助函数
+    Value* callMethodOnInstance(Value* instance, const std::string& methodName, const std::vector<Value*>& args);
+    
+    // 通用的静态类方法调用辅助函数
+    Value* callMethodOnClass(ClassType* classType, const std::string& methodName, const std::vector<Value*>& args);
+    
+    // 解析和执行代码文件
+    Value* parseAndExecute(const std::string& filename);
 
 public:
     // 构造函数
@@ -67,6 +83,12 @@ public:
     // CastExpression的访问方法
     Value* visit(CastExpression* expr) override;
     Value* visit(AccessExpression* expr) override;
+    
+    // AccessExpression 子类的具体访问方法
+    Value* visit(MemberAccessExpression* expr);
+    Value* visit(MethodReferenceExpression* expr);
+    Value* visit(IndexAccessExpression* expr);
+    
     Value* visit(CallExpression* expr) override;
     Value* visit(TernaryExpression* expr) override;
     
@@ -89,9 +111,8 @@ public:
     void visit(FunctionPrototype* stmt) override;
     void visit(FunctionDefinition* stmt) override;
     void visit(StructDefinition* stmt) override;
-    void visit(ClassMember* member) override;
-    void visit(ClassMethod* method) override;
     void visit(ClassDefinition* stmt) override;
+    void visit(VisibilityStatement* stmt) override;
     
 
     // ASTVisitor接口实现 - 程序访问方法
@@ -119,8 +140,6 @@ public:
     
     // 辅助方法声明
     void processMemberPrototypes(ObjectType* type, const std::vector<ClassMember*>& members);
-    void processStructDefinition(StructDefinition* structDef);
-    void processStructDefinition(ClassDefinition* classDef);
     
     // 自增自减操作处理
     Value* handleIncrementDecrement(UnaryExpression* unary);

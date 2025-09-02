@@ -262,39 +262,33 @@ struct FunctionDefinition : public Definition {
     void accept(StatementVisitor* visitor) override;
 };
 
-// ==================== 结构体和类定义 ====================
-// 类方法定义
-struct ClassMethod : public FunctionDefinition {
+// ==================== 可见性语句 ====================
+// 可见性声明语句，用于在类定义中设置当前可见性
+struct VisibilityStatement : public Statement {
     string visibility;  // "public", "private", "protected"
-    bool isStatic;
     
-    ClassMethod(FunctionPrototype* proto, BlockStatement* funcBody, 
-               const string& methodVisibility = "public", bool staticMethod = false)
-        : FunctionDefinition(proto, funcBody), visibility(methodVisibility), isStatic(staticMethod) {}
+    VisibilityStatement(const string& vis) : visibility(vis) {}
     
-    string getDefinitionType() const override {
-        return "ClassMethod";
+    string getStatementType() const {
+        return "VisibilityStatement";
     }
     
     void accept(StatementVisitor* visitor) override;
 };
 
-// 类定义 - 基类，包含成员和方法
+// ==================== 结构体和类定义 ====================
+
+// 类定义 - 基类，本质上是一组statement
 struct ClassDefinition : public Definition {
     string baseClass;
-    vector<ClassMember*> members;  // 使用ClassMember
-    vector<ClassMethod*> methods;
+    vector<Statement*> statements;  // 类体中的所有语句（包括成员、方法等）
     
-    ClassDefinition(const string& className, const string& base, 
-                   const vector<ClassMember*>& classMembers, const vector<ClassMethod*>& classMethods)
-        : Definition(className), baseClass(base), members(classMembers), methods(classMethods) {}
+    ClassDefinition(const string& className, const string& base, const vector<Statement*>& stmts)
+        : Definition(className), baseClass(base), statements(stmts) {}
     
     virtual ~ClassDefinition() {
-        for (auto* member : members) {
-            delete member;
-        }
-        for (auto* method : methods) {
-            delete method;
+        for (auto* stmt : statements) {
+            delete stmt;
         }
     }
     
@@ -307,8 +301,8 @@ struct ClassDefinition : public Definition {
 
 // 结构体定义 - 继承自类定义，所有成员都是public
 struct StructDefinition : public ClassDefinition {
-    StructDefinition(const string& structName, const vector<ClassMember*>& structMembers)
-        : ClassDefinition(structName, "", structMembers, {}) {}  // 没有基类，没有方法
+    StructDefinition(const string& structName, const vector<Statement*>& stmts)
+        : ClassDefinition(structName, "", stmts) {}  // 没有基类，只有语句
     
     string getDefinitionType() const override {
         return "StructDefinition";

@@ -109,8 +109,4 @@ ReturnType CallExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
     return visitor->visit(this);
 }
 
-// ==================== IncrementDecrementExpression实现 ====================
-template<typename ReturnType>
-ReturnType IncrementDecrementExpression::accept(ExpressionVisitor<ReturnType>* visitor) {
-    return visitor->visit(this);
-}
+// IncDecExpression已合并到UnaryExpression中，不再需要单独的accept方法

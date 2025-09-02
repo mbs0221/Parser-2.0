@@ -1,5 +1,6 @@
 #include "interpreter/values/value.h"
 #include "interpreter/types/types.h"
+#include "interpreter/scope/scope.h"
 #include "interpreter/utils/logger.h"
 #include <algorithm>
 #include <stdexcept>
@@ -388,70 +389,23 @@ void ObjectFactory::initializeMethods(Dict* instance, ClassType* type) {
 
 // ==================== 函数创建方法实现 ====================
 
-Value* ObjectFactory::createBuiltinFunction(const string& name, 
-                                          function<Value*(vector<Value*>&)> func,
-                                          const vector<string>& params) {
-    // 转换函数签名以匹配BuiltinFunction构造函数
-    auto convertedFunc = [func](vector<Value*> args) -> Value* {
-        return func(args);
-    };
-    return new BuiltinFunction(name, convertedFunc, params);
-}
-
-Value* ObjectFactory::createUserFunction(const string& name,
-                                       void* funcDef,
-                                       const vector<string>& params) {
-    // 将void*转换为FunctionDefinition*
-    FunctionDefinition* definition = static_cast<FunctionDefinition*>(funcDef);
-    
-    // 创建用户函数（不自动设置执行器）
-    UserFunction* userFunc = new UserFunction(name, params, definition);
-    
-    // 执行器由调用者（解释器）负责设置
-    // 这样可以减少依赖注入，让解释器完全控制函数执行器的设置
-    
-    return userFunc;
-}
-
-Value* ObjectFactory::createUserFunction(const string& name,
-                                       const vector<string>& params,
-                                       void* funcDef) {
-    return createUserFunction(name, funcDef, params);
-}
 
 
 
-Value* ObjectFactory::createCallableFromDefinition(const string& name,
-                                                 void* funcDef,
-                                                 const vector<string>& params) {
-    return createUserFunction(name, funcDef, params);
-}
+
+
+
+
+
+
 
 // ==================== 静态函数创建方法 ====================
 
-Value* ObjectFactory::createBuiltinFunctionStatic(const string& name,
-                                                function<Value*(vector<Value*>&)> func,
-                                                const vector<string>& params) {
-    // 转换函数签名以匹配BuiltinFunction构造函数
-    auto convertedFunc = [func](vector<Value*> args) -> Value* {
-        return func(args);
-    };
-    return new BuiltinFunction(name, convertedFunc, params);
-}
 
-Value* ObjectFactory::createUserFunctionStatic(const string& name,
-                                             void* funcDef,
-                                             const vector<string>& params) {
-    // 静态方法无法访问实例成员，所以需要创建一个临时的ObjectFactory
-    ObjectFactory tempFactory;
-    return tempFactory.createUserFunction(name, funcDef, params);
-}
 
-Value* ObjectFactory::createCallableFromDefinitionStatic(const string& name,
-                                                       void* funcDef,
-                                                       const vector<string>& params) {
-    return createUserFunctionStatic(name, funcDef, params);
-}
+
+
+
 
 // ==================== 基本类型创建方法实现 ====================
 

@@ -18,10 +18,10 @@ class Function;
 class FunctionCall {
 protected:
     Scope* currentScope;
-    std::vector<Value*>& args;
+    const std::vector<Value*>& args;
     
 public:
-    FunctionCall(Scope* scope, std::vector<Value*>& arguments);
+    FunctionCall(Scope* scope, const std::vector<Value*>& arguments);
     virtual ~FunctionCall() = default;
     
     // 纯虚函数：执行函数调用
@@ -44,7 +44,7 @@ protected:
     Function* function;
     
 public:
-    BasicFunctionCall(Scope* scope, Function* func, std::vector<Value*>& arguments);
+    BasicFunctionCall(Scope* scope, Function* func, const std::vector<Value*>& arguments);
     
     // 实现基类的execute方法
     Value* execute() override;
@@ -63,7 +63,7 @@ private:
     ClassType* classType;
     
 public:
-    StaticMethodCall(Scope* scope, ClassType* cls, Function* method, std::vector<Value*>& arguments);
+    StaticMethodCall(Scope* scope, ClassType* cls, Function* method, const std::vector<Value*>& arguments);
     
     // 重写execute方法，先注入静态成员，再调用基类方法
     Value* execute() override;
@@ -77,19 +77,18 @@ private:
 class InstanceMethodCall : public BasicFunctionCall {
 private:
     Value* instance;
-    std::string methodName;
+    MethodReference* methodRef;
     
 public:
-    InstanceMethodCall(Scope* scope, Value* inst, const std::string& method, std::vector<Value*>& arguments);
+    // 构造函数：接受MethodReference对象
+    InstanceMethodCall(Scope* scope, Value* inst, MethodReference* methodRef, const std::vector<Value*>& arguments);
     
-    // 重写execute方法，先设置this指针，再调用基类方法
+    // 重写execute方法，先绑定实例到作用域，再委托给方法引用执行
     Value* execute() override;
     
 private:
-    // 设置this指针到作用域
-    void setupThisPointer();
-    // 清理this指针
-    void cleanupThisPointer();
+    // 绑定实例到作用域变量
+    void bindInstanceToScope();
 };
 
 // ==================== 函数执行器接口 ====================
@@ -99,11 +98,10 @@ public:
     virtual ~FunctionExecutor() = default;
     
     // 执行用户函数体
-    // args: 函数参数
     // functionBody: 函数体语句
     // 返回: 函数执行结果
-    virtual class Value* executeFunction(const std::vector<class Value*>& args, 
-                                       class Statement* functionBody) = 0;
+    // 注意：参数绑定由FunctionCall机制处理，不需要args参数
+    virtual class Value* executeFunction(class Statement* functionBody) = 0;
     
     // 获取执行器名称（用于调试）
     virtual std::string getExecutorName() const = 0;
@@ -120,8 +118,7 @@ public:
     InterpreterFunctionExecutor(Interpreter* interp);
     
     // 实现FunctionExecutor接口
-    class Value* executeFunction(const std::vector<class Value*>& args, 
-                                class Statement* functionBody) override;
+    class Value* executeFunction(class Statement* functionBody) override;
     
     // 获取执行器名称
     std::string getExecutorName() const override;

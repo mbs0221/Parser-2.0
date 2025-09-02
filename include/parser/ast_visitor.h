@@ -16,7 +16,6 @@ class ConstantExpression;
 class VariableExpression;
 class UnaryExpression;
 class BinaryExpression;
-class IncrementDecrementExpression;
 class AccessExpression;
 class CallExpression;
 class TernaryExpression;
@@ -41,9 +40,8 @@ class VariableDefinition;
 class FunctionPrototype;
 class FunctionDefinition;
 class ClassDefinition;
-class ClassMember;
-class ClassMethod;
 class StructDefinition;
+class VisibilityStatement;
 
 // 语句访问者接口 - 不需要返回值
 class StatementVisitor {
@@ -68,10 +66,9 @@ public:
     virtual void visit(VariableDefinition* stmt) = 0;
     virtual void visit(FunctionPrototype* stmt) = 0;
     virtual void visit(FunctionDefinition* func) = 0;
-    virtual void visit(ClassMember* member) = 0;
-    virtual void visit(ClassMethod* method) = 0;
     virtual void visit(ClassDefinition* stmt) = 0;
     virtual void visit(StructDefinition* stmt) = 0;
+    virtual void visit(VisibilityStatement* stmt) = 0;
     
     // 程序根节点访问方法
     virtual void visit(Program* program) = 0;
@@ -93,7 +90,6 @@ public:
     virtual ReturnType visit(VariableExpression* expr) = 0;
     virtual ReturnType visit(UnaryExpression* expr) = 0;
     virtual ReturnType visit(BinaryExpression* expr) = 0;
-    virtual ReturnType visit(IncrementDecrementExpression* expr) = 0;
     virtual ReturnType visit(CastExpression* expr) = 0;
     virtual ReturnType visit(AccessExpression* expr) = 0;
     virtual ReturnType visit(CallExpression* expr) = 0;

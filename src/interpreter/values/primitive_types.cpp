@@ -647,9 +647,20 @@ string Char::getBuiltinTypeName() const {
 
 // ==================== String类型实现 ====================
 String::String(const string& val, ObjectType* vt) : PrimitiveValue(vt, true), value(val) {
-    TypeRegistry* registry = TypeRegistry::getGlobalInstance();
-    if (registry) {
-        setValueType(registry->getType("string"));
+    // 如果传入的vt参数不为nullptr，使用它
+    if (vt) {
+        setValueType(vt);
+    } else {
+        // 否则尝试从TypeRegistry获取
+        TypeRegistry* registry = TypeRegistry::getGlobalInstance();
+        if (registry) {
+            ObjectType* stringType = registry->getType("string");
+            if (stringType) {
+                setValueType(stringType);
+            }
+        }
+        // 如果TypeRegistry还没有初始化或者StringType还没有注册，暂时不设置valueType
+        // 这将在后续的某个时候被正确设置
     }
 }
 
@@ -839,107 +850,5 @@ String* String::replace(const String& oldStr, const String& newStr) const {
     return new String(result);
 }
 
-// ==================== MethodValue实现 ====================
-MethodValue::MethodValue(ObjectType* type, Value* instance, const std::string& name)
-    : Function(name), targetType(type), target(instance), methodName(name) {
-}
-
-ObjectType* MethodValue::getTargetType() const {
-    return targetType;
-}
-
-Value* MethodValue::getTarget() const {
-    return target;
-}
-
-std::string MethodValue::getMethodName() const {
-    return methodName;
-}
-
-Value* MethodValue::call(std::vector<Value*> args) {
-    if (!targetType || !target) {
-        return nullptr;
-    }
-    
-    // 直接调用类型系统的方法，避免不必要的包装
-    return targetType->callMethod(target, methodName, args);
-}
-
-std::string MethodValue::getTypeName() const {
-    if (targetType) {
-        return targetType->getTypeName();
-    }
-    return "unknown";
-}
-
-std::string MethodValue::getFunctionType() const {
-    return "method";
-}
-
-Value* MethodValue::clone() const {
-    return new MethodValue(targetType, target, methodName);
-}
-
-std::string MethodValue::toString() const {
-    std::stringstream ss;
-    ss << "method<" << (targetType ? targetType->getTypeName() : "unknown") 
-       << "::" << methodName << ">";
-    return ss.str();
-}
-
-// ==================== ClassMethodValue实现 ====================
-ClassMethodValue::ClassMethodValue(ObjectType* type, const std::string& name)
-    : Function(name, {}), targetType(type), methodName(name) {
-}
-
-ObjectType* ClassMethodValue::getTargetType() const {
-    return targetType;
-}
-
-std::string ClassMethodValue::getMethodName() const {
-    return methodName;
-}
-
-Value* ClassMethodValue::call(std::vector<Value*> args) {
-    if (!targetType) {
-        return nullptr;
-    }
-    
-    cout << "DEBUG: ClassMethodValue::call: methodName='" << methodName << "', args.size()=" << args.size() << endl;
-    
-    // 调用类型的类方法（不需要实例）
-    // 首先尝试调用类型系统中注册的静态方法
-    if (targetType->hasStaticMethod(methodName, args)) {
-        LOG_DEBUG("Calling static method '" + methodName + "' on type '" + targetType->getTypeName() + "'");
-        cout << "DEBUG: ClassMethodValue::call: calling callStaticMethod" << endl;
-        // 调用类型系统中注册的静态方法
-        return targetType->callStaticMethod(methodName, args);
-    } else {
-        LOG_DEBUG("Static method '" + methodName + "' not found in type '" + targetType->getTypeName() + "', falling back to createValueWithArgs");
-        cout << "DEBUG: ClassMethodValue::call: falling back to createValueWithArgs" << endl;
-        // 如果没有找到注册的方法，回退到 createValueWithArgs
-        return targetType->createValueWithArgs(args);
-    }
-}
-
-std::string ClassMethodValue::getTypeName() const {
-    if (targetType) {
-        return targetType->getTypeName();
-    }
-    return "unknown";
-}
-
-std::string ClassMethodValue::getFunctionType() const {
-    return "class_method";
-}
-
-Value* ClassMethodValue::clone() const {
-    return new ClassMethodValue(targetType, methodName);
-}
-
-std::string ClassMethodValue::toString() const {
-    std::stringstream ss;
-    ss << "class_method<" << (targetType ? targetType->getTypeName() : "unknown") 
-       << "::" << methodName << ">";
-    return ss.str();
-}
+// 注意：MethodValue 和 ClassMethodValue 已被合并到 MethodReference 中
+// 所有相关功能现在通过统一的 MethodReference 类提供

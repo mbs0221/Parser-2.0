@@ -18,19 +18,23 @@ add_library(interpreter SHARED
     types/builtin_types.cpp
     types/function_signature.cpp
     types/object_type.cpp
-    types/container_type.cpp
     types/class_type.cpp
     types/interface_type.cpp
     types/struct_type.cpp
+    types/string.cpp
+    types/array.cpp
+    types/dict.cpp
+    types/primitive_type.cpp
     
     # 值系统
     values/primitive_types.cpp
     values/container_values.cpp
     values/object_factory.cpp
     values/object_registry.cpp
+    values/method_reference.cpp
     
     # 函数系统
-    function.cpp
+    values/function.cpp
     
     # 作用域管理
     scope/scope.cpp
