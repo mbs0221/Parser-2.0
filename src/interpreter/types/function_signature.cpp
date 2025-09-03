@@ -1,10 +1,17 @@
 
-#include "interpreter/values/value.h"
-#include "interpreter/types/types.h"
 #include "interpreter/scope/scope.h"
+#include "interpreter/values/value.h"
+#include "interpreter/utils/logger.h"
 #include <sstream>
 
 using namespace std;
+
+// 辅助函数：判断是否为系统注入的变量
+static bool isSystemVariable(const string& key) {
+    return (key == "__func__" || key == "this" || key == "instance" || 
+            key == "self" || key == "__class_name__" || key == "argc" || 
+            key == "args" || key == "kwargs");
+}
 
 // 基本构造函数
 FunctionSignature::FunctionSignature(const string& n, const vector<Parameter>& params) 
@@ -45,9 +52,52 @@ FunctionSignature::FunctionSignature(const FunctionDefinition* funcDef) {
 // 从Scope构造
 FunctionSignature::FunctionSignature(const string& funcName, class Scope* scope) 
     : name(funcName) {
-    // 暂时不实现，因为Scope类定义不完整
+    if (!scope) {
+        LOG_DEBUG("FunctionSignature: Scope is null, creating empty signature");
+        return;
+    }
+    
+    // FunctionSignature只统计scope内部的函数参数，不统计系统注入的变量
+    // 只处理通过*args和**kwargs机制传递的参数
+    
+    // 检查是否有args参数（位置参数）
+    // if (scope->hasArgs()) {
+    //     Array* argsArray = scope->getArgs();
+    //     if (argsArray) {
+    //         vector<Value*> args = argsArray->getElements();
+    //         for (size_t i = 0; i < args.size(); ++i) {
+    //             if (!isSystemVariable(args[i])) {
+    //                 // 为每个参数创建一个Parameter对象
+    //                 string paramName = "arg" + to_string(i);
+    //                 string paramType = args[i]->getBuiltinTypeName();
+    //                 parameters.push_back(Parameter(paramName, paramType, "", false));
+    //                 LOG_DEBUG("FunctionSignature: Added parameter from args: " + paramName + " (" + paramType + ")");
+    //             }
+    //         }
+    //     }
+    // }
+    
+    // 检查是否有kwargs参数（关键字参数）
+    if (scope->hasKwargs()) {
+        Dict* kwargs = scope->getKwargs();
+        if (kwargs) {
+            vector<string> keys = kwargs->getKeys();
+            for (const string& key : keys) {
+                // 只处理真正的函数参数，过滤掉系统注入的变量
+                if (!isSystemVariable(key)) {
+                    Value* value = kwargs->getEntry(key);
+                    if (value) {
+                        string paramType = value->getBuiltinTypeName();
+                        parameters.push_back(Parameter(key, paramType, "", false));
+                        LOG_DEBUG("FunctionSignature: Added parameter from kwargs: " + key + " (" + paramType + ")");
+                    }
+                }
+            }
+        }
+    }
+    
+    LOG_DEBUG("FunctionSignature: Created signature with " + to_string(parameters.size()) + " function parameters (excluding system variables)");
 }
-
 
 
 // 拷贝构造函数

@@ -62,10 +62,25 @@ void BasicFunctionCall::bindParameters(const vector<Value*>& args) {
     // 使用虚函数获取参数名称，避免dynamic_cast
     vector<string> paramNames = function->getParameterNames();
     
-    // 按照参数名称列表绑定参数到作用域（ObjectRegistry自动维护顺序）
-    if (!paramNames.empty()) {
-        for (size_t i = 0; i < paramNames.size() && i < args.size(); ++i) {
-            const string& paramName = paramNames[i];
+    // 过滤掉可变参数标记 "..."，只保留实际的参数名
+    vector<string> actualParamNames;
+    bool hasVariadic = false;
+    for (const string& paramName : paramNames) {
+        if (paramName == "...") {
+            hasVariadic = true;
+        } else {
+            actualParamNames.push_back(paramName);
+        }
+    }
+    
+    LOG_DEBUG("BasicFunctionCall: Original param names: " + to_string(paramNames.size()) + 
+              ", Actual param names: " + to_string(actualParamNames.size()) + 
+              ", Has variadic: " + string(hasVariadic ? "true" : "false"));
+    
+    // 按照实际参数名称列表绑定参数到作用域
+    if (!actualParamNames.empty()) {
+        for (size_t i = 0; i < actualParamNames.size() && i < args.size(); ++i) {
+            const string& paramName = actualParamNames[i];
             Value* argValue = args[i];
             currentScope->setArgument(paramName, argValue);
             LOG_DEBUG("BasicFunctionCall: Bound parameter '" + paramName + "' to argument at index " + to_string(i));
@@ -73,22 +88,22 @@ void BasicFunctionCall::bindParameters(const vector<Value*>& args) {
     }
     
     // 处理剩余参数：支持*args和**kwargs两种方式
-    if (args.size() > paramNames.size()) {
-        size_t remainingCount = args.size() - paramNames.size();
+    if (args.size() > actualParamNames.size()) {
+        size_t remainingCount = args.size() - actualParamNames.size();
         
         // 检查剩余参数的模式
         bool isKeyValuePairs = true;
-        for (size_t i = paramNames.size(); i < args.size(); i += 2) {
+        for (size_t i = actualParamNames.size(); i < args.size(); i += 2) {
             if (i + 1 >= args.size() || !args[i] || !args[i + 1]) {
                 isKeyValuePairs = false;
                 break;
             }
         }
         
-        if (isKeyValuePairs && remainingCount % 2 == 0) {
+        if (isKeyValuePairs && remainingCount % 2 == 0 && remainingCount > 0) {
             // **kwargs模式：键值对形式
             Dict* kwargs = new Dict();
-            for (size_t i = paramNames.size(); i < args.size(); i += 2) {
+            for (size_t i = actualParamNames.size(); i < args.size(); i += 2) {
                 Value* key = args[i];
                 Value* value = args[i + 1];
                 if (key && value) {
@@ -98,10 +113,10 @@ void BasicFunctionCall::bindParameters(const vector<Value*>& args) {
             }
             currentScope->setArgument("kwargs", kwargs);
             LOG_DEBUG("BasicFunctionCall: Created kwargs with " + to_string(kwargs->getSize()) + " key-value pairs");
-        } else {
+        } else if (remainingCount > 0) {
             // *args模式：位置参数形式
             Array* argsArray = new Array();
-            for (size_t i = paramNames.size(); i < args.size(); ++i) {
+            for (size_t i = actualParamNames.size(); i < args.size(); ++i) {
                 if (args[i]) {
                     argsArray->addElement(args[i]->clone());
                     LOG_DEBUG("BasicFunctionCall: Added to args: " + args[i]->toString());
@@ -118,7 +133,8 @@ void BasicFunctionCall::bindParameters(const vector<Value*>& args) {
     // 简单的参数数量日志
     LOG_DEBUG("BasicFunctionCall: About to create Array with " + to_string(args.size()) + " arguments");
     
-    currentScope->setArgument("args", new Array(args));
+    // 修复：Array构造函数需要三个参数，第三个参数是元素类型
+    currentScope->setArgument("args", new Array(args, nullptr, nullptr));
     LOG_DEBUG("BasicFunctionCall: Bound " + to_string(args.size()) + " arguments using kwargs approach");
 }
 

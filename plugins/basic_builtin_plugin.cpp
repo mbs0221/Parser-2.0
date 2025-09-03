@@ -460,6 +460,93 @@ Value* builtin_random(Scope* scope) {
     return nullptr;
 }
 
+// array构造函数 - 创建数组
+Value* builtin_array(Scope* scope) {
+    LOG_DEBUG("builtin_array() called");
+    Array* array = new Array();
+    
+    // 使用新的*args机制处理可变参数
+    if (scope->hasArgs()) {
+        // 从*args中获取所有元素
+        Array* argsArray = scope->getArgs();
+        if (argsArray) {
+            for (size_t i = 0; i < argsArray->getSize(); ++i) {
+                Value* element = argsArray->getElement(i);
+                if (element) {
+                    array->addElement(element->clone());
+                }
+            }
+            LOG_DEBUG("builtin_array: created array with " + to_string(array->getSize()) + " elements");
+            return array;
+        }
+    } else if (scope->hasKwargs()) {
+        // 从**kwargs中获取所有值作为元素
+        Dict* kwargs = scope->getKwargs();
+        if (kwargs) {
+            // 使用Dict::getValues()简化实现
+            vector<Value*> values = kwargs->getValues();
+            // 克隆所有值
+            for (Value*& value : values) {
+                array->addElement(value->clone());
+            }
+            LOG_DEBUG("builtin_array: created array with " + to_string(array->getSize()) + " elements from kwargs");
+            return array;
+        }
+    }
+    
+    // 如果没有可变参数，返回空数组
+    LOG_DEBUG("builtin_array: created empty array");
+    return array;
+}
+
+// dict构造函数 - 创建字典
+Value* builtin_dict(Scope* scope) {
+    LOG_DEBUG("builtin_dict() called");
+    Dict* dict = new Dict();
+    
+    // 使用新的*args机制处理可变参数
+    if (scope->hasArgs()) {
+        // 从*args中获取所有元素
+        Array* argsArray = scope->getArgs();
+        if (argsArray) {
+            // 每两个参数组成一个键值对
+            for (size_t i = 0; i < argsArray->getSize(); i += 2) {
+                if (i + 1 < argsArray->getSize()) {
+                    Value* key = argsArray->getElement(i);
+                    Value* value = argsArray->getElement(i + 1);
+                    
+                    if (key && value) {
+                        string keyStr = key->toString();
+                        LOG_DEBUG("builtin_dict: adding key-value pair: " + keyStr + " = " + value->toString());
+                        dict->setEntry(keyStr, value->clone());
+                    }
+                }
+            }
+            LOG_DEBUG("builtin_dict: created dict with " + to_string(dict->getSize()) + " entries");
+            return dict;
+        }
+    } else if (scope->hasKwargs()) {
+        // 从**kwargs中获取所有键值对
+        Dict* kwargs = scope->getKwargs();
+        if (kwargs) {
+            vector<string> keys = kwargs->getKeys();
+            for (const string& key : keys) {
+                Value* value = kwargs->getEntry(key);
+                if (value) {
+                    LOG_DEBUG("builtin_dict: adding key-value pair from kwargs: " + key + " = " + value->toString());
+                    dict->setEntry(key, value->clone());
+                }
+            }
+            LOG_DEBUG("builtin_dict: created dict with " + to_string(dict->getSize()) + " entries from kwargs");
+            return dict;
+        }
+    }
+    
+    // 如果没有可变参数，返回空字典
+    LOG_DEBUG("builtin_dict: created empty dict");
+    return dict;
+}
+
 Value* builtin_exit(Scope* scope) {
     if (Integer* code = scope->getArgument<Integer>("code")) {
         int exitCode = code->getValue();
@@ -487,8 +574,8 @@ protected:
         LOG_DEBUG("CorePlugin::registerFunctions called with new scope interface and C function prototype parsing");
         
         // 使用宏简化内置函数注册
-        REGISTER_BUILTIN_FUNCTION(scopeManager, "print", builtin_print, "print(value, ...)");
-        REGISTER_BUILTIN_FUNCTION(scopeManager, "println", builtin_println, "println(value, ...)");
+        REGISTER_BUILTIN_FUNCTION(scopeManager, "print", builtin_print, "print(...)");
+        REGISTER_BUILTIN_FUNCTION(scopeManager, "println", builtin_println, "println(...)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "count", builtin_count, "count(value)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "cin", builtin_cin, "cin()");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "exit", builtin_exit, "exit(code)");
@@ -509,7 +596,14 @@ protected:
         REGISTER_BUILTIN_FUNCTION(scopeManager, "cast", builtin_cast, "cast(value, type)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "random", builtin_random, "random(max)");
         
-        LOG_DEBUG("Registered " + to_string(21) + " functions using simplified macro interface");
+        // 注册array构造函数到全局作用域
+        REGISTER_BUILTIN_FUNCTION(scopeManager, "array", builtin_array, "array(...)");
+        
+        // 注册dict构造函数到全局作用域
+        REGISTER_BUILTIN_FUNCTION(scopeManager, "dict", builtin_dict, "dict(...)");
+        REGISTER_BUILTIN_FUNCTION(scopeManager, "Dict", builtin_dict, "Dict(...)");
+        
+        LOG_DEBUG("Registered " + to_string(23) + " functions using simplified macro interface");
     }
 };
 

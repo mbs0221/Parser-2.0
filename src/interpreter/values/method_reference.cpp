@@ -55,10 +55,12 @@ Value* MethodReference::call(Scope* scope) {
     
     // 如果找到了函数，直接设置缓存并调用
     if (foundFunction) {
+        LOG_DEBUG("MethodReference::call: Found function");
         cachedFunction = foundFunction;
         return foundFunction->call(scope);
     }
     
+    LOG_DEBUG("MethodReference::call: No function found");
     return nullptr;
 }
 
@@ -112,15 +114,18 @@ string InstanceMethodReference::toString() const {
 // 子类实现：根据函数签名查找最佳匹配的实例方法
 Function* InstanceMethodReference::findBestMatch(const FunctionSignature& callSignature) const {
     if (!targetType || !targetType->supportsMethods()) {
+        LOG_ERROR("InstanceMethodReference::findBestMatch: Target type or method support is null");
         return nullptr;
     }
     
     // 直接根据调用签名查找匹配的实例方法
     IMethodSupport* methodSupport = dynamic_cast<IMethodSupport*>(targetType);
     if (methodSupport) {
+        LOG_DEBUG("InstanceMethodReference::findBestMatch: Method support is not null");
         return methodSupport->findUserMethod(callSignature);
     }
     
+    LOG_ERROR("InstanceMethodReference::findBestMatch: Method support is null");
     return nullptr;
 }
 
@@ -147,14 +152,18 @@ string StaticMethodReference::toString() const {
 // 子类实现：根据函数签名查找最佳匹配的静态方法
 Function* StaticMethodReference::findBestMatch(const FunctionSignature& callSignature) const {
     if (!targetType || !targetType->supportsMethods()) {
+        LOG_ERROR("StaticMethodReference::findBestMatch: Target type or method support is null");
         return nullptr;
     }
     
     // 直接根据调用签名查找匹配的静态方法
     IMethodSupport* methodSupport = dynamic_cast<IMethodSupport*>(targetType);
     if (methodSupport) {
+        LOG_DEBUG("StaticMethodReference::findBestMatch: Method support is not null");
+        LOG_DEBUG(callSignature.toString());
         return methodSupport->findStaticMethod(callSignature);
     }
     
+    LOG_ERROR("StaticMethodReference::findBestMatch: Method support is null");
     return nullptr;
 }

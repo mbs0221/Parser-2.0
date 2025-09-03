@@ -107,7 +107,21 @@ std::vector<Value*> Scope::getAllArguments() const {
 // 获取参数数量
 size_t Scope::getArgumentCount() const {
     if (!objectRegistry) return 0;
-    return objectRegistry->getVariableCount();
+    
+    // 只统计真正的函数参数，过滤掉系统变量
+    size_t count = 0;
+    std::vector<std::string> allNames = objectRegistry->getVariableNames();
+    
+    for (const std::string& name : allNames) {
+        // 过滤掉系统参数和特殊变量
+        if (name != "argc" && name != "args" && name != "this" && 
+            name != "instance" && name != "kwargs" && name != "__class_name__" && 
+            name != "self" && name != "__func__") {
+            count++;
+        }
+    }
+    
+    return count;
 }
 
 // 获取参数名称列表（用于函数原型匹配）
@@ -121,7 +135,7 @@ std::vector<std::string> Scope::getParameterNames() const {
     // 注意：args现在用于*args位置参数，kwargs用于**kwargs关键字参数
     std::vector<std::string> paramNames;
     for (const std::string& name : allNames) {
-        if (name != "argc" && name != "args" && name != "this" && name != "instance" && name != "kwargs") {
+        if (name != "argc" && name != "args" && name != "this" && name != "instance" && name != "kwargs" && name != "__class_name__" && name != "self" && name != "__func__") {
             paramNames.push_back(name);
         }
     }

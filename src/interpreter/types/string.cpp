@@ -30,12 +30,12 @@ static const vector<Function*> stringClassMethods = {
     
     new BuiltinFunction([](class Scope* scope) -> Value* {
         // 从作用域获取实例，而不是使用参数
-        cout << "StringType::length() called" << endl;
+        LOG_DEBUG("StringType::length() called");
         if (String* str = scope->getThis<String>()) {
-            cout << "StringType::length() called: " << str->length() << endl;
+            LOG_DEBUG("StringType::length() called: " + to_string(str->length()));
             return new Integer(str->length());
         }
-        cout << "StringType::length() called: nullptr" << endl;
+        LOG_DEBUG("StringType::length() called: nullptr");
         return nullptr;
     }, "length()"),
     
@@ -57,12 +57,10 @@ static const vector<Function*> stringClassMethods = {
         // 从作用域获取实例，而不是使用参数
         if (String* str = scope->getThis<String>()) {
             // 使用语义化的getArgument方法获取参数
-            if (String* substr = scope->getArgument<String>("substring")) {
-                return new Integer(str->indexOf(*substr));
-            }
+            return str->trim();
         }
         return nullptr;
-    }, "indexOf(substring)"),
+    }, "trim()"),
     
     new BuiltinFunction([](class Scope* scope) -> Value* {
         // 从作用域获取实例，而不是使用参数
@@ -154,6 +152,15 @@ static const vector<Function*> stringClassMethods = {
         return new Bool(false);
     }, "isEmpty()"),
     
+    new BuiltinFunction([](class Scope* scope) -> Value* {
+        if (String* str = scope->getThis<String>()) {
+            if (String* substr = scope->getArgument<String>("substring")) {
+                return new Integer(str->indexOf(*substr));
+            }
+        }
+        return new Integer(-1);
+    }, "indexOf(substring)"),
+
     new BuiltinFunction([](class Scope* scope) -> Value* {
         if (String* str = scope->getThis<String>()) {
             if (String* substr = scope->getArgument<String>("substring")) {
@@ -337,14 +344,14 @@ StringType::StringType() : ClassType("string", false, true, false) {
     // 批量注册静态方法
     for (Function* method : stringStaticMethods) {
         // 将 BuiltinFunction 转换为 Function* 类型
-        cout << "StringType::StringType: adding static method: " << method->getName() << endl;
+        LOG_DEBUG("StringType::StringType: adding static method: " + method->getName());
         addStaticMethod(method);
     }
 
     // 批量注册类方法
     for (Function* method : stringClassMethods) {
         // 将 BuiltinFunction 转换为 Function* 类型
-        cout << "StringType::StringType: adding class method: " << method->getName() << endl;
+        LOG_DEBUG("StringType::StringType: adding class method: " + method->getName());
         addUserMethod(method);
     }
 }
