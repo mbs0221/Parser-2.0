@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "interpreter/values/value.h"
+
 // 控制流异常基类
 class ControlFlowException : public std::exception {
 protected:
@@ -22,17 +24,19 @@ public:
 // Return异常
 class ReturnException : public ControlFlowException {
 private:
-    void* returnValue;  // 返回值指针
+    Value* returnValue;  // 返回值指针
     
 public:
     ReturnException() : ControlFlowException("Return"), returnValue(nullptr) {}
-    ReturnException(void* value) : ControlFlowException("Return"), returnValue(value) {}
+    ReturnException(Value* value) : ControlFlowException("Return"), returnValue(value) {}
     
     // 获取返回值
-    void* getValue() const { return returnValue; }
+    template<typename T>
+    T getValue() const { return static_cast<T>(returnValue); }
     
     // 设置返回值
-    void setValue(void* value) { returnValue = value; }
+    template<typename T>
+    void setValue(T value) { returnValue = static_cast<T>(value); }
 };
 
 // Break异常

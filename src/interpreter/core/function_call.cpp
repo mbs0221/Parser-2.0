@@ -253,7 +253,8 @@ Value* InterpreterFunctionExecutor::executeFunction(class Statement* functionBod
         
         LOG_DEBUG("InterpreterFunctionExecutor: Function execution completed successfully");
         return new String("Function execution completed");
-        
+    } catch (ReturnException& e) {
+        return e.getValue<Value*>();
     } catch (const exception& e) {
         LOG_ERROR("InterpreterFunctionExecutor: Error executing function: " + string(e.what()));
         return new String("Function execution error: " + string(e.what()));

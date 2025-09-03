@@ -64,29 +64,9 @@ public:
         void destroyPlugin(BuiltinPlugin* plugin) { delete plugin; } \
     }
 
-// 简化插件开发的宏
-#define REGISTER_BUILTIN_FUNCTION(scopeManager, funcName, funcPtr) \
-    scopeManager.defineFunction(funcName, new BuiltinFunction(funcName, funcPtr))
-
-#define REGISTER_BUILTIN_FUNCTIONS(scopeManager, ...) \
-    do { \
-        std::map<std::string, BuiltinFunctionPtr> funcMap = {__VA_ARGS__}; \
-        for (const auto& pair : funcMap) { \
-            scopeManager.defineFunction(pair.first, new BuiltinFunction(pair.first, pair.second)); \
-        } \
-    } while(0)
-
 // ==================== 插件函数注册宏 ====================
-// 简化内置函数注册的宏
+// 统一的内置函数注册宏，使用函数原型来解析参数
 #define REGISTER_BUILTIN_FUNCTION(scopeManager, name, func, description) \
-    scopeManager.defineFunction(name, new BuiltinFunction(name, func, {}, false))
-
-// 带参数信息的内置函数注册宏
-#define REGISTER_BUILTIN_FUNCTION_WITH_PARAMS(scopeManager, name, func, params, description) \
-    scopeManager.defineFunction(name, new BuiltinFunction(name, func, params, false))
-
-// 可变参数的内置函数注册宏（使用函数原型）
-#define REGISTER_BUILTIN_FUNCTION_VARARGS(scopeManager, name, func, description) \
     scopeManager.defineFunction(name, new BuiltinFunction(func, description))
 
 #endif // BUILTIN_PLUGIN_H

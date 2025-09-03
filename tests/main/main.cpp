@@ -176,7 +176,16 @@ int main(int argc, char *argv[])
 		// 解释器在构造函数中已经自动加载了插件，这里不需要重复加载
 		Interpreter interpreter(loadPlugins);
 		
-		interpreter.visit(program);  // 直接调用visit方法，消除execute函数依赖
+		try{
+			interpreter.visit(program);  // 直接调用visit方法，消除execute函数依赖
+		} catch (const ReturnException& e) {
+			Integer* returnValue = e.getValue<Integer*>();
+			LOG_INFO("Program execution completed with return value: " + to_string(returnValue->getValue()));
+			return returnValue->getValue();
+		} catch (const std::exception& e) {
+			LOG_ERROR("Program execution failed: " + string(e.what()));
+			return -1;
+		}
 		LOG_INFO("Program execution completed");
 	} else {
 		LOG_ERROR("Parsing failed");

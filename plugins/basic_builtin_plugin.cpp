@@ -461,12 +461,11 @@ Value* builtin_random(Scope* scope) {
 }
 
 Value* builtin_exit(Scope* scope) {
-    int exitCode = 0;
     if (Integer* code = scope->getArgument<Integer>("code")) {
-        exitCode = code->getValue();
+        int exitCode = code->getValue();
+        throw ReturnException(new Integer(exitCode));
     }
-    exit(exitCode);
-    return nullptr;
+    throw ReturnException(new Integer(0));
 }
 
 // 核心基础函数插件类
@@ -488,8 +487,8 @@ protected:
         LOG_DEBUG("CorePlugin::registerFunctions called with new scope interface and C function prototype parsing");
         
         // 使用宏简化内置函数注册
-        REGISTER_BUILTIN_FUNCTION_VARARGS(scopeManager, "print", builtin_print, "print(value, ...)");
-        REGISTER_BUILTIN_FUNCTION_VARARGS(scopeManager, "println", builtin_println, "println(value, ...)");
+        REGISTER_BUILTIN_FUNCTION(scopeManager, "print", builtin_print, "print(value, ...)");
+        REGISTER_BUILTIN_FUNCTION(scopeManager, "println", builtin_println, "println(value, ...)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "count", builtin_count, "count(value)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "cin", builtin_cin, "cin()");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "exit", builtin_exit, "exit(code)");
@@ -500,8 +499,8 @@ protected:
         REGISTER_BUILTIN_FUNCTION(scopeManager, "substring", builtin_substring, "substring(string, start, length)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "length", builtin_length, "length(value)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "abs", builtin_abs, "abs(value)");
-        REGISTER_BUILTIN_FUNCTION_VARARGS(scopeManager, "max", builtin_max, "max(value, ...)");
-        REGISTER_BUILTIN_FUNCTION_VARARGS(scopeManager, "min", builtin_min, "min(value, ...)");
+        REGISTER_BUILTIN_FUNCTION(scopeManager, "max", builtin_max, "max(value, ...)");
+        REGISTER_BUILTIN_FUNCTION(scopeManager, "min", builtin_min, "min(value, ...)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "pow", builtin_pow, "pow(base, exponent)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "sort", builtin_sort, "sort(array)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "to_string", builtin_to_string, "to_string(value)");

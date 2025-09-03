@@ -16,6 +16,11 @@
 
 using namespace std;
 
+template<>
+Integer* ReturnException::getValue<Integer*>() const {
+    return static_cast<Integer*>(returnValue);
+}
+
 // 语句访问方法 - 无返回值
 void Interpreter::visit(Statement* stmt) {
     if (!stmt) return;

@@ -192,9 +192,12 @@ Value* Interpreter::parseAndExecute(const std::string& filename) {
         // 清理解析后的程序
         delete program;
         
-        return new String("File executed successfully");
+    } catch (const ReturnException& e) {
+        return e.getValue<Integer*>();
     } catch (const std::exception& e) {
         reportError("Exception during parsing/execution: " + std::string(e.what()));
-        return nullptr;
+        return new Integer(-1);
     }
+
+    return new Integer(0);
 }
