@@ -1,0 +1,144 @@
+{
+  "library_name": "math",
+  "library_path": "/usr/lib/x86_64-linux-gnu/libm.so",
+  "description": "标准C数学库的动态加载插件",
+  "header_files": ["math.h"],
+  "functions": [
+    {
+      "name": "sin",
+      "c_signature": "double sin(double x)",
+      "description": "计算正弦值",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "double",
+          "is_pointer": false,
+          "is_const": false,
+          "description": "角度值（弧度）"
+        }
+      ],
+      "return_type": "double",
+      "is_void_return": false
+    },
+    {
+      "name": "cos",
+      "c_signature": "double cos(double x)",
+      "description": "计算余弦值",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "double",
+          "is_pointer": false,
+          "is_const": false,
+          "description": "角度值（弧度）"
+        }
+      ],
+      "return_type": "double",
+      "is_void_return": false
+    },
+    {
+      "name": "tan",
+      "c_signature": "double tan(double x)",
+      "description": "计算正切值",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "double",
+          "is_pointer": false,
+          "is_const": false,
+          "description": "角度值（弧度）"
+        }
+      ],
+      "return_type": "double",
+      "is_void_return": false
+    },
+    {
+      "name": "sqrt",
+      "c_signature": "double sqrt(double x)",
+      "description": "计算平方根",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "double",
+          "is_pointer": false,
+          "is_const": false,
+          "description": "非负数"
+        }
+      ],
+      "return_type": "double",
+      "is_void_return": false
+    },
+    {
+      "name": "log",
+      "c_signature": "double log(double x)",
+      "description": "计算自然对数",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "double",
+          "is_pointer": false,
+          "is_const": false,
+          "description": "正数"
+        }
+      ],
+      "return_type": "double",
+      "is_void_return": false
+    },
+    {
+      "name": "floor",
+      "c_signature": "double floor(double x)",
+      "description": "向下取整",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "double",
+          "is_pointer": false,
+          "is_const": false,
+          "description": "浮点数"
+        }
+      ],
+      "return_type": "double",
+      "is_void_return": false
+    },
+    {
+      "name": "ceil",
+      "c_signature": "double ceil(double x)",
+      "description": "向上取整",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "double",
+          "is_pointer": false,
+          "is_const": false,
+          "description": "浮点数"
+        }
+      ],
+      "return_type": "double",
+      "is_void_return": false
+    },
+    {
+      "name": "abs",
+      "c_signature": "int abs(int x)",
+      "description": "计算绝对值",
+      "parameters": [
+        {
+          "name": "x",
+          "type": "int",
+          "is_pointer": false,
+          "is_const": false,
+          "description": "整数"
+        }
+      ],
+      "return_type": "int",
+      "is_void_return": false
+    }
+  ],
+  "type_mappings": {
+    "double": "Double",
+    "int": "Integer",
+    "size_t": "Integer",
+    "char*": "String",
+    "const char*": "String",
+    "void": "null"
+  }
+}

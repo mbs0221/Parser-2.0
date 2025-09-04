@@ -43,6 +43,9 @@ add_library(interpreter SHARED
     # 插件系统
     plugins/plugin_manager.cpp
     
+    # 模块系统
+    modules/module_system.cpp
+    
     # 工具和日志已移动到 common 库
 )
 

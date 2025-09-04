@@ -693,7 +693,7 @@ public:
     // 设置可变参数名称
     void setVarArgsName(const std::string& name);
     
-    // 解析C风格函数原型（包括函数名和参数）
+    // 使用统一的函数签名解析器解析C风格函数原型
     void parseCFormatParams(const char* functionPrototype);
     
     // 获取参数的默认值

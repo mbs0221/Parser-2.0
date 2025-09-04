@@ -143,6 +143,27 @@ std::vector<std::string> Scope::getParameterNames() const {
     return paramNames;
 }
 
+// 获取有名字的函数实际参数（过滤系统变量）
+std::map<std::string, Value*> Scope::getNamedArgs() const {
+    std::map<std::string, Value*> namedArgs;
+    if (!objectRegistry) return namedArgs;
+    
+    // 从ObjectRegistry获取所有变量名称
+    std::vector<std::string> allNames = objectRegistry->getVariableNames();
+    
+    // 过滤掉系统参数，只保留真正的函数参数
+    for (const std::string& name : allNames) {
+        if (name != "argc" && name != "args" && name != "this" && name != "instance" && name != "kwargs" && name != "__class_name__" && name != "self" && name != "__func__") {
+            Value* value = objectRegistry->lookupVariable(name);
+            if (value) {
+                namedArgs[name] = value;
+            }
+        }
+    }
+    
+    return namedArgs;
+}
+
 // 获取kwargs字典（可变参数支持）
 Dict* Scope::getKwargs() const {
     return getVariable<Dict>("kwargs");

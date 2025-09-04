@@ -1,0 +1,188 @@
+2025-09-04 17:44:43,486 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:44:43,486 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:44:43,486 [INFO] : [main] Lexical analysis of file: programs/test_simple_class.txt
+2025-09-04 17:44:43,486 [INFO] : [main] Lexical analysis started
+2025-09-04 17:47:52,587 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:47:52,587 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:47:52,587 [INFO] : [main] Lexical analysis of file: programs/test_simple_class.txt
+2025-09-04 17:47:52,587 [INFO] : [main] Lexical analysis started
+2025-09-04 17:48:35,668 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:48:35,668 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:48:35,668 [INFO] : [main] Lexical analysis of file: programs/test_simple_class.txt
+2025-09-04 17:48:35,669 [INFO] : [main] Lexical analysis started
+2025-09-04 17:48:35,670 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:48:35,671 [INFO] : Logger shutting down
+2025-09-04 17:49:19,494 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:49:19,494 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:49:19,494 [INFO] : [main] Lexical analysis of file: programs/test_class_definition_only.txt
+2025-09-04 17:49:19,494 [INFO] : [main] Lexical analysis started
+2025-09-04 17:49:19,495 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:49:19,496 [INFO] : Logger shutting down
+2025-09-04 17:49:19,503 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:49:19,503 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:49:19,503 [INFO] : [main] Lexical analysis of file: programs/test_class_definition_only.txt
+2025-09-04 17:49:19,503 [INFO] : [main] Lexical analysis started
+2025-09-04 17:49:19,504 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:49:19,504 [INFO] : Logger shutting down
+2025-09-04 17:49:24,502 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:49:24,502 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:49:24,502 [INFO] : [main] Lexical analysis of file: programs/test_simple_function.txt
+2025-09-04 17:49:24,502 [INFO] : [main] Lexical analysis started
+2025-09-04 17:49:24,503 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:49:24,503 [INFO] : Logger shutting down
+2025-09-04 17:49:24,510 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:49:24,510 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:49:24,510 [INFO] : [main] Lexical analysis of file: programs/test_simple_function.txt
+2025-09-04 17:49:24,510 [INFO] : [main] Lexical analysis started
+2025-09-04 17:49:24,511 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:49:24,511 [INFO] : Logger shutting down
+2025-09-04 17:49:30,440 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:49:30,440 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:49:30,440 [INFO] : [main] Lexical analysis of file: programs/test_builtin_function_redefinition.txt
+2025-09-04 17:49:30,440 [INFO] : [main] Lexical analysis started
+2025-09-04 17:49:30,441 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:49:30,442 [INFO] : Logger shutting down
+2025-09-04 17:49:30,449 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:49:30,449 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:49:30,449 [INFO] : [main] Lexical analysis of file: programs/test_builtin_function_redefinition.txt
+2025-09-04 17:49:30,449 [INFO] : [main] Lexical analysis started
+2025-09-04 17:49:30,450 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:49:30,451 [INFO] : Logger shutting down
+2025-09-04 17:53:07,859 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:07,860 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:07,860 [INFO] : [main] Lexical analysis of file: programs/test_simple_let.txt
+2025-09-04 17:53:07,860 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:07,860 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:07,861 [INFO] : Logger shutting down
+2025-09-04 17:53:07,867 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:07,868 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:07,868 [INFO] : [main] Lexical analysis of file: programs/test_simple_let.txt
+2025-09-04 17:53:07,868 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:07,868 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:07,868 [INFO] : Logger shutting down
+2025-09-04 17:53:12,015 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:12,015 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:12,015 [INFO] : [main] Lexical analysis of file: programs/test_simple_var.txt
+2025-09-04 17:53:12,015 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:12,016 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:12,016 [INFO] : Logger shutting down
+2025-09-04 17:53:12,023 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:12,023 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:12,023 [INFO] : [main] Lexical analysis of file: programs/test_simple_var.txt
+2025-09-04 17:53:12,023 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:12,024 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:12,024 [INFO] : Logger shutting down
+2025-09-04 17:53:17,516 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:17,516 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:17,516 [INFO] : [main] Lexical analysis of file: programs/test_simple_plus.txt
+2025-09-04 17:53:17,516 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:17,517 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:17,517 [INFO] : Logger shutting down
+2025-09-04 17:53:17,524 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:17,524 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:17,525 [INFO] : [main] Lexical analysis of file: programs/test_simple_plus.txt
+2025-09-04 17:53:17,525 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:17,526 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:17,526 [INFO] : Logger shutting down
+2025-09-04 17:53:28,099 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:28,100 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:28,100 [INFO] : [main] Lexical analysis of file: programs/test_arithmetic.txt
+2025-09-04 17:53:28,100 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:28,102 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:28,102 [INFO] : Logger shutting down
+2025-09-04 17:53:28,109 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:28,109 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:28,109 [INFO] : [main] Lexical analysis of file: programs/test_arithmetic.txt
+2025-09-04 17:53:28,110 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:28,111 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:28,111 [INFO] : Logger shutting down
+2025-09-04 17:53:32,340 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:32,340 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:32,340 [INFO] : [main] Lexical analysis of file: programs/test_control_flow_fixed.txt
+2025-09-04 17:53:32,341 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:32,342 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:32,342 [INFO] : Logger shutting down
+2025-09-04 17:53:32,350 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:32,350 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:32,350 [INFO] : [main] Lexical analysis of file: programs/test_control_flow_fixed.txt
+2025-09-04 17:53:32,350 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:32,351 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:32,352 [INFO] : Logger shutting down
+2025-09-04 17:53:53,331 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:53,331 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:53,331 [INFO] : [main] Lexical analysis of file: programs/test_simple_condition.txt
+2025-09-04 17:53:53,332 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:53,333 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:53,333 [INFO] : Logger shutting down
+2025-09-04 17:53:53,340 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:53:53,340 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:53:53,340 [INFO] : [main] Lexical analysis of file: programs/test_simple_condition.txt
+2025-09-04 17:53:53,340 [INFO] : [main] Lexical analysis started
+2025-09-04 17:53:53,341 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:53:53,341 [INFO] : Logger shutting down
+2025-09-04 17:54:04,452 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:54:04,453 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:54:04,453 [INFO] : [main] Lexical analysis of file: programs/test_collections.txt
+2025-09-04 17:54:04,453 [INFO] : [main] Lexical analysis started
+2025-09-04 17:54:04,454 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:54:04,454 [INFO] : Logger shutting down
+2025-09-04 17:54:04,462 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:54:04,462 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:54:04,462 [INFO] : [main] Lexical analysis of file: programs/test_collections.txt
+2025-09-04 17:54:04,463 [INFO] : [main] Lexical analysis started
+2025-09-04 17:54:04,464 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:54:04,464 [INFO] : Logger shutting down
+2025-09-04 17:54:24,446 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:54:24,447 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:54:24,447 [INFO] : [main] Lexical analysis of file: programs/test_basic.txt
+2025-09-04 17:54:24,447 [INFO] : [main] Lexical analysis started
+2025-09-04 17:54:24,448 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:54:24,448 [INFO] : Logger shutting down
+2025-09-04 17:54:24,455 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:54:24,455 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:54:24,455 [INFO] : [main] Lexical analysis of file: programs/test_basic.txt
+2025-09-04 17:54:24,456 [INFO] : [main] Lexical analysis started
+2025-09-04 17:54:24,456 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:54:24,457 [INFO] : Logger shutting down
+2025-09-04 17:54:33,798 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:54:33,798 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:54:33,798 [INFO] : [main] Lexical analysis of file: programs/test_math.txt
+2025-09-04 17:54:33,798 [INFO] : [main] Lexical analysis started
+2025-09-04 17:54:33,800 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:54:33,800 [INFO] : Logger shutting down
+2025-09-04 17:54:33,807 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:54:33,807 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:54:33,807 [INFO] : [main] Lexical analysis of file: programs/test_math.txt
+2025-09-04 17:54:33,807 [INFO] : [main] Lexical analysis started
+2025-09-04 17:54:33,809 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:54:33,809 [INFO] : Logger shutting down
+2025-09-04 17:54:43,394 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:54:43,394 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:54:43,394 [INFO] : [main] Lexical analysis of file: programs/test_length_function.txt
+2025-09-04 17:54:43,394 [INFO] : [main] Lexical analysis started
+2025-09-04 17:54:43,395 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:54:43,395 [INFO] : Logger shutting down
+2025-09-04 17:54:43,402 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:54:43,402 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:54:43,402 [INFO] : [main] Lexical analysis of file: programs/test_length_function.txt
+2025-09-04 17:54:43,403 [INFO] : [main] Lexical analysis started
+2025-09-04 17:54:43,403 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:54:43,403 [INFO] : Logger shutting down
+2025-09-04 17:55:02,833 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:55:02,833 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:55:02,833 [INFO] : [main] Lexical analysis of file: programs/test_print.txt
+2025-09-04 17:55:02,834 [INFO] : [main] Lexical analysis started
+2025-09-04 17:55:02,834 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:55:02,834 [INFO] : Logger shutting down
+2025-09-04 17:55:02,842 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 17:55:02,842 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 17:55:02,842 [INFO] : [main] Lexical analysis of file: programs/test_print.txt
+2025-09-04 17:55:02,842 [INFO] : [main] Lexical analysis started
+2025-09-04 17:55:02,843 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 17:55:02,843 [INFO] : Logger shutting down
+2025-09-04 18:08:05,809 [INFO] : Logger initialized successfully with log rotation (max size: 5MB, max files: 3)
+2025-09-04 18:08:05,809 [INFO] : [main] Lexer application started with log level: INFO
+2025-09-04 18:08:05,809 [INFO] : [main] Lexical analysis of file: test_modulo.txt
+2025-09-04 18:08:05,809 [INFO] : [main] Lexical analysis started
+2025-09-04 18:08:05,810 [INFO] : [main] Lexical analysis completed successfully
+2025-09-04 18:08:05,810 [INFO] : Logger shutting down

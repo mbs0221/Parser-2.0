@@ -1,0 +1,6 @@
+// 测试简单函数
+function hello() {
+    println("Hello World");
+}
+
+hello();

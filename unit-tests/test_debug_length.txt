@@ -1,0 +1,5 @@
+// 简单测试str.length()
+let str = "Hello";
+println("字符串: ", str);
+let len = str.length();
+println("长度: ", len);

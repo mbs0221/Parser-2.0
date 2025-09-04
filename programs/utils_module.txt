@@ -1,0 +1,60 @@
+// 工具函数模块
+
+// 格式化函数
+function format(template, ...args) {
+    // 简化实现 - 实际应该支持格式化字符串
+    return template;
+}
+
+// 调试函数
+function debugPrint(value) {
+    print("DEBUG: " + to_string(value));
+}
+
+function debugPrintln(value) {
+    println("DEBUG: " + to_string(value));
+}
+
+// 类型检查函数
+function isString(value) {
+    return true; // 简化实现
+}
+
+function isNumber(value) {
+    return true; // 简化实现
+}
+
+function isArray(value) {
+    return true; // 简化实现
+}
+
+function isDict(value) {
+    return true; // 简化实现
+}
+
+// 工具函数
+function sleep(milliseconds) {
+    // 简化实现 - 实际应该暂停执行
+    return;
+}
+
+function random() {
+    // 简化实现 - 实际应该生成随机数
+    return 0.5;
+}
+
+function randomInt(min, max) {
+    // 简化实现 - 实际应该生成随机整数
+    return min;
+}
+
+// 系统函数
+function getCurrentTime() {
+    // 简化实现 - 实际应该返回当前时间
+    return 0;
+}
+
+function getEnvironmentVariable(name) {
+    // 简化实现 - 实际应该获取环境变量
+    return "";
+}

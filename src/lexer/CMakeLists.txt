@@ -30,6 +30,9 @@ target_include_directories(lexer PUBLIC
 # 设置编译选项
 target_compile_options(lexer PRIVATE ${LOG4CPP_CFLAGS_OTHER})
 
+# 链接依赖库
+target_link_libraries(lexer common ${LOG4CPP_LIBRARIES})
+
 # 添加debug宏定义（在Debug构建类型下启用）
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(lexer PRIVATE LEXER_DEBUG)

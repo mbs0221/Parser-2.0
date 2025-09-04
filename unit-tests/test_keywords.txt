@@ -1,0 +1,18 @@
+// 测试新的关键字 from 和 as
+
+// 1. 测试默认导入
+import "test_module.txt";
+
+// 2. 测试命名空间导入
+import "test_module.txt" as test;
+
+// 3. 测试选择性导入
+import { func1, func2 } from "test_module.txt";
+
+// 4. 测试带别名的选择性导入
+import { func1 as f1, func2 as f2 } from "test_module.txt";
+
+// 5. 测试通配符导入
+import * from "test_module.txt";
+
+println("关键字测试完成");

@@ -1,0 +1,85 @@
+{
+  "library_name": "string",
+  "library_path": "/lib/x86_64-linux-gnu/libc.so.6",
+  "description": "标准C字符串库的动态加载插件",
+  "header_files": ["string.h"],
+  "functions": [
+    {
+      "name": "strlen",
+      "c_signature": "size_t strlen(const char* str)",
+      "description": "计算字符串长度",
+      "parameters": [
+        {
+          "name": "str",
+          "type": "const char*",
+          "is_pointer": true,
+          "is_const": true,
+          "description": "字符串"
+        }
+      ],
+      "return_type": "size_t",
+      "is_void_return": false
+    },
+    {
+      "name": "strcmp",
+      "c_signature": "int strcmp(const char* str1, const char* str2)",
+      "description": "比较字符串",
+      "parameters": [
+        {
+          "name": "str1",
+          "type": "const char*",
+          "is_pointer": true,
+          "is_const": true,
+          "description": "字符串1"
+        },
+        {
+          "name": "str2",
+          "type": "const char*",
+          "is_pointer": true,
+          "is_const": true,
+          "description": "字符串2"
+        }
+      ],
+      "return_type": "int",
+      "is_void_return": false
+    },
+    {
+      "name": "strncmp",
+      "c_signature": "int strncmp(const char* str1, const char* str2, size_t n)",
+      "description": "比较字符串的前n个字符",
+      "parameters": [
+        {
+          "name": "str1",
+          "type": "const char*",
+          "is_pointer": true,
+          "is_const": true,
+          "description": "字符串1"
+        },
+        {
+          "name": "str2",
+          "type": "const char*",
+          "is_pointer": true,
+          "is_const": true,
+          "description": "字符串2"
+        },
+        {
+          "name": "n",
+          "type": "size_t",
+          "is_pointer": false,
+          "is_const": false,
+          "description": "比较的字符数"
+        }
+      ],
+      "return_type": "int",
+      "is_void_return": false
+    }
+  ],
+  "type_mappings": {
+    "double": "Double",
+    "int": "Integer",
+    "size_t": "Integer",
+    "char*": "String",
+    "const char*": "String",
+    "void": "null"
+  }
+}

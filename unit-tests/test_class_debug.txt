@@ -1,0 +1,7 @@
+// 调试类定义问题
+class DebugClass {
+    public
+    let x = 10;
+}
+
+println("Class definition completed");

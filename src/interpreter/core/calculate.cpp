@@ -423,7 +423,14 @@ Value* Calculator::tryConvertValue(Value* sourceValue, const string& targetTypeN
     if (!methodName.empty() && methodName.length() > 2) {
         methodName[2] = toupper(methodName[2]);
     }
-    return interpreter_->callMethodOnInstance(sourceValue, methodName, {});
+    // 创建实例方法引用
+    ObjectType* sourceType = sourceValue->getValueType();
+    if (!sourceType || !sourceType->supportsMethods()) return nullptr;
+    
+    InstanceMethodReference* methodRef = new InstanceMethodReference(sourceType, sourceValue, methodName);
+    Value* result = interpreter_->callMethodOnInstance(methodRef, {});
+    delete methodRef;
+    return result;
 }
 
 // 确定兼容类型（选择优先级更高的类型）
@@ -452,7 +459,11 @@ Value* Calculator::callMethodWithReference(ObjectType* targetType, Value* target
     if (!targetType || !targetInstance) return nullptr;
     
     // 使用Interpreter的通用方法调用机制
-    return interpreter_->callMethodOnInstance(targetInstance, methodName, args);
+    // 创建实例方法引用
+    InstanceMethodReference* methodRef = new InstanceMethodReference(targetType, targetInstance, methodName);
+    Value* result = interpreter_->callMethodOnInstance(methodRef, args);
+    delete methodRef;
+    return result;
 }
 
 // 执行用户自定义类型的二元运算（使用MethodReference优化）

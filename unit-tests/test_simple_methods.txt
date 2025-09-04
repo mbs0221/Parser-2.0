@@ -1,0 +1,23 @@
+// 测试基本类型方法
+println("=== 测试基本类型方法 ===");
+
+// 1. 字符串方法
+let str = "Hello World";
+println("字符串: ", str);
+println("长度: ", str.length());
+println("大写: ", str.toUpper());
+println("小写: ", str.toLower());
+
+// 2. 数字方法
+let num = 42;
+println("数字: ", num);
+println("转字符串: ", num.toString());
+
+// 3. 数组方法
+let arr = [1, 2, 3, 4, 5];
+println("数组: ", arr);
+println("数组大小: ", arr.size());
+
+// 4. 混合运算
+let result = str + " " + num;
+println("混合运算结果: ", result);

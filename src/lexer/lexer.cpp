@@ -1,5 +1,6 @@
 #include "lexer/value.h"
 #include "lexer/lexer.h"
+#include "common/logger.h"
 
 namespace lexer {
 
@@ -38,6 +39,8 @@ Lexer::Lexer() : inf(nullptr) {
 	words["private"] = Visibility::Private;
 	words["protected"] = Visibility::Protected;
 	words["import"] = new Word(IMPORT, "import");
+	words["from"] = new Word(FROM, "from");
+	words["as"] = new Word(AS, "as");
 	words["null"] = new Word(NULL_VALUE, "null");
 }
 
@@ -85,7 +88,7 @@ Token *Lexer::scan(){//LL(1)
 	}
 	
 	#ifdef LEXER_DEBUG
-	cout << "[LEXER DEBUG] scan() - peek char: '" << peek << "' (ASCII: " << (int)peek << ")" << endl;
+	LOG_DEBUG("scan() - peek char: '" + string(1, peek) + "' (ASCII: " + to_string((int)peek) + ")");
 	#endif
 	
 	// 检查是否到达输入末尾
@@ -126,7 +129,7 @@ Token *Lexer::match_char(){
 		case '?':c = '\?'; break;
 		case '0':c = '\0'; break;
 		default:
-			printf("LEXICAL ERROR line[%03d]: invalid escape sequence '\\%c'\n", line, peek);
+			LOG_ERROR("LEXICAL ERROR line[" + to_string(line) + "]: invalid escape sequence '\\" + string(1, peek) + "'");
 			exit(1);  // 强制退出
 		}
 		inf->read(&peek, 1);// 读取结束引号
@@ -137,7 +140,7 @@ Token *Lexer::match_char(){
 	
 	// 检查是否遇到结束引号
 	if (peek != '\'') {
-		printf("LEXICAL ERROR line[%03d]: unterminated character literal\n", line);
+		LOG_ERROR("LEXICAL ERROR line[" + to_string(line) + "]: unterminated character literal");
 		exit(1);  // 强制退出
 	}
 	
@@ -156,7 +159,7 @@ Token *Lexer::match_id(){
 	inf->read(&peek, 1);
 	inf->seekg(-1, ios_base::cur);
 	
-	cout << "[LEXER DEBUG] Identified identifier: '" << str << "'" << endl;
+	LOG_DEBUG("Identified identifier: '" + str + "'");
 	
 	if (words.find(str) != words.end()){
 		return words[str];
@@ -357,17 +360,16 @@ Token *Lexer::match_other(){
 		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::Div;  // 使用静态常量
 	} else if (peek == '%') {
-		//inf->read(&peek, 1);  // 读取下一个字符
+		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::Mod;  // 使用静态常量
 	} else if (peek == '^') {
-		// inf->read(&peek, 1);  // 读取下一个字符
+		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::BitXor;  // 使用静态常量
 	} else if (peek == '~') {
-		// inf->read(&peek, 1);  // 读取下一个字符
+		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::BitNot;  // 使用静态常量
 	} else if (peek == '.') {
-		// inf->read(&peek, 1);  // 读取下一个字符
-		// 不需要回退文件指针，因为peek已经指向下一个字符
+		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::Dot;  // 使用静态常量
 	} else {
 		// 其他字符返回Token类型
@@ -482,7 +484,7 @@ Token *Lexer::match_string(){
 				case '0': str += '\0'; break;
 				default: 
 					// 无效转义字符，报错
-					printf("LEXICAL ERROR line[%03d]: invalid escape sequence '\\%c'\n", line, peek);
+					LOG_ERROR("LEXICAL ERROR line[" + to_string(line) + "]: invalid escape sequence '\\" + string(1, peek) + "'");
 					exit(1);  // 强制退出
 					break;
 			}
@@ -516,11 +518,53 @@ bool Lexer::match(int Tag) {
     int currentTag = look->Tag;
     move();
     if (currentTag > 255)
-        printf("SYNTAX ERROR line[%03d]: expected %d, got %d\n", line, Tag, currentTag);
+        LOG_ERROR("SYNTAX ERROR line[" + to_string(line) + "]: expected " + to_string(Tag) + ", got " + to_string(currentTag));
     else
-        printf("SYNTAX ERROR line[%03d]: expected '%c', got '%c'\n", line, (char)Tag, (char)currentTag);
+        LOG_ERROR("SYNTAX ERROR line[" + to_string(line) + "]: expected '" + string(1, (char)Tag) + "', got '" + string(1, (char)currentTag) + "'");
     exit(1);  // 强制退出
     return false;
+}
+
+// ==================== 辅助函数实现 ====================
+
+// 检查当前token是否为指定类型
+bool Lexer::isToken(int tag) const {
+    return look && look->Tag == tag;
+}
+
+// 检查当前token是否为关键字
+bool Lexer::isKeyword(int tag) const {
+    return look && look->Tag == tag;
+}
+
+// 检查当前token是否为操作符
+bool Lexer::isOperator(int tag) const {
+    return look && look->Tag == tag;
+}
+
+// 检查当前token是否为标识符
+bool Lexer::isIdentifier() const {
+    return look && look->Tag == ID;
+}
+
+// 检查当前token是否为字符串
+bool Lexer::isString() const {
+    return look && look->Tag == STR;
+}
+
+// 检查当前token是否为数字
+bool Lexer::isNumber() const {
+    return look && (look->Tag == NUM || look->Tag == REAL);
+}
+
+// 检查当前token是否为as关键字
+bool Lexer::isAs() const {
+    return look && look->Tag == AS;
+}
+
+// 检查当前token是否为from关键字
+bool Lexer::isFrom() const {
+    return look && look->Tag == FROM;
 }
 
 // 匹配单词（标识符或关键字）
@@ -530,7 +574,7 @@ string Lexer::matchIdentifier() {
         move();
         return word ? word->word : "";
     }
-    printf("SYNTAX ERROR line[%03d]: expected identifier, got %d\n", line, look->Tag);
+    LOG_ERROR("SYNTAX ERROR line[" + to_string(line) + "]: expected identifier, got " + to_string(look->Tag));
     exit(1);
 }
 

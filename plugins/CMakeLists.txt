@@ -1,92 +1,52 @@
-# 插件构建配置
+# 插件构建配置 - 使用子目录结构
 
-# 核心基础函数插件
-add_library(core_plugin SHARED
-    basic_builtin_plugin.cpp
+# 添加所有插件子目录
+add_subdirectory(core_plugin)
+add_subdirectory(math_plugin)
+add_subdirectory(math_enhanced_plugin)
+add_subdirectory(string_plugin)
+add_subdirectory(array_plugin)
+add_subdirectory(type_plugin)
+add_subdirectory(io_plugin)
+# add_subdirectory(extra_plugin)  # 与core_plugin功能重复，暂时禁用
+
+# 创建插件目标列表（用于依赖管理）
+set(PLUGIN_TARGETS
+    core_plugin
+    math_plugin
+    math_enhanced_plugin
+    string_plugin
+    array_plugin
+    type_plugin
+    io_plugin
+    # extra_plugin  # 与core_plugin功能重复，暂时禁用
 )
 
-target_include_directories(core_plugin PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/Parser
+# 设置所有插件的通用属性
+foreach(PLUGIN_TARGET ${PLUGIN_TARGETS})
+    if(TARGET ${PLUGIN_TARGET})
+        set_target_properties(${PLUGIN_TARGET} PROPERTIES
+            LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins
+            CXX_STANDARD 17
+            CXX_STANDARD_REQUIRED ON
+            POSITION_INDEPENDENT_CODE ON
+        )
+    endif()
+endforeach()
+
+# 创建统一的plugins目标，用于编译所有插件
+add_custom_target(plugins ALL
+    DEPENDS ${PLUGIN_TARGETS}
+    COMMENT "Building all plugins"
 )
 
-target_link_libraries(core_plugin parser interpreter)
-
-# 基础数学函数插件
-add_library(math_plugin SHARED
-    math_plugin.cpp
+# 为plugins目标添加描述
+set_target_properties(plugins PROPERTIES
+    FOLDER "Plugins"
 )
 
-target_include_directories(math_plugin PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/Parser
-)
-
-target_link_libraries(math_plugin parser interpreter)
-
-# 增强数学函数插件
-add_library(math_enhanced_plugin SHARED
-    math_plugin_enhanced.cpp
-)
-
-target_include_directories(math_enhanced_plugin PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/Parser
-)
-
-target_link_libraries(math_enhanced_plugin parser interpreter)
-
-# 字符串处理插件
-add_library(string_plugin SHARED
-    string_plugin.cpp
-)
-
-target_include_directories(string_plugin PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/Parser
-)
-
-target_link_libraries(string_plugin parser interpreter)
-
-# 数组操作插件
-add_library(array_plugin SHARED
-    array_plugin.cpp
-)
-
-target_include_directories(array_plugin PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/Parser
-)
-
-target_link_libraries(array_plugin parser interpreter)
-
-# 类型转换插件
-add_library(type_plugin SHARED
-    type_plugin.cpp
-)
-
-target_include_directories(type_plugin PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/Parser
-)
-
-target_link_libraries(type_plugin parser interpreter)
-
-# IO插件
-add_library(io_plugin SHARED
-    io_plugin.cpp
-)
-
-target_include_directories(io_plugin PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/Parser
-)
-
-target_link_libraries(io_plugin parser interpreter)
-
-# 设置插件输出目录
-set_target_properties(core_plugin math_plugin math_enhanced_plugin string_plugin array_plugin type_plugin io_plugin PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins
-    CXX_STANDARD 11
-    CXX_STANDARD_REQUIRED ON
+# 添加安装规则（可选）
+install(TARGETS ${PLUGIN_TARGETS}
+    LIBRARY DESTINATION plugins
+    RUNTIME DESTINATION plugins
 )

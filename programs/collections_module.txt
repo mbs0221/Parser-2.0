@@ -1,0 +1,76 @@
+// 集合工具模块
+
+// 向量类
+struct Vector {
+    data: array;
+    
+    function Vector() {
+        this.data = [];
+    }
+    
+    function push(element) {
+        this.data.push(element);
+    }
+    
+    function pop() {
+        return this.data.pop();
+    }
+    
+    function size() {
+        return length(this.data);
+    }
+    
+    function get(index) {
+        return this.data[index];
+    }
+    
+    function set(index, value) {
+        this.data[index] = value;
+    }
+}
+
+// 哈希映射类
+struct HashMap {
+    data: dict;
+    
+    function HashMap() {
+        this.data = {};
+    }
+    
+    function put(key, value) {
+        this.data[key] = value;
+    }
+    
+    function get(key) {
+        return this.data[key];
+    }
+    
+    function contains(key) {
+        return this.data[key] != null;
+    }
+    
+    function remove(key) {
+        let value = this.data[key];
+        this.data[key] = null;
+        return value;
+    }
+    
+    function size() {
+        let count = 0;
+        for (let key in this.data) {
+            if (this.data[key] != null) {
+                count = count + 1;
+            }
+        }
+        return count;
+    }
+}
+
+// 集合工具函数
+function createVector() {
+    return Vector();
+}
+
+function createHashMap() {
+    return HashMap();
+}

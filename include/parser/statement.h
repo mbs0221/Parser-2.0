@@ -24,17 +24,55 @@ struct Statement : public AST {
     virtual void accept(StatementVisitor* visitor) = 0;
 };
 
+// ==================== 导入类型定义 ====================
+// 导入类型枚举
+enum class ImportType {
+    DEFAULT,        // import "module";
+    NAMESPACE,      // import "module" as ns;
+    SELECTIVE,      // import { func1, func2 } from "module";
+    WILDCARD        // import * from "module";
+};
 
+// 导入项信息
+struct ImportItem {
+    std::string name;           // 导入的名称
+    std::string alias;          // 别名（可选）
+    
+    ImportItem(const std::string& n, const std::string& a = "") 
+        : name(n), alias(a.empty() ? n : a) {}
+};
 
 // ==================== 基本语句 ====================
-// 导入语句
+// 导入语句 - 增强版本
 struct ImportStatement : public Statement {
-    std::string moduleName;
+    std::string modulePath;     // 模块路径
+    ImportType type;            // 导入类型
+    std::string namespaceAlias; // 命名空间别名
+    std::vector<ImportItem> items; // 导入项列表（用于选择性导入）
     
-    ImportStatement(const std::string& name) : moduleName(name) {}
+    // 构造函数
+    ImportStatement(const std::string& path, ImportType t = ImportType::DEFAULT)
+        : modulePath(path), type(t) {}
+    
+    ImportStatement(const std::string& path, const std::string& alias)
+        : modulePath(path), type(ImportType::NAMESPACE), namespaceAlias(alias) {}
+    
+    ImportStatement(const std::string& path, const std::vector<ImportItem>& importItems)
+        : modulePath(path), type(ImportType::SELECTIVE), items(importItems) {}
+    
+    // 添加导入项
+    void addImportItem(const std::string& name, const std::string& alias = "") {
+        items.emplace_back(name, alias);
+    }
+    
+    // 设置通配符导入
+    void setWildcardImport() {
+        type = ImportType::WILDCARD;
+        items.clear();
+    }
     
     ~ImportStatement() {
-        // 不需要手动清理，string会自动管理内存
+        // 不需要手动清理，容器会自动管理内存
     }
     
     void accept(StatementVisitor* visitor) override;
@@ -56,8 +94,6 @@ struct ExpressionStatement : public Statement {
     void accept(StatementVisitor* visitor) override;
 };
 
-
-
 // ==================== 控制流语句 ====================
 // 条件语句
 struct IfStatement : public Statement {
@@ -69,18 +105,9 @@ struct IfStatement : public Statement {
         : condition(cond), thenStatement(thenStmt), elseStatement(elseStmt) {}
     
     ~IfStatement() {
-        if (condition) {
-            delete condition;
-            condition = nullptr;
-        }
-        if (thenStatement) {
-            delete thenStatement;
-            thenStatement = nullptr;
-        }
-        if (elseStatement) {
-            delete elseStatement;
-            elseStatement = nullptr;
-        }
+        if (condition) delete condition;
+        if (thenStatement) delete thenStatement;
+        if (elseStatement) delete elseStatement;
     }
     
     void accept(StatementVisitor* visitor) override;
@@ -91,70 +118,46 @@ struct WhileStatement : public Statement {
     Expression* condition;
     Statement* body;
     
-    WhileStatement(Expression* cond, Statement* stmt) : condition(cond), body(stmt) {}
+    WhileStatement(Expression* cond, Statement* bodyStmt)
+        : condition(cond), body(bodyStmt) {}
     
     ~WhileStatement() {
-        if (condition) {
-            delete condition;
-            condition = nullptr;
-        }
-        if (body) {
-            delete body;
-            body = nullptr;
-        }
+        if (condition) delete condition;
+        if (body) delete body;
     }
     
     void accept(StatementVisitor* visitor) override;
 };
 
-// For循环语句
 struct ForStatement : public Statement {
-    Statement* initializer;
+    Statement* initialization;
     Expression* condition;
-    Expression* increment;
+    Statement* increment;
     Statement* body;
     
-    ForStatement(Statement* init, Expression* cond, Expression* inc, Statement* stmt)
-        : initializer(init), condition(cond), increment(inc), body(stmt) {}
+    ForStatement(Statement* init, Expression* cond, Statement* inc, Statement* bodyStmt)
+        : initialization(init), condition(cond), increment(inc), body(bodyStmt) {}
     
     ~ForStatement() {
-        if (initializer) {
-            delete initializer;
-            initializer = nullptr;
-        }
-        if (condition) {
-            delete condition;
-            condition = nullptr;
-        }
-        if (increment) {
-            delete increment;
-            increment = nullptr;
-        }
-        if (body) {
-            delete body;
-            body = nullptr;
-        }
+        if (initialization) delete initialization;
+        if (condition) delete condition;
+        if (increment) delete increment;
+        if (body) delete body;
     }
     
     void accept(StatementVisitor* visitor) override;
 };
 
-// Do-While循环语句
 struct DoWhileStatement : public Statement {
     Statement* body;
     Expression* condition;
     
-    DoWhileStatement(Statement* stmt, Expression* cond) : body(stmt), condition(cond) {}
+    DoWhileStatement(Statement* bodyStmt, Expression* cond)
+        : body(bodyStmt), condition(cond) {}
     
     ~DoWhileStatement() {
-        if (body) {
-            delete body;
-            body = nullptr;
-        }
-        if (condition) {
-            delete condition;
-            condition = nullptr;
-        }
+        if (body) delete body;
+        if (condition) delete condition;
     }
     
     void accept(StatementVisitor* visitor) override;
@@ -162,124 +165,105 @@ struct DoWhileStatement : public Statement {
 
 // 跳转语句
 struct BreakStatement : public Statement {
-    BreakStatement() {}
-    
     void accept(StatementVisitor* visitor) override;
 };
 
 struct ContinueStatement : public Statement {
-    ContinueStatement() {}
-    
     void accept(StatementVisitor* visitor) override;
 };
 
-// 返回语句
 struct ReturnStatement : public Statement {
     Expression* returnValue;
     
     ReturnStatement(Expression* value = nullptr) : returnValue(value) {}
     
     ~ReturnStatement() {
-        if (returnValue) {
-            delete returnValue;
-            returnValue = nullptr;
-        }
+        if (returnValue) delete returnValue;
     }
     
     void accept(StatementVisitor* visitor) override;
 };
 
-
-
 // ==================== 异常处理语句 ====================
-// Try-Catch-Finally语句 - 合并了CatchStatement和FinallyStatement
 struct TryStatement : public Statement {
     Statement* tryBlock;
+    std::string exceptionVariable;
+    Statement* catchBlock;
+    Statement* finallyBlock;
     
-    // 统一的catch结构
-    struct CatchBlock {
-        string exceptionType;
-        string exceptionName;
-        Statement* catchBlock;
-        
-        CatchBlock(const string& type, const string& name, Statement* stmt)
-            : exceptionType(type), exceptionName(name), catchBlock(stmt) {}
-    };
+    TryStatement(Statement* tryBlk, const std::string& exVar, Statement* catchBlk, Statement* finallyBlk = nullptr)
+        : tryBlock(tryBlk), exceptionVariable(exVar), catchBlock(catchBlk), finallyBlock(finallyBlk) {}
     
-    vector<CatchBlock> catchBlocks;
-    Statement* finallyBlock;  // nullptr表示没有finally块
-    
-    TryStatement(Statement* tryStmt, const vector<CatchBlock>& catchStmts, Statement* finallyStmt = nullptr)
-        : tryBlock(tryStmt), catchBlocks(catchStmts), finallyBlock(finallyStmt) {}
+    ~TryStatement() {
+        if (tryBlock) delete tryBlock;
+        if (catchBlock) delete catchBlock;
+        if (finallyBlock) delete finallyBlock;
+    }
     
     void accept(StatementVisitor* visitor) override;
 };
 
 // ==================== Switch语句 ====================
-// Switch语句 - 合并了CaseStatement和DefaultStatement
 struct SwitchStatement : public Statement {
     Expression* expression;
+    std::vector<std::pair<Expression*, Statement*>> cases;
+    Statement* defaultCase;
     
-    // 统一的case结构，value为nullptr表示default分支
-    struct SwitchCase {
-        Expression* value;  // nullptr表示default分支
-        vector<Statement*> statements;
-        
-        SwitchCase(Expression* val, const vector<Statement*>& stmts) 
-            : value(val), statements(stmts) {}
-    };
+    SwitchStatement(Expression* expr) : expression(expr), defaultCase(nullptr) {}
     
-    vector<SwitchCase> cases;
+    ~SwitchStatement() {
+        if (expression) delete expression;
+        for (auto& case_pair : cases) {
+            if (case_pair.first) delete case_pair.first;
+            if (case_pair.second) delete case_pair.second;
+        }
+        if (defaultCase) delete defaultCase;
+    }
     
-    SwitchStatement(Expression* expr, const vector<SwitchCase>& caseStmts)
-        : expression(expr), cases(caseStmts) {}
+    void addCase(Expression* caseExpr, Statement* caseStmt) {
+        cases.emplace_back(caseExpr, caseStmt);
+    }
+    
+    void setDefaultCase(Statement* defaultStmt) {
+        defaultCase = defaultStmt;
+    }
     
     void accept(StatementVisitor* visitor) override;
 };
 
 // ==================== 复合语句 ====================
-// 块语句
 struct BlockStatement : public Statement {
-    vector<Statement*> statements;
+    std::vector<Statement*> statements;
     
-    BlockStatement() : statements() {}
-    BlockStatement(const vector<Statement*>& stmts) : statements(stmts) {}
+    BlockStatement() = default;
     
     ~BlockStatement() {
         for (Statement* stmt : statements) {
-            if (stmt) {
-                delete stmt;
-            }
+            if (stmt) delete stmt;
         }
-        statements.clear();
     }
     
     void addStatement(Statement* stmt) {
-        statements.push_back(stmt);
+        if (stmt) statements.push_back(stmt);
     }
     
     void accept(StatementVisitor* visitor) override;
 };
 
 // ==================== 程序根节点 ====================
-// 程序根节点 - 继承自Statement
 struct Program : public Statement {
-    vector<Statement*> statements;
+    std::vector<Statement*> statements;
     
-    Program() : statements() {}
-    Program(const vector<Statement*>& stmts) : statements(stmts) {}
+    Program() = default;
     
     ~Program() {
         for (Statement* stmt : statements) {
-            if (stmt) {
-                delete stmt;
-            }
+            if (stmt) delete stmt;
         }
-        statements.clear();
     }
     
     void addStatement(Statement* stmt) {
-        statements.push_back(stmt);
+        if (stmt) statements.push_back(stmt);
     }
     
     void accept(StatementVisitor* visitor) override;

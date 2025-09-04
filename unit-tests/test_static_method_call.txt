@@ -1,0 +1,20 @@
+// 测试静态方法调用
+class MathUtils {
+    public
+    function add(a, b) {
+        return a + b;
+    }
+    
+    function multiply(a, b) {
+        return a * b;
+    }
+}
+
+// 测试静态方法调用
+let result1 = MathUtils.add(5, 3);
+println("MathUtils.add(5, 3) = ", result1);
+
+let result2 = MathUtils.multiply(4, 6);
+println("MathUtils.multiply(4, 6) = ", result2);
+
+println("Static method call test completed");

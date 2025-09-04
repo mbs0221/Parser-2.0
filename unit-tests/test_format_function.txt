@@ -1,0 +1,44 @@
+// 测试Python风格的format函数
+// 这个程序测试新添加的format函数的各种用法
+
+// 测试基本的位置参数格式化
+let result1 = format("Hello {}!", "World");
+println("基本格式化: " + result1);
+
+// 测试数字格式化
+let result2 = format("数字: {}", 42);
+println("数字格式化: " + result2);
+
+// 测试浮点数格式化
+let result3 = format("浮点数: {}", 3.14159);
+println("浮点数格式化: " + result3);
+
+// 测试多个参数
+let result4 = format("{} + {} = {}", 10, 20, 30);
+println("多参数格式化: " + result4);
+
+// 测试位置参数索引
+let result5 = format("{1} 和 {0}", "World", "Hello");
+println("位置参数: " + result5);
+
+// 测试数字精度格式化
+let result6 = format("精度: {:.2f}", 3.14159);
+println("精度格式化: " + result6);
+
+// 测试字符串宽度格式化
+let result7 = format("宽度: {:10s}", "test");
+println("宽度格式化: " + result7);
+
+// 测试整数宽度格式化
+let result8 = format("整数宽度: {:4d}", 42);
+println("整数宽度格式化: " + result8);
+
+// 测试混合格式化
+let result9 = format("混合: {} 的年龄是 {:2d} 岁，身高 {:.1f} 米", "张三", 25, 1.75);
+println("混合格式化: " + result9);
+
+// 测试空格式化
+let result10 = format("空格式化: {}", "");
+println("空格式化: " + result10);
+
+println("所有format函数测试完成！");

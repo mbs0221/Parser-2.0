@@ -2,6 +2,8 @@
 #include "common/logger.h"
 #include "interpreter/values/value.h"
 #include "interpreter/scope/scope.h"
+// MethodReference classes are defined in value.h
+#include "interpreter/types/types.h"
 #include <iostream>
 #include <dlfcn.h>
 #include <filesystem>
@@ -106,8 +108,28 @@ bool PluginManager::unloadPlugin(const string& pluginName) {
 
 void PluginManager::registerAllPlugins(ScopeManager& scopeManager) {
     for (const auto& pair : plugins) {
-        pair.second->registerFunctions(scopeManager);
+        registerPluginFunctions(pair.second, scopeManager);
     }
+}
+
+void PluginManager::registerPluginFunctions(BuiltinPlugin* plugin, ScopeManager& scopeManager) {
+    if (!plugin) return;
+    
+    // 获取插件的函数列表
+    std::vector<FunctionInfo> functions = plugin->getFunctions();
+    
+    // 注册每个函数到作用域管理器
+    for (const FunctionInfo& funcInfo : functions) {
+        // 创建BuiltinFunction对象
+        BuiltinFunction* builtinFunc = new BuiltinFunction(funcInfo.name, funcInfo.function, funcInfo.parameterNames);
+        
+        // 注册到作用域管理器
+        scopeManager.defineFunction(funcInfo.name, builtinFunc);
+        
+        LOG_DEBUG("Registered function: " + funcInfo.name + " from plugin " + plugin->getPluginInfo().name);
+    }
+    
+    LOG_INFO("Registered " + std::to_string(functions.size()) + " functions from plugin " + plugin->getPluginInfo().name);
 }
 
 vector<string> PluginManager::getLoadedPlugins() const {
@@ -133,4 +155,39 @@ PluginInfo PluginManager::getPluginInfo(const string& pluginName) const {
 // ==================== BuiltinPlugin辅助方法实现 ====================
 
 // ==================== PluginManager辅助方法实现 ====================
-// 注意：callMethodOnValue方法已移动到Interpreter类中
+// 通过类型系统调用方法
+Value* PluginManager::callMethodOnValue(Value* value, const string& methodName, vector<Value*>& args) {
+    if (!value) return nullptr;
+    
+    // 获取值的类型
+    ObjectType* valueType = value->getValueType();
+    if (!valueType || !valueType->supportsMethods()) {
+        LOG_ERROR("Value type does not support methods: " + (valueType ? valueType->getTypeName() : "null"));
+        return nullptr;
+    }
+    
+    // 查找方法 - 需要检查类型是否支持方法
+    Function* method = nullptr;
+    if (ClassType* classType = dynamic_cast<ClassType*>(valueType)) {
+        method = classType->findUserMethod(methodName, args);
+    } else if (PrimitiveType* primitiveType = dynamic_cast<PrimitiveType*>(valueType)) {
+        method = primitiveType->findUserMethod(methodName, args);
+    } else if (Interface* interfaceType = dynamic_cast<Interface*>(valueType)) {
+        method = interfaceType->findUserMethod(methodName, args);
+    }
+    
+    if (!method) {
+        LOG_ERROR("Method not found: " + methodName + " on type " + valueType->getTypeName());
+        return nullptr;
+    }
+    
+    // 创建实例方法引用
+    InstanceMethodReference* methodRef = new InstanceMethodReference(valueType, value, methodName);
+    
+    // 调用方法 - 这里需要访问Interpreter实例
+    // 由于PluginManager是静态方法，我们需要通过其他方式调用
+    // 暂时返回nullptr，需要重构
+    LOG_ERROR("callMethodOnValue: Method call not implemented yet");
+    delete methodRef;
+    return nullptr;
+}

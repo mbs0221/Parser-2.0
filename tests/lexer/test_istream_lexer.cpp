@@ -7,14 +7,14 @@
 using namespace std;
 
 int main() {
-    cout << "=== 测试Lexer输入流构造函数 ===" << endl;
+    LOG_INFO("=== 测试Lexer输入流构造函数 ===");
     
     // 创建一个包含简单代码的字符串
     string code = "let a = 1;\nlet b = 2;\nlet c = a + b;";
     
-    cout << "测试代码:" << endl;
-    cout << code << endl;
-    cout << endl;
+    LOG_INFO("测试代码:");
+    LOG_INFO(code);
+    LOG_INFO("");
     
     // 创建字符串输入流
     istringstream input(code);
@@ -22,7 +22,7 @@ int main() {
     // 使用输入流构造函数创建lexer
     lexer::Lexer lex(input);
     
-    cout << "开始词法分析..." << endl;
+    LOG_INFO("开始词法分析...");
     
     // 开始扫描token
     lexer::Token* token;
@@ -30,32 +30,31 @@ int main() {
     
     while ((token = lex.scan()) != nullptr && token != lexer::Token::END_OF_FILE) {
         tokenCount++;
-        cout << "Token " << tokenCount << ": ";
+        LOG_INFO("Token " + to_string(tokenCount) + ": ");
         
         // 显示token信息
         if (token->Tag == lexer::ID) {
-            cout << "ID (" << token->str() << ")";
+            LOG_INFO("ID (" + token->str() + ")");
         } else if (token->Tag == lexer::NUM) {
-            cout << "NUM (" << token->str() << ")";
+            LOG_INFO("NUM (" + token->str() + ")");
         } else if (token->Tag == lexer::STR) {
-            cout << "STR (" << token->str() << ")";
+            LOG_INFO("STR (" + token->str() + ")");
         } else if (token->Tag == lexer::LET) {
-            cout << "LET";
+            LOG_INFO("LET");
         } else {
-            cout << "UNKNOWN(" << token->Tag << ")";
+            LOG_INFO("UNKNOWN(" + to_string(token->Tag) + ")");
         }
         
-        cout << " at Line " << lex.line << ", Col " << lex.column << endl;
+        LOG_INFO(" at Line " + to_string(lex.line) + ", Col " + to_string(lex.column));
         
         // 防止无限循环
         if (tokenCount > 100) {
-            cout << "警告: Token数量过多，可能存在循环" << endl;
+            LOG_WARN("警告: Token数量过多，可能存在循环");
             break;
         }
     }
     
-    cout << endl;
-    cout << "词法分析完成，共生成 " << tokenCount << " 个token" << endl;
+    LOG_INFO("词法分析完成，共生成 " + to_string(tokenCount) + " 个token");
     
     return 0;
 } 

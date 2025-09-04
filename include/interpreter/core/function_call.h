@@ -60,10 +60,10 @@ protected:
 // 静态方法调用（类上下文）- 继承BasicFunctionCall，增加静态成员注入
 class StaticMethodCall : public BasicFunctionCall {
 private:
-    ClassType* classType;
+    ObjectType* objectType;
     
 public:
-    StaticMethodCall(Scope* scope, ClassType* cls, Function* method, const std::vector<Value*>& arguments);
+    StaticMethodCall(Scope* scope, ObjectType* cls, Function* method, const std::vector<Value*>& arguments);
     
     // 重写execute方法，先注入静态成员，再调用基类方法
     Value* execute() override;

@@ -653,7 +653,7 @@ public:
             if (globalRegistry) {
                 globalRegistry->registerType(name, type);
                 // 添加调试信息（使用标准输出，避免编译问题）
-                std::cout << "AutoRegistrar: Registered type '" << name << "' to global registry" << std::endl;
+                LOG_INFO("AutoRegistrar: Registered type '" + name + "' to global registry");
             }
         }
     };
@@ -667,7 +667,7 @@ public:
     // 注册类型
     void registerType(const std::string& name, ObjectType* type) {
         types[name] = type;
-        std::cout << "TypeRegistry: Registered type '" << name << "' (total types: " << types.size() << ")" << std::endl;
+        LOG_INFO("TypeRegistry: Registered type '" + name + "' (total types: " + std::to_string(types.size()) + ")");
     }
     
     // 获取类型
@@ -782,7 +782,7 @@ public:
     static void register_##name##_type() { \
         /* 使用registerBuiltinType方法，确保正确注册到全局注册表 */ \
         TypeRegistry::registerBuiltinType(#name, new TypeClass()); \
-        std::cout << "AutoRegistrar: Registered type '" << #name << "' to global registry" << std::endl; \
+        LOG_INFO("AutoRegistrar: Registered type '" + std::string(#name) + "' to global registry"); \
     } \
     /* 提供显式初始化函数，用于动态库加载后调用 */ \
     extern "C" void register_##name##_type_explicit() { \
@@ -793,7 +793,7 @@ public:
     static void register_##name##_type() { \
         /* 使用registerBuiltinType方法，确保正确注册到全局注册表 */ \
         TypeRegistry::registerBuiltinType(#name, new TypeClass()); \
-        std::cout << "AutoRegistrar: Registered type '" << #name << "' to global registry" << std::endl; \
+        LOG_INFO("AutoRegistrar: Registered type '" + std::string(#name) + "' to global registry"); \
     } \
     /* 提供显式初始化函数，用于动态库加载后调用 */ \
     extern "C" void register_##name##_type_explicit() { \

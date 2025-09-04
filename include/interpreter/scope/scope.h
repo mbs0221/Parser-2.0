@@ -129,6 +129,9 @@ struct Scope {
     // 获取参数名称列表（用于函数原型匹配）
     std::vector<std::string> getParameterNames() const;
     
+    // 获取有名字的函数实际参数（过滤系统变量）
+    std::map<std::string, Value*> getNamedArgs() const;
+    
     // 获取kwargs字典（可变参数支持）
     Dict* getKwargs() const;
     

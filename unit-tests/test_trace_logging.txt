@@ -1,0 +1,9 @@
+// 测试trace级别日志
+class TraceTestClass {
+    public
+    function test() {
+        println("Testing trace logging");
+    }
+}
+
+println("Trace logging test completed");

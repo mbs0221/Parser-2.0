@@ -1,0 +1,12 @@
+// 只测试类定义，不实例化
+class Person {
+    public
+    let name = "Unknown";
+    let age = 0;
+    
+    function greet() {
+        println("Hello, I am ", name, " and I am ", age, " years old");
+    }
+}
+
+println("Class definition completed");

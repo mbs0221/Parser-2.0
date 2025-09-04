@@ -1,0 +1,29 @@
+// 测试内置函数重复定义错误处理
+
+// 尝试重新定义内置函数 print
+function print() {
+    println("This should not work - print is already defined");
+}
+
+// 尝试重新定义内置函数 length
+function length() {
+    println("This should not work - length is already defined");
+}
+
+// 尝试重新定义内置函数 max
+function max() {
+    println("This should not work - max is already defined");
+}
+
+// 测试类中定义内置函数名的方法
+class TestClass {
+    function print() {
+        println("This should not work - print is already defined as built-in");
+    }
+    
+    function length() {
+        println("This should not work - length is already defined as built-in");
+    }
+}
+
+println("Test completed - should see error messages above");

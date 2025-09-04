@@ -48,6 +48,18 @@ Value* MethodReference::call(Scope* scope) {
         return cachedFunction->call(scope);
     }
     
+    // 调试：打印 scope 中的所有变量
+    LOG_DEBUG("MethodReference::call: Scope contents for method '" + methodName + "':");
+    if (scope && scope->getObjectRegistry()) {
+        vector<string> allNames = scope->getObjectRegistry()->getVariableNames();
+        for (const string& name : allNames) {
+            Value* value = scope->getVariable(name);
+            if (value) {
+                LOG_DEBUG("MethodReference::call: Scope variable: " + name + " = " + value->toString() + " (" + value->getBuiltinTypeName() + ")");
+            }
+        }
+    }
+    
     // 计算函数签名 - 使用FunctionSignature的构造函数
     FunctionSignature callSignature(methodName, scope);
     

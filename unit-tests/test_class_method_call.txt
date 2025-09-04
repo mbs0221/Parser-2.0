@@ -1,0 +1,13 @@
+// 测试类方法调用
+class MethodCallClass {
+    public
+    function add(a, b) {
+        return a + b;
+    }
+}
+
+// 测试类方法调用
+let result = MethodCallClass.add(5, 3);
+println("MethodCallClass.add(5, 3) = ", result);
+
+println("Class method call test completed");

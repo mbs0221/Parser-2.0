@@ -164,7 +164,13 @@ Value* Interpreter::visit(CastExpression* castExpr) {
     if (valueType->supportsMethods()) {
         // 调用转换方法（转换方法通常不需要参数）
         std::vector<Value*> emptyArgs;
-        Value* result = callMethodOnInstance(operandValue, methodName, emptyArgs);
+        // 创建实例方法引用
+        ObjectType* operandType = operandValue->getValueType();
+        if (!operandType || !operandType->supportsMethods()) return nullptr;
+        
+        InstanceMethodReference* methodRef = new InstanceMethodReference(operandType, operandValue, methodName);
+        Value* result = callMethodOnInstance(methodRef, emptyArgs);
+        delete methodRef;
         
         if (result) {
             return result;
@@ -373,12 +379,22 @@ Value* Interpreter::visit(MethodReferenceExpression* expr) {
     if (!expr || !expr->target || !expr->key) return nullptr;
     
     // 求值目标
+    LOG_DEBUG("About to evaluate target");
     Value* targetValue = visit(expr->target);
-    if (!targetValue) return nullptr;
+    if (!targetValue) {
+        LOG_DEBUG("targetValue is null");
+        return nullptr;
+    }
+    LOG_DEBUG("targetValue evaluated: " + targetValue->toString());
     
     // 求值键
+    LOG_DEBUG("About to evaluate key");
     Value* keyValue = visit(expr->key);
-    if (!keyValue) return nullptr;
+    if (!keyValue) {
+        LOG_DEBUG("keyValue is null");
+        return nullptr;
+    }
+    LOG_DEBUG("keyValue evaluated: " + keyValue->toString());
     
     // 获取成员名称
     string memberName = extractMemberName(keyValue);
@@ -451,7 +467,10 @@ Value* Interpreter::visit(IndexAccessExpression* expr) {
     }
     
     // 使用新的方法调用机制
-    Value* result = callMethodOnInstance(target, methodName, args);
+    // 创建实例方法引用
+    InstanceMethodReference* methodRef = new InstanceMethodReference(targetType, target, methodName);
+    Value* result = callMethodOnInstance(methodRef, args);
+    delete methodRef;
     
     // 清理临时参数（只清理我们创建的临时参数）
     if (dynamic_cast<String*>(key) == nullptr && args.size() > 0) {
@@ -515,20 +534,23 @@ Value* Interpreter::visit(CallExpression* call) {
     if (!call) return nullptr;
     
     // 调试：显示CallExpression的arguments信息
-    LOG_DEBUG("CallExpression: arguments count: " + to_string(call->arguments.size()));
+    LOG_DEBUG("arguments count: " + to_string(call->arguments.size()));
     for (size_t i = 0; i < call->arguments.size(); ++i) {
-        LOG_DEBUG("CallExpression: argument " + to_string(i) + " type: " + typeid(*call->arguments[i]).name());
+        LOG_DEBUG("argument " + to_string(i) + " type: " + typeid(*call->arguments[i]).name());
     }
     
     // 求值被调用者（函数表达式）
+    LOG_DEBUG("About to evaluate callee");
     Value* callee = visit(call->callee);
     if (!callee) {
+        LOG_DEBUG("callee is null");
         throw ReturnException(new String("Failed to evaluate function callee"));
     }
+    LOG_DEBUG("callee evaluated successfully");
     
     // 调试：显示callee信息
-    LOG_DEBUG("CallExpression: callee is not null, type: " + callee->getBuiltinTypeName());
-    LOG_DEBUG("CallExpression: callee toString: " + callee->toString());
+    LOG_DEBUG("callee is not null, type: " + callee->getBuiltinTypeName());
+    LOG_DEBUG("callee toString: " + callee->toString());
     
     // 求值所有参数
     vector<Value*> evaluatedArgs;
@@ -592,30 +614,28 @@ Value* Interpreter::visit(CallExpression* call) {
         if (!func->isCallable()) {
             Interpreter::reportError("Function is not callable");
         } else {
-            // 对于 MethodReference，也需要使用scope来管理参数
+            // 对于 MethodReference，使用 callMethodOnInstance 的简洁方式
             if (MethodReference* methodRef = dynamic_cast<MethodReference*>(func)) {
                 // 检查是否为实例方法引用
                 if (InstanceMethodReference* instanceMethodRef = dynamic_cast<InstanceMethodReference*>(methodRef)) {
-                    // 实例方法调用，使用 InstanceMethodCall 来设置 this 指针
-                    InstanceMethodCall functionCall(scopeManager.getCurrentScope(), 
-                                                   instanceMethodRef->getTargetInstance(), 
-                                                   methodRef, evaluatedArgs);
-                    result = functionCall.execute();
+                    // 使用 callMethodOnInstance 的简洁方式
+                    LOG_DEBUG("CallExpression: Using callMethodOnInstance for instance method: " + methodRef->getMethodName());
+                    LOG_DEBUG("CallExpression: About to call callMethodOnInstance");
+                    result = callMethodOnInstance(instanceMethodRef, evaluatedArgs);
+                    LOG_DEBUG("CallExpression: callMethodOnInstance returned");
+                } else if (StaticMethodReference* staticMethodRef = dynamic_cast<StaticMethodReference*>(methodRef)) {
+                    // 静态方法调用
+                    LOG_DEBUG("CallExpression: Using callMethodOnClass for static method: " + methodRef->getMethodName());
+                    result = callMethodOnClass(staticMethodRef, evaluatedArgs);
                 } else {
-                    // 静态方法调用，使用 BasicFunctionCall
-                    BasicFunctionCall functionCall(scopeManager.getCurrentScope(), func, evaluatedArgs);
-                    result = functionCall.execute();
+                    // 不应该有其他类型的 MethodReference
+                    LOG_DEBUG("CallExpression: Unknown MethodReference type");
+                    throw ReturnException(new String("Unknown MethodReference type"));
                 }
             } else {
-                // 其他函数类型，使用参数验证
-                if (!func->validateArguments(evaluatedArgs)) {
-                    size_t expectedParams = func->getParameters().size();
-                    throw ReturnException(new String("Function expects " + to_string(expectedParams) + " arguments, but got " + to_string(evaluatedArgs.size())));
-                } else {
-                    // 使用新的函数调用架构
-                    BasicFunctionCall functionCall(scopeManager.getCurrentScope(), func, evaluatedArgs);
-                    result = functionCall.execute();
-                }
+                // 其他函数类型，使用 callFunction 的简洁方式
+                LOG_DEBUG("CallExpression: Using callFunction for regular function: " + func->getName());
+                result = callFunction(func, evaluatedArgs);
             }
         }
     } else {

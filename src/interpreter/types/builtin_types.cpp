@@ -306,12 +306,12 @@ REGISTER_BUILTIN_TYPE(dict, DictType)      // DictType -> ContainerType -> Objec
 void debugTypeRegistration() {
     TypeRegistry* globalRegistry = TypeRegistry::getGlobalInstance();
     if (globalRegistry) {
-        cout << "=== Debug: Built-in Types Registration ===" << endl;
-        cout << "Global registry has " << globalRegistry->types.size() << " types:" << endl;
+        LOG_DEBUG("=== Debug: Built-in Types Registration ===");
+        LOG_DEBUG("Global registry has " + to_string(globalRegistry->types.size()) + " types:");
         for (const auto& pair : globalRegistry->types) {
-            cout << "  - " << pair.first << " -> " << pair.second->getTypeName() << endl;
+            LOG_DEBUG("  - " + pair.first + " -> " + pair.second->getTypeName());
         }
-        cout << "=========================================" << endl;
+        LOG_DEBUG("=========================================");
     }
 }
 
@@ -328,7 +328,7 @@ void ensureDebugInitialized() {
 
 // 统一的动态库初始化函数
 extern "C" void initialize_interpreter_types() {
-    std::cout << "Initializing interpreter types..." << std::endl;
+    LOG_INFO("Initializing interpreter types...");
     
     // 调用所有类型的显式初始化函数
     register_bool_type_explicit();
@@ -340,7 +340,7 @@ extern "C" void initialize_interpreter_types() {
     register_array_type_explicit();
     register_dict_type_explicit();
     
-    std::cout << "Interpreter types initialization completed." << std::endl;
+    LOG_INFO("Interpreter types initialization completed.");
     
     // 显示调试信息
     debugTypeRegistration();

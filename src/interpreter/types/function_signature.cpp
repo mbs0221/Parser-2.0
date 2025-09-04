@@ -57,23 +57,31 @@ FunctionSignature::FunctionSignature(const string& funcName, class Scope* scope)
         return;
     }
     
-    // FunctionSignature应该按照FunctionCall绑定参数的方式来统计参数
-    // 使用Scope的getParameterNames()方法，它已经过滤掉了系统变量
+    // 检查是否有可变参数标志
+    bool hasVarArgs = scope->hasArgs();
+    bool hasVarKwargs = scope->hasKwargs();
     
-    // 获取真正的函数参数名称（已过滤系统变量）
-    vector<string> paramNames = scope->getParameterNames();
-    LOG_DEBUG("FunctionSignature: Scope has " + to_string(paramNames.size()) + " parameter names");
+    LOG_DEBUG("FunctionSignature: Checking for variadic arguments - hasArgs: " + 
+              string(hasVarArgs ? "true" : "false") + ", hasKwargs: " + string(hasVarKwargs ? "true" : "false"));
     
-    for (const string& paramName : paramNames) {
-        Value* value = scope->getVariable(paramName);
-        if (value) {
-            string paramType = value->getBuiltinTypeName();
-            parameters.push_back(Parameter(paramName, paramType, "", false));
-            LOG_DEBUG("FunctionSignature: Added parameter: " + paramName + " (" + paramType + ")");
+    // 对于方法调用，我们不应该从scope中提取参数，因为scope包含了脚本执行过程中的所有变量
+    // 方法调用的参数应该通过实际传递的arguments来确定
+    // 这里我们创建一个空的签名，让方法查找基于名称进行
+    
+    // 调试：打印新作用域中的所有变量
+    LOG_DEBUG("FunctionSignature: Scope contents for method call '" + funcName + "':");
+    if (scope && scope->getObjectRegistry()) {
+        vector<string> allNames = scope->getObjectRegistry()->getVariableNames();
+        LOG_DEBUG("FunctionSignature: Found " + to_string(allNames.size()) + " variables in scope");
+        for (const string& name : allNames) {
+            Value* value = scope->getVariable(name);
+            if (value) {
+                LOG_DEBUG("FunctionSignature: Scope variable: " + name + " = " + value->toString() + " (" + value->getBuiltinTypeName() + ")");
+            }
         }
     }
     
-    LOG_DEBUG("FunctionSignature: Created signature for '" + funcName + "' with " + to_string(parameters.size()) + " function parameters (using getParameterNames)");
+    LOG_DEBUG("FunctionSignature: Creating empty signature for method call '" + funcName + "'");
     LOG_DEBUG("FunctionSignature: Final signature: " + toString());
 }
 

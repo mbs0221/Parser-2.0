@@ -36,7 +36,7 @@ target_include_directories(parser PUBLIC
 target_compile_options(parser PRIVATE ${LOG4CPP_CFLAGS_OTHER})
 
 # 链接依赖库
-target_link_libraries(parser lexer)
+target_link_libraries(parser lexer common ${LOG4CPP_LIBRARIES})
 
 # 设置输出目录
 set_target_properties(parser PROPERTIES

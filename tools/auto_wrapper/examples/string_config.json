@@ -1,0 +1,131 @@
+{
+  "library_name": "string",
+  "plugin_name": "StringAutoPlugin",
+  "description": "自动生成的字符串处理插件，封装标准C字符串库",
+  "header_files": ["string.h", "ctype.h"],
+  "functions": [
+    {
+      "name": "strlen",
+      "c_signature": "size_t strlen(const char* str)",
+      "description": "计算字符串长度",
+      "parameters": [
+        {
+          "name": "str",
+          "c_type": "const char*",
+          "interpreter_type": "String",
+          "description": "字符串"
+        }
+      ],
+      "return_c_type": "size_t",
+      "return_interpreter_type": "Integer",
+      "is_void_return": false
+    },
+    {
+      "name": "strcpy",
+      "c_signature": "char* strcpy(char* dest, const char* src)",
+      "description": "复制字符串",
+      "parameters": [
+        {
+          "name": "dest",
+          "c_type": "char*",
+          "interpreter_type": "String",
+          "description": "目标字符串"
+        },
+        {
+          "name": "src",
+          "c_type": "const char*",
+          "interpreter_type": "String",
+          "description": "源字符串"
+        }
+      ],
+      "return_c_type": "char*",
+      "return_interpreter_type": "String",
+      "is_void_return": false
+    },
+    {
+      "name": "strcat",
+      "c_signature": "char* strcat(char* dest, const char* src)",
+      "description": "连接字符串",
+      "parameters": [
+        {
+          "name": "dest",
+          "c_type": "char*",
+          "interpreter_type": "String",
+          "description": "目标字符串"
+        },
+        {
+          "name": "src",
+          "c_type": "const char*",
+          "interpreter_type": "String",
+          "description": "源字符串"
+        }
+      ],
+      "return_c_type": "char*",
+      "return_interpreter_type": "String",
+      "is_void_return": false
+    },
+    {
+      "name": "strcmp",
+      "c_signature": "int strcmp(const char* str1, const char* str2)",
+      "description": "比较字符串",
+      "parameters": [
+        {
+          "name": "str1",
+          "c_type": "const char*",
+          "interpreter_type": "String",
+          "description": "字符串1"
+        },
+        {
+          "name": "str2",
+          "c_type": "const char*",
+          "interpreter_type": "String",
+          "description": "字符串2"
+        }
+      ],
+      "return_c_type": "int",
+      "return_interpreter_type": "Integer",
+      "is_void_return": false
+    },
+    {
+      "name": "toupper",
+      "c_signature": "int toupper(int c)",
+      "description": "转换为大写字母",
+      "parameters": [
+        {
+          "name": "c",
+          "c_type": "int",
+          "interpreter_type": "Integer",
+          "description": "字符的ASCII值"
+        }
+      ],
+      "return_c_type": "int",
+      "return_interpreter_type": "Integer",
+      "is_void_return": false
+    },
+    {
+      "name": "tolower",
+      "c_signature": "int tolower(int c)",
+      "description": "转换为小写字母",
+      "parameters": [
+        {
+          "name": "c",
+          "c_type": "int",
+          "interpreter_type": "Integer",
+          "description": "字符的ASCII值"
+        }
+      ],
+      "return_c_type": "int",
+      "return_interpreter_type": "Integer",
+      "is_void_return": false
+    }
+  ],
+  "type_mappings": {
+    "double": "Double",
+    "int": "Integer",
+    "size_t": "Integer",
+    "char*": "String",
+    "const char*": "String",
+    "void": "null"
+  },
+  "output_directory": "plugins/string_auto_plugin"
+}

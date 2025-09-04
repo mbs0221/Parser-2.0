@@ -1,0 +1,18 @@
+// 测试lexer辅助函数的导入语法
+
+// 1. 默认导入
+import "test_module.txt";
+
+// 2. 命名空间导入
+import "test_module.txt" as test;
+
+// 3. 选择性导入
+import { func1, func2 } from "test_module.txt";
+
+// 4. 带别名的选择性导入
+import { func1 as f1, func2 as f2 } from "test_module.txt";
+
+// 5. 通配符导入
+import * from "test_module.txt";
+
+println("所有导入语法测试完成");

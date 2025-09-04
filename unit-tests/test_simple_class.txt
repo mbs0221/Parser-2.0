@@ -1,0 +1,27 @@
+// 简单类定义测试
+class Person {
+    public
+    let name = "Unknown";
+    let age = 0;
+    
+    function greet() {
+        println("Hello, I am ", name, " and I am ", age, " years old");
+    }
+    
+    function setName(newName) {
+        name = newName;
+    }
+    
+    function setAge(newAge) {
+        age = newAge;
+    }
+}
+
+// 创建实例并测试
+let person = Person();
+person.setName("Alice");
+person.setAge(25);
+person.greet();
+
+println("Person name: ", person.name);
+println("Person age: ", person.age);

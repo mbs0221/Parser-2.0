@@ -59,6 +59,16 @@ public:
 	// 单词匹配方法
 	Word* matchWord();
 	
+	// 辅助函数 - token类型判断
+	bool isToken(int tag) const;
+	bool isKeyword(int tag) const;
+	bool isOperator(int tag) const;
+	bool isIdentifier() const;
+	bool isString() const;
+	bool isNumber() const;
+	bool isAs() const;
+	bool isFrom() const;
+	
 protected:
 	Token *match_id();
 	Token *match_other();

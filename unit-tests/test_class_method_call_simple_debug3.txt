@@ -1,0 +1,15 @@
+// 测试类方法调用简单调试3
+class SimpleDebugMethodClass3 {
+    public
+    function add(a, b) {
+        return a + b;
+    }
+}
+
+println("Class definition completed");
+
+// 测试类方法调用
+let result = SimpleDebugMethodClass3.add(5, 3);
+println("SimpleDebugMethodClass3.add(5, 3) = ", result);
+
+println("Class method call test completed");

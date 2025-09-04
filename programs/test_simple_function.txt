@@ -1,6 +1,0 @@
-// 简单函数测试
-function hello() {
-    return 42;
-}
-
-let result = hello();

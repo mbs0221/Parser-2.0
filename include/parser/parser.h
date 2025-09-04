@@ -27,6 +27,8 @@ protected:
     // 语句解析（函数内部）
     Statement* parseStatement();
     ImportStatement* parseImportStatement();
+    ImportStatement* parseSelectiveImport();
+    ImportStatement* parseWildcardImport();
     VariableDefinition* parseVariableDefinition();
     IfStatement* parseIfStatement();
     WhileStatement* parseWhileStatement();

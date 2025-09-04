@@ -54,6 +54,12 @@ void Interpreter::visit(Statement* stmt) {
         visit(switchStmt);
     } else if (FunctionDefinition* funcDef = dynamic_cast<FunctionDefinition*>(stmt)) {
         visit(funcDef);
+    } else if (ClassDefinition* classDef = dynamic_cast<ClassDefinition*>(stmt)) {
+        visit(classDef);
+    } else if (StructDefinition* structDef = dynamic_cast<StructDefinition*>(stmt)) {
+        visit(structDef);
+    } else if (VisibilityStatement* visStmt = dynamic_cast<VisibilityStatement*>(stmt)) {
+        visit(visStmt);
     } else {
         reportError("Unknown statement type");
     }
@@ -76,12 +82,40 @@ void Interpreter::visit(ReturnStatement* returnStmt) {
 
 
 
-// 导入语句执行
+// 导入语句执行 - 使用新的模块系统
 void Interpreter::visit(ImportStatement* importStmt) {
     if (!importStmt) return;
     
-    string moduleName = importStmt->moduleName;
-    LOG_DEBUG("Importing module: " + moduleName);
+    LOG_DEBUG("Processing import statement");
+    
+    // 创建导入信息
+    ModuleSystem::ImportInfo importInfo(importStmt->modulePath, static_cast<ModuleSystem::ImportType>(importStmt->type));
+    importInfo.namespaceAlias = importStmt->namespaceAlias;
+    
+    // 转换ImportItem类型
+    for (const auto& item : importStmt->items) {
+        importInfo.items.emplace_back(item.name, item.alias);
+    }
+    
+    // 使用模块系统处理导入
+    if (!moduleSystem) {
+        // 如果模块系统未初始化，使用旧的简单导入方式
+        handleLegacyImport(importStmt);
+        return;
+    }
+    
+    if (!moduleSystem->processImport(importInfo)) {
+        LOG_ERROR("Failed to process import: " + importStmt->modulePath);
+        return;
+    }
+    
+    LOG_DEBUG("Module import completed: " + importStmt->modulePath);
+}
+
+// 处理旧的简单导入方式（向后兼容）
+void Interpreter::handleLegacyImport(ImportStatement* importStmt) {
+    string moduleName = importStmt->modulePath;
+    LOG_DEBUG("Using legacy import for module: " + moduleName);
     
     // 检查文件是否存在
     ifstream file(moduleName);
@@ -107,7 +141,7 @@ void Interpreter::visit(ImportStatement* importStmt) {
     // 清理导入的程序
     delete importedProgram;
     
-    LOG_DEBUG("Module import completed: " + moduleName);
+    LOG_DEBUG("Legacy module import completed: " + moduleName);
 }
 
 // 表达式语句执行

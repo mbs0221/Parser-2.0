@@ -1,0 +1,11 @@
+// 测试模块文件
+
+function func1() {
+    return 1;
+}
+
+function func2() {
+    return 2;
+}
+
+let moduleVar = 42;

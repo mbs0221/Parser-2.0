@@ -91,17 +91,27 @@ void BasicFunctionCall::bindParameters(const vector<Value*>& args) {
     if (args.size() > actualParamNames.size()) {
         size_t remainingCount = args.size() - actualParamNames.size();
         
-        // 检查剩余参数的模式
+        // 检查剩余参数的模式：是否为键值对形式
+        // 键值对形式：所有剩余参数都是成对的，且第一个是字符串（键）
         bool isKeyValuePairs = true;
-        for (size_t i = actualParamNames.size(); i < args.size(); i += 2) {
-            if (i + 1 >= args.size() || !args[i] || !args[i + 1]) {
-                isKeyValuePairs = false;
-                break;
+        if (remainingCount % 2 != 0) {
+            isKeyValuePairs = false;  // 奇数个参数不可能是键值对
+        } else {
+            for (size_t i = actualParamNames.size(); i < args.size(); i += 2) {
+                if (i + 1 >= args.size() || !args[i] || !args[i + 1]) {
+                    isKeyValuePairs = false;
+                    break;
+                }
+                // 检查第一个参数是否为字符串类型（键）
+                if (args[i]->getTypeName() != "string") {
+                    isKeyValuePairs = false;
+                    break;
+                }
             }
         }
         
-        if (isKeyValuePairs && remainingCount % 2 == 0 && remainingCount > 0) {
-            // **kwargs模式：键值对形式
+        if (isKeyValuePairs && remainingCount > 0) {
+            // **kwargs模式：键值对形式，类似Python的**kwargs
             Dict* kwargs = new Dict();
             for (size_t i = actualParamNames.size(); i < args.size(); i += 2) {
                 Value* key = args[i];
@@ -114,7 +124,7 @@ void BasicFunctionCall::bindParameters(const vector<Value*>& args) {
             currentScope->setArgument("kwargs", kwargs);
             LOG_DEBUG("BasicFunctionCall: Created kwargs with " + to_string(kwargs->getSize()) + " key-value pairs");
         } else if (remainingCount > 0) {
-            // *args模式：位置参数形式
+            // *args模式：位置参数形式，类似Python的*args
             Array* argsArray = new Array();
             for (size_t i = actualParamNames.size(); i < args.size(); ++i) {
                 if (args[i]) {
@@ -140,11 +150,11 @@ void BasicFunctionCall::bindParameters(const vector<Value*>& args) {
 
 // ==================== StaticMethodCall 实现 ====================
 
-StaticMethodCall::StaticMethodCall(Scope* scope, ClassType* cls, Function* method, const vector<Value*>& arguments)
-    : BasicFunctionCall(scope, method, arguments), classType(cls) {}
+StaticMethodCall::StaticMethodCall(Scope* scope, ObjectType* cls, Function* method, const vector<Value*>& arguments)
+    : BasicFunctionCall(scope, method, arguments), objectType(cls) {}
 
 Value* StaticMethodCall::execute() {
-    if (!classType) {
+    if (!objectType) {
         LOG_ERROR("StaticMethodCall: Class type is null");
         return nullptr;
     }
@@ -166,12 +176,21 @@ void StaticMethodCall::injectStaticMembers() {
     LOG_DEBUG("StaticMethodCall: Injecting static members into scope");
     
     // 将类名注册到作用域中，这样静态方法内部就能知道当前类的名称
-    string className = classType->getTypeName();
+    string className = objectType->getTypeName();
     currentScope->setArgument("__class_name__", new String(className));
     LOG_DEBUG("StaticMethodCall: Registered class name '" + className + "' to scope as __class_name__");
+
+    if (!objectType->supportsMembers()) {
+        throw ReturnException(new String("StaticMethodCall: Class type '" + className + "' does not support static members"));
+    }
+
+    ClassType* classType = dynamic_cast<ClassType*>(objectType);
+    if (!classType) {
+        throw ReturnException(new String("StaticMethodCall: Class type '" + className + "' does not support static members"));
+    }
     
     // 将类的静态成员注入到当前作用域
-    for (const auto& staticMember : classType->getStaticMemberTypes()) {
+    for (const auto& staticMember : classType->getStaticMembers()) {
         const string& memberName = staticMember.first;
         Value* memberValue = classType->getStaticMemberValue(memberName);
         

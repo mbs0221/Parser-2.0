@@ -1,9 +1,0 @@
-function test() {
-    let a = 15;
-    let b = 3;
-    let c = 7;
-    let sum1 = a + b + c;
-    print(sum1);
-}
-
-test();

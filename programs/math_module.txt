@@ -1,0 +1,59 @@
+// 数学工具模块
+
+// 基础数学函数
+function add(a, b) {
+    return a + b;
+}
+
+function subtract(a, b) {
+    return a - b;
+}
+
+function multiply(a, b) {
+    return a * b;
+}
+
+function divide(a, b) {
+    if (b == 0) {
+        throw "Division by zero";
+    }
+    return a / b;
+}
+
+// 高级数学函数
+function power(base, exponent) {
+    let result = 1;
+    let i = 0;
+    while (i < exponent) {
+        result = result * base;
+        i = i + 1;
+    }
+    return result;
+}
+
+function factorial(n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+// 数学常量
+let PI = 3.14159265359;
+let E = 2.71828182846;
+
+// 工具函数
+function isEven(n) {
+    return n % 2 == 0;
+}
+
+function isOdd(n) {
+    return n % 2 != 0;
+}
+
+function abs(n) {
+    if (n < 0) {
+        return -n;
+    }
+    return n;
+}

@@ -13,6 +13,7 @@
 #include "interpreter/types/types.h"
 #include "interpreter/values/calculate.h"
 #include "interpreter/values/value.h"
+#include "interpreter/modules/module_system.h"
 
 #include <string>
 #include <list>
@@ -37,6 +38,9 @@ public:
     // 插件管理器
     PluginManager pluginManager;
     
+    // 模块系统
+    ModuleSystem::ModuleSystem* moduleSystem;
+    
     // 类型注册表
     TypeRegistry* typeRegistry;
 
@@ -54,13 +58,20 @@ public:
 
 public:
     // 通用的实例方法调用辅助函数
-    Value* callMethodOnInstance(Value* instance, const std::string& methodName, const std::vector<Value*>& args);
+    Value* callMethodOnInstance(InstanceMethodReference* methodRef, const std::vector<Value*>& args);
     
     // 通用的静态类方法调用辅助函数
-    Value* callMethodOnClass(ClassType* classType, const std::string& methodName, const std::vector<Value*>& args);
+    Value* callMethodOnClass(StaticMethodReference* methodRef, const std::vector<Value*>& args);
+    
+    // 通用的普通函数调用辅助函数
+    Value* callFunction(Function* func, const std::vector<Value*>& args);
     
     // 解析和执行代码文件
     Value* parseAndExecute(const std::string& filename);
+    
+    // 模块系统相关方法
+    void initializeModuleSystem();
+    ModuleSystem::ModuleSystem* getModuleSystem() { return moduleSystem; }
 
 public:
     // 构造函数

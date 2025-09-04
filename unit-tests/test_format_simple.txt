@@ -1,0 +1,16 @@
+// 简单的format函数测试
+// 测试基本的字符串格式化功能
+
+// 测试基本格式化
+let result1 = format("Hello {}!", "World");
+println("基本格式化: " + result1);
+
+// 测试数字格式化
+let result2 = format("数字: {}", 42);
+println("数字格式化: " + result2);
+
+// 测试多个参数
+let result3 = format("{} + {} = {}", 10, 20, 30);
+println("多参数格式化: " + result3);
+
+println("format函数测试完成！");

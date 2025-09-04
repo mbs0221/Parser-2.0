@@ -1,0 +1,11 @@
+// 测试类中的简单方法
+class TestClass {
+    public
+    let value = 0;
+    
+    function getValue() {
+        return value;
+    }
+}
+
+println("Class definition completed");

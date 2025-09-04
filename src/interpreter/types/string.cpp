@@ -2,6 +2,8 @@
 #include <cmath>
 #include <cctype>
 #include <vector>
+#include <string>
+#include <cstdio>
 
 #include "interpreter/values/value.h"
 #include "interpreter/types/types.h"
@@ -10,6 +12,83 @@
 #include "lexer/token.h"
 
 using namespace std;
+
+// 辅助函数：应用格式化规范
+string applyFormatSpec(const string& value, const string& formatSpec, Value* originalValue) {
+    string result = value;
+    
+    // 处理数字格式化
+    if (Double* doubleVal = dynamic_cast<Double*>(originalValue)) {
+        double num = doubleVal->getValue();
+        
+        // 处理精度格式化 {:.2f}
+        if (formatSpec.find('.') != string::npos) {
+            size_t dotPos = formatSpec.find('.');
+            size_t endPos = formatSpec.find('f', dotPos);
+            if (endPos != string::npos) {
+                string precisionStr = formatSpec.substr(dotPos + 1, endPos - dotPos - 1);
+                if (!precisionStr.empty()) {
+                    int precision = stoi(precisionStr);
+                    char buffer[100];
+                    snprintf(buffer, sizeof(buffer), "%.*f", precision, num);
+                    result = string(buffer);
+                }
+            }
+        }
+        // 处理整数部分宽度 {0:4.2f}
+        else if (formatSpec.find('f') != string::npos) {
+            size_t fPos = formatSpec.find('f');
+            if (fPos > 0) {
+                string widthStr = formatSpec.substr(0, fPos);
+                if (!widthStr.empty()) {
+                    int width = stoi(widthStr);
+                    char buffer[100];
+                    snprintf(buffer, sizeof(buffer), "%*.*f", width, 2, num);
+                    result = string(buffer);
+                }
+            }
+        }
+    }
+    else if (Integer* intVal = dynamic_cast<Integer*>(originalValue)) {
+        int num = intVal->getValue();
+        
+        // 处理整数格式化 {0:4d}
+        if (formatSpec.find('d') != string::npos) {
+            size_t dPos = formatSpec.find('d');
+            if (dPos > 0) {
+                string widthStr = formatSpec.substr(0, dPos);
+                if (!widthStr.empty()) {
+                    int width = stoi(widthStr);
+                    char buffer[100];
+                    snprintf(buffer, sizeof(buffer), "%*d", width, num);
+                    result = string(buffer);
+                }
+            }
+        }
+    }
+    
+    // 处理字符串格式化
+    else if (String* strVal = dynamic_cast<String*>(originalValue)) {
+        // 处理字符串宽度 {0:10s}
+        if (formatSpec.find('s') != string::npos) {
+            size_t sPos = formatSpec.find('s');
+            if (sPos > 0) {
+                string widthStr = formatSpec.substr(0, sPos);
+                if (!widthStr.empty()) {
+                    int width = stoi(widthStr);
+                    if (width > 0) {
+                        result = strVal->getValue();
+                        if ((int)result.length() < width) {
+                            result = string(width - result.length(), ' ') + result;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return result;
+}
 
 // 定义类方法数组
 static const vector<Function*> stringClassMethods = {
@@ -250,7 +329,7 @@ static const vector<Function*> stringStaticMethods = {
         return new String(result);
     }, "concat(...)"),
     
-    // 混合参数示例：格式化函数（固定参数 + 可变参数）
+    // Python风格的格式化函数（固定参数 + 可变参数）
     new BuiltinFunction([](class Scope* scope) -> Value* {
         // 获取固定参数：格式字符串
         String* formatStr = scope->getArgument<String>("format");
@@ -260,19 +339,85 @@ static const vector<Function*> stringStaticMethods = {
         
         string result = formatStr->getValue();
         
-        // 获取可变参数并替换占位符
+        // 获取可变参数
+        vector<Value*> varArgs;
         if (scope->hasArgs()) {
-            vector<Value*> varArgs = scope->getArgs()->getElements();
-            for (size_t i = 0; i < varArgs.size(); ++i) {
-                string placeholder = "{" + to_string(i) + "}";
-                string replacement = varArgs[i] ? varArgs[i]->toString() : "null";
+            varArgs = scope->getArgs()->getElements();
+        }
+        
+        // 获取关键字参数
+        Dict* kwargs = scope->getKwargs();
+        
+        // 解析并替换格式化占位符
+        size_t pos = 0;
+        while (pos < result.length()) {
+            size_t start = result.find('{', pos);
+            if (start == string::npos) break;
+            
+            size_t end = result.find('}', start);
+            if (end == string::npos) break;
+            
+            string placeholder = result.substr(start, end - start + 1);
+            string content = result.substr(start + 1, end - start - 1);
+            
+            string replacement;
+            
+            if (content.empty()) {
+                // {} - 使用位置参数
+                if (!varArgs.empty()) {
+                    replacement = varArgs[0] ? varArgs[0]->toString() : "null";
+                    varArgs.erase(varArgs.begin());
+                } else {
+                    replacement = "{}";
+                }
+            } else {
+                // 解析格式化规范
+                size_t colonPos = content.find(':');
+                string fieldName = (colonPos != string::npos) ? content.substr(0, colonPos) : content;
+                string formatSpec = (colonPos != string::npos) ? content.substr(colonPos + 1) : "";
                 
-                // 简单的字符串替换
-                size_t pos = result.find(placeholder);
-                if (pos != string::npos) {
-                    result.replace(pos, placeholder.length(), replacement);
+                Value* value = nullptr;
+                
+                // 确定要格式化的值
+                if (fieldName.empty()) {
+                    // {0}, {1} - 位置参数
+                    if (!fieldName.empty() && isdigit(fieldName[0])) {
+                        int index = stoi(fieldName);
+                        if (index >= 0 && index < (int)varArgs.size()) {
+                            value = varArgs[index];
+                        }
+                    } else {
+                        // {} - 下一个位置参数
+                        if (!varArgs.empty()) {
+                            value = varArgs[0];
+                            varArgs.erase(varArgs.begin());
+                        }
+                    }
+                } else if (isdigit(fieldName[0])) {
+                    // 位置参数 {0}, {1}, {2}...
+                    int index = stoi(fieldName);
+                    if (index >= 0 && index < (int)varArgs.size()) {
+                        value = varArgs[index];
+                    }
+                } else if (kwargs) {
+                    // 关键字参数 {name}
+                    value = kwargs->getEntry(fieldName);
+                }
+                
+                if (value) {
+                    replacement = value->toString();
+                    
+                    // 应用格式化规范
+                    if (!formatSpec.empty()) {
+                        replacement = applyFormatSpec(replacement, formatSpec, value);
+                    }
+                } else {
+                    replacement = placeholder; // 保持原样
                 }
             }
+            
+            result.replace(start, placeholder.length(), replacement);
+            pos = start + replacement.length();
         }
         
         return new String(result);

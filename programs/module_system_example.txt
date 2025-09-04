@@ -1,0 +1,46 @@
+// 模块系统示例程序
+
+// 1. 默认导入 - 导入模块的所有导出项到当前作用域
+import "programs/math_module.txt";
+
+// 2. 命名空间导入 - 将模块导入为命名空间
+import "programs/string_module.txt" as str;
+
+// 3. 选择性导入 - 只导入指定的函数
+import { Vector, HashMap } from "programs/collections_module.txt";
+
+// 4. 带别名的选择性导入
+import { add as plus, multiply as times } from "programs/math_module.txt";
+
+// 5. 通配符导入 - 导入所有导出项
+import * from "programs/utils_module.txt";
+
+// 使用导入的函数和变量
+println("=== 模块系统示例 ===");
+
+// 使用默认导入的函数
+let result1 = add(10, 20);
+println("默认导入 - add(10, 20) = " + to_string(result1));
+
+// 使用命名空间导入的函数
+let result2 = str.toUpper("hello world");
+println("命名空间导入 - str.toUpper('hello world') = " + result2);
+
+// 使用选择性导入的类
+let vec = Vector();
+vec.push(1);
+vec.push(2);
+vec.push(3);
+println("选择性导入 - Vector size: " + to_string(vec.size()));
+
+// 使用带别名的函数
+let result3 = plus(5, 15);
+let result4 = times(3, 7);
+println("别名导入 - plus(5, 15) = " + to_string(result3));
+println("别名导入 - times(3, 7) = " + to_string(result4));
+
+// 使用通配符导入的函数
+let result5 = format("Hello, {0}!", "World");
+println("通配符导入 - format result: " + result5);
+
+println("=== 示例完成 ===");

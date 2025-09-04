@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.10)
 add_library(common STATIC
     logger.cpp
     string_utils.cpp
+    function_signature_parser.cpp
 )
 
 # 设置包含目录

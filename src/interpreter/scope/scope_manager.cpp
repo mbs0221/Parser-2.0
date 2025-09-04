@@ -178,35 +178,35 @@ Value* ScopeManager::lookupTypeMethod(const string& typeName, const string& meth
 
 // 简单聚合查询方法 - 一次性查询所有类型的标识符，返回第一个找到的
 Value* ScopeManager::lookupAny(const string& name) {
-    cout << "DEBUG: ScopeManager::lookupAny: looking for '" + name + "'" << endl;
+    LOG_TRACE("ScopeManager::lookupAny: looking for '" + name + "'");
     LOG_DEBUG("ScopeManager::lookupAny: looking for '" + name + "'");
     
     // 1. 首先尝试查找变量
-    cout << "DEBUG: ScopeManager::lookupAny: trying lookupVariable" << endl;
+    LOG_TRACE("ScopeManager::lookupAny: trying lookupVariable");
     Value* value = lookupVariable(name);
     if (value) {
-        cout << "DEBUG: ScopeManager::lookupAny: found variable '" + name + "'" << endl;
+        LOG_TRACE("ScopeManager::lookupAny: found variable '" + name + "'");
         LOG_DEBUG("ScopeManager::lookupAny: found variable '" + name + "'");
         return value;
     }
     
     // 2. 然后尝试查找可调用对象（函数等）
-    cout << "DEBUG: ScopeManager::lookupAny: trying lookupCallable" << endl;
+    LOG_TRACE("ScopeManager::lookupAny: trying lookupCallable");
     value = lookupCallable(name);
     if (value) {
-        cout << "DEBUG: ScopeManager::lookupAny: found callable '" + name + "'" << endl;
+        LOG_TRACE("ScopeManager::lookupAny: found callable '" + name + "'");
         LOG_DEBUG("ScopeManager::lookupAny: found callable '" + name + "'");
         return value;
     }
     
     // 3. 然后尝试查找实例（暂时跳过，直接进行类型名称查找）
-    cout << "DEBUG: ScopeManager::lookupAny: skipping lookupInstance for now" << endl;
+    LOG_TRACE("ScopeManager::lookupAny: skipping lookupInstance for now");
     
     // 4. 最后尝试查找类型名称
-    cout << "DEBUG: ScopeManager::lookupAny: trying TypeRegistry::getGlobalInstance()->getType" << endl;
+    LOG_TRACE("ScopeManager::lookupAny: trying TypeRegistry::getGlobalInstance()->getType");
     ObjectType* type = TypeRegistry::getGlobalInstance()->getType(name);
     if (type) {
-        cout << "DEBUG: ScopeManager::lookupAny: found type '" + name + "'" << endl;
+        LOG_TRACE("ScopeManager::lookupAny: found type '" + name + "'");
         LOG_DEBUG("ScopeManager::lookupAny: found type '" + name + "'");
         // 返回一个表示类型的特殊值，这样AccessExpression就能识别它是类型名称
         // 创建一个没有运行时类型的String对象，这样AccessExpression就会将其识别为类型名称
@@ -215,7 +215,7 @@ Value* ScopeManager::lookupAny(const string& name) {
         return typeNameObj;
     }
     
-    cout << "DEBUG: ScopeManager::lookupAny: nothing found for '" + name + "'" << endl;
+    LOG_TRACE("ScopeManager::lookupAny: nothing found for '" + name + "'");
     LOG_DEBUG("ScopeManager::lookupAny: nothing found for '" + name + "'");
     return nullptr;
 }
@@ -363,6 +363,14 @@ void ScopeManager::defineVariable(const string& name, const string& type, Value*
 void ScopeManager::defineFunction(const string& name, Function* function) {
     if (!function) return;
     
+    // 检查函数是否已经存在
+    Value* existingFunction = lookupFunction(name);
+    if (existingFunction) {
+        LOG_ERROR("Function '" + name + "' is already defined as a built-in function");
+        LOG_ERROR("Cannot redefine built-in function '" + name + "'");
+        return;
+    }
+    
     // 自动处理类方法和普通函数的注册
     if (isInClassContext()) {
         // 在类定义中，注册为类方法
@@ -377,7 +385,17 @@ void ScopeManager::defineFunction(const string& name, Function* function) {
 }
 
 void ScopeManager::defineFunction(const string& name, const vector<string>& parameterTypes, Value* function) {
-    if (currentScope && currentScope->objectRegistry && function) {
+    if (!function) return;
+    
+    // 检查函数是否已经存在
+    Value* existingFunction = lookupFunction(name);
+    if (existingFunction) {
+        LOG_ERROR("Function '" + name + "' is already defined as a built-in function");
+        LOG_ERROR("Cannot redefine built-in function '" + name + "'");
+        return;
+    }
+    
+    if (currentScope && currentScope->objectRegistry) {
         // 使用参数类型信息创建函数签名
         string key = name + "(";
         for (size_t i = 0; i < parameterTypes.size(); ++i) {
@@ -386,6 +404,7 @@ void ScopeManager::defineFunction(const string& name, const vector<string>& para
         }
         key += ")";
         currentScope->objectRegistry->defineCallable(key, function);
+        LOG_DEBUG("ScopeManager: function '" + name + "' with signature '" + key + "' registered");
     }
 }
 
@@ -484,12 +503,12 @@ void ScopeManager::printCurrentScope() const {
 }
 
 void ScopeManager::printAllScopes() const {
-    cout << "=== All Scopes ===" << endl;
+    LOG_DEBUG("=== All Scopes ===");
     size_t i = 0;
     for (auto scope : scopes) {
-        cout << "Scope " << i << ":" << endl;
+        LOG_DEBUG("Scope " + to_string(i) + ":");
         scope->print();
-        cout << endl;
+        LOG_DEBUG("");
         ++i;
     }
 }
@@ -558,6 +577,14 @@ VisibilityType ScopeManager::getCurrentVisibility() const {
 
 void ScopeManager::registerAsClassMethod(const string& name, Function* function) {
     if (!function) return;
+    
+    // 检查函数是否已经作为内置函数存在
+    Value* existingFunction = lookupFunction(name);
+    if (existingFunction) {
+        LOG_ERROR("Function '" + name + "' is already defined as a built-in function");
+        LOG_ERROR("Cannot redefine built-in function '" + name + "' as a class method");
+        return;
+    }
     
     // 获取当前类名或结构体名
     String* classNameValue = currentScope->getVariable<String>("__class__");

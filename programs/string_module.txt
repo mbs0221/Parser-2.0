@@ -1,0 +1,46 @@
+// 字符串工具模块
+
+// 字符串转换函数
+function toUpper(str) {
+    // 简化实现 - 实际应该转换大小写
+    return str;
+}
+
+function toLower(str) {
+    // 简化实现 - 实际应该转换大小写
+    return str;
+}
+
+// 字符串操作函数
+function trim(str) {
+    // 简化实现 - 实际应该去除首尾空格
+    return str;
+}
+
+function substring(str, start, length) {
+    // 简化实现 - 实际应该提取子字符串
+    return str;
+}
+
+// 字符串检查函数
+function isEmpty(str) {
+    return length(str) == 0;
+}
+
+function contains(str, substr) {
+    // 简化实现 - 实际应该检查子字符串
+    return true;
+}
+
+// 字符串分割和连接
+function split(str, delimiter) {
+    // 简化实现 - 实际应该分割字符串
+    let result = [];
+    result.push(str);
+    return result;
+}
+
+function join(array, separator) {
+    // 简化实现 - 实际应该连接数组元素
+    return "joined_string";
+}

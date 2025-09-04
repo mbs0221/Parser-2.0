@@ -1,0 +1,13 @@
+// 测试类中带参数的函数定义
+class ParameterizedFunctionsClass {
+    public
+    function add(a, b) {
+        return a + b;
+    }
+    
+    function multiply(x, y) {
+        return x * y;
+    }
+}
+
+println("Class definition completed");

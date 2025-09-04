@@ -1,0 +1,13 @@
+// 测试类中多个函数定义
+class MultipleFunctionsClass {
+    public
+    function func1() {
+        println("Function 1 called");
+    }
+    
+    function func2() {
+        println("Function 2 called");
+    }
+}
+
+println("Class definition completed");

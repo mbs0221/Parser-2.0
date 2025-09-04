@@ -44,6 +44,9 @@ Interpreter::Interpreter() {
     // 创建初始作用域
     scopeManager.enterScope();
     
+    // 初始化模块系统
+    initializeModuleSystem();
+    
     // 注册所有内置插件
     pluginManager.registerAllPlugins(scopeManager);
     
@@ -51,54 +54,88 @@ Interpreter::Interpreter() {
 }
 
 // 通用的实例方法调用辅助函数
-Value* Interpreter::callMethodOnInstance(Value* instance, const std::string& methodName, const std::vector<Value*>& args) {
-    if (!instance) return nullptr;
-    
-    ObjectType* instanceType = instance->getValueType();
-    if (!instanceType || !instanceType->supportsMethods()) return nullptr;
-    
-    // 1. 创建实例方法引用，自动查询匹配的方法
-    MethodReference* methodRef = new InstanceMethodReference(instanceType, instance, methodName);
+Value* Interpreter::callMethodOnInstance(InstanceMethodReference* methodRef, const std::vector<Value*>& args) {
     if (!methodRef) return nullptr;
     
-    // 2. 进入新作用域
+    Value* instance = methodRef->getTargetInstance();
+    if (!instance) {
+        LOG_DEBUG("Instance is null");
+        return nullptr;
+    }
+    LOG_DEBUG("Got instance: " + instance->toString());
+    
+    // 1. 进入新作用域
     scopeManager.enterScope();
     
-    // 3. 通过实例方法调用执行方法
-    InstanceMethodCall methodCall(scopeManager.getCurrentScope(), instance, methodRef, args);
+    try {
+        // 2. 通过实例方法调用执行方法
+        InstanceMethodCall methodCall(scopeManager.getCurrentScope(), instance, methodRef, args);
 
-    // 3. 执行方法
-    Value* result = methodCall.execute();
-    
-    // 退出作用域
-    scopeManager.exitScope();
-    
-    delete methodRef;
-    return result;
+        // 3. 执行方法
+        Value* result = methodCall.execute();
+        
+        // 4. 退出作用域
+        scopeManager.exitScope();
+        
+        return result;
+    } catch (...) {
+        // 确保在异常情况下也退出作用域
+        scopeManager.exitScope();
+        throw;
+    }
 }
 
 // 通用的静态类方法调用辅助函数
-Value* Interpreter::callMethodOnClass(ClassType* classType, const std::string& methodName, const std::vector<Value*>& args) {
-    if (!classType) return nullptr;
-    
-    if (!classType->supportsMethods()) return nullptr;
-    
-    // 1. 创建静态方法引用，自动查询匹配的静态方法
-    MethodReference* methodRef = new StaticMethodReference(classType, methodName);
+Value* Interpreter::callMethodOnClass(StaticMethodReference* methodRef, const std::vector<Value*>& args) {
     if (!methodRef) return nullptr;
     
-    // 2. 进入新作用域
+    ObjectType* classType = methodRef->getTargetType();
+    if (!classType || !classType->supportsMethods()) return nullptr;
+    
+    // 1. 进入新作用域
     scopeManager.enterScope();
-    StaticMethodCall methodCall(scopeManager.getCurrentScope(), classType, methodRef, args);
+    
+    try {
+        // 2. 通过静态方法调用执行方法
+        StaticMethodCall methodCall(scopeManager.getCurrentScope(), classType, methodRef, args);
 
-    // 3. 执行方法
-    Value* result = methodCall.execute();
+        // 3. 执行方法
+        Value* result = methodCall.execute();
+        
+        // 4. 退出作用域
+        scopeManager.exitScope();
+        
+        return result;
+    } catch (...) {
+        // 确保在异常情况下也退出作用域
+        scopeManager.exitScope();
+        throw;
+    }
+}
+
+// 通用的普通函数调用辅助函数
+Value* Interpreter::callFunction(Function* func, const std::vector<Value*>& args) {
+    if (!func) return nullptr;
     
-    // 退出作用域
-    scopeManager.exitScope();
+    if (!func->isCallable()) return nullptr;
     
-    delete methodRef;
-    return result;
+    // 1. 进入新作用域，避免包含脚本执行过程中的变量
+    scopeManager.enterScope();
+    
+    try {
+        // 2. 使用 BasicFunctionCall 执行函数
+        BasicFunctionCall functionCall(scopeManager.getCurrentScope(), func, args);
+        Value* result = functionCall.execute();
+        
+        // 3. 退出作用域
+        scopeManager.exitScope();
+        
+        return result;
+    } catch (...) {
+        // 确保在异常情况下也退出作用域
+        scopeManager.exitScope();
+        throw;
+    }
 }
 
 // 解释器构造函数（可选择是否加载插件）
@@ -130,9 +167,23 @@ Interpreter::~Interpreter() {
         parser = nullptr;
     }
     
+    if (moduleSystem) {
+        delete moduleSystem;
+        moduleSystem = nullptr;
+    }
+    
     // pluginManager是对象，会自动析构，不需要delete
     
     LOG_DEBUG("Interpreter destroyed");
+}
+
+// 初始化模块系统
+void Interpreter::initializeModuleSystem() {
+    moduleSystem = new ModuleSystem::ModuleSystem();
+    moduleSystem->initialize(&scopeManager);
+    moduleSystem->setDefaultSearchPaths();
+    
+    LOG_DEBUG("Module system initialized");
 }
 
 // 程序执行

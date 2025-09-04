@@ -3,6 +3,7 @@
 #include "interpreter/core/function_call.h"
 #include "interpreter/scope/scope.h"
 #include "common/logger.h"
+#include "common/function_signature_parser.h"
 #include <algorithm>
 #include <sstream>
 #include <iostream> // Added for debugging
@@ -243,129 +244,31 @@ BuiltinFunction::BuiltinFunction(const string& funcName,
               string(supportsVarArgs ? "true" : "false"));
 }
 
-// 解析C风格函数原型（包括函数名和参数）
+// 使用统一的函数签名解析器解析C风格函数原型
 void BuiltinFunction::parseCFormatParams(const char* functionPrototype) {
     if (!functionPrototype) return;
     
-    string prototypeStr(functionPrototype);
-    size_t pos = 0;
+    // 使用统一的函数签名解析器
+    FunctionSignatureParseResult result = FunctionSignatureParser::parseCFormatParams(functionPrototype);
     
-    // 跳过开头的空白字符
-    while (pos < prototypeStr.length() && isspace(prototypeStr[pos])) {
-        pos++;
-    }
+    // 设置函数名
+    name = result.functionName;
     
-    // 解析函数名
-    size_t funcNameStart = pos;
-    while (pos < prototypeStr.length() && 
-           (isalnum(prototypeStr[pos]) || prototypeStr[pos] == '_')) {
-        pos++;
-    }
+    // 设置参数列表
+    parameters = result.parameters;
+    parameterNames = result.parameterNames;
+    paramDefaults = result.paramDefaults;
+    varArgsSupport = result.varArgsSupport;
+    varArgsName = result.varArgsName;
     
-    if (pos > funcNameStart) {
-        string funcName = prototypeStr.substr(funcNameStart, pos - funcNameStart);
-        name = funcName;  // 设置函数名
-        LOG_DEBUG("BuiltinFunction: Parsed function name: " + funcName);
-    }
-    
-    // 跳过空白字符
-    while (pos < prototypeStr.length() && isspace(prototypeStr[pos])) {
-        pos++;
-    }
-    
-    // 检查是否有参数列表（以 '(' 开始）
-    if (pos < prototypeStr.length() && prototypeStr[pos] == '(') {
-        pos++; // 跳过 '('
-        
-        // 跳过空白字符
-        while (pos < prototypeStr.length() && isspace(prototypeStr[pos])) {
-            pos++;
-        }
-        
-        // 检查是否以 "..." 开头（纯可变参数）
-        if (pos < prototypeStr.length() && prototypeStr.substr(pos, 3) == "...") {
-            parameters.push_back(Parameter("...", "any", "", true));
-            parameterNames.push_back("...");
-            varArgsSupport = true;
-            LOG_DEBUG("BuiltinFunction: C-style prototype parsed as variadic only");
-            return;
-        }
-        
-        // 解析参数列表
-        while (pos < prototypeStr.length()) {
-            // 跳过空白字符
-            while (pos < prototypeStr.length() && isspace(prototypeStr[pos])) {
-                pos++;
-            }
-            
-            if (pos >= prototypeStr.length()) break;
-            
-            // 检查是否到达参数列表结束
-            if (prototypeStr[pos] == ')') {
-                pos++;
-                break;
-            }
-            
-            // 检查是否为可变参数标记
-            if (pos + 2 < prototypeStr.length() && prototypeStr.substr(pos, 3) == "...") {
-                parameters.push_back(Parameter("...", "any", "", true));
-                parameterNames.push_back("...");
-                varArgsSupport = true;
-                pos += 3;
-                LOG_DEBUG("BuiltinFunction: C-style prototype parsed with variadic support");
-                continue;
-            }
-            
-            // 解析参数名称
-            size_t start = pos;
-            while (pos < prototypeStr.length() && 
-                   (isalnum(prototypeStr[pos]) || prototypeStr[pos] == '_')) {
-                pos++;
-            }
-            
-            if (pos > start) {
-                string paramName = prototypeStr.substr(start, pos - start);
-                string defaultValue = "";
-                bool hasDefault = false;
-                
-                // 检查是否有默认值
-                if (pos < prototypeStr.length() && prototypeStr[pos] == '=') {
-                    pos++; // 跳过 '=' 符号
-                    
-                    // 解析默认值
-                    size_t defaultValueStart = pos;
-                    while (pos < prototypeStr.length() && 
-                           prototypeStr[pos] != ',' && prototypeStr[pos] != ';' && 
-                           prototypeStr[pos] != ')' && !isspace(prototypeStr[pos])) {
-                        pos++;
-                    }
-                    
-                    if (pos > defaultValueStart) {
-                        defaultValue = prototypeStr.substr(defaultValueStart, pos - defaultValueStart);
-                        hasDefault = true;
-                        paramDefaults[paramName] = defaultValue;
-                        LOG_DEBUG("BuiltinFunction: Parameter '" + paramName + "' has default value: " + defaultValue);
-                    }
-                }
-                
-                // 创建Parameter对象，包含默认值信息
-                parameters.push_back(Parameter(paramName, "any", defaultValue, false));
-                parameterNames.push_back(paramName);
-                
-                LOG_DEBUG("BuiltinFunction: C-style prototype parsed parameter: " + paramName);
-            }
-            
-            // 跳过分隔符（逗号、分号等）
-            while (pos < prototypeStr.length() && 
-                   (prototypeStr[pos] == ',' || prototypeStr[pos] == ';' || isspace(prototypeStr[pos]))) {
-                pos++;
-            }
-        }
-    }
-    
-    LOG_DEBUG("BuiltinFunction: C-style prototype parsing completed. Function: " + name + 
+    LOG_DEBUG("BuiltinFunction: C-style prototype parsing completed using unified parser. Function: " + name + 
               ", Parameters: " + to_string(parameters.size()) + 
               ", VarArgs: " + string(varArgsSupport ? "true" : "false"));
+    
+    // 调试：打印所有解析的参数
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        LOG_DEBUG("BuiltinFunction: Parameter " + to_string(i) + ": " + parameters[i].toString());
+    }
 }
 
 // 获取参数的默认值

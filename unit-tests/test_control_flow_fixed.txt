@@ -1,0 +1,21 @@
+// 测试条件语句和循环 - 修复版本（在函数内部）
+function testControlFlow() {
+    // 测试条件语句和循环
+    let i = 0;
+    while (i < 5) {
+        if (i % 2 == 0) {
+            println("Even: ", i);
+        } else {
+            println("Odd: ", i);
+        }
+        i = i + 1;
+    }
+
+    // 测试for循环
+    for (let j = 0; j < 3; j = j + 1) {
+        println("For loop iteration: ", j);
+    }
+}
+
+// 调用测试函数
+testControlFlow();

@@ -333,14 +333,32 @@ Function* ClassType::findUserMethod(const FunctionSignature& signature) const {
         LOG_DEBUG("ClassType::findUserMethod: Available signature: " + pair.first.toString());
     }
     
+    // 首先尝试精确匹配
     auto it = userFunctionMethods.find(signature);
     if (it != userFunctionMethods.end()) {
         LOG_DEBUG("ClassType::findUserMethod: Found exact match!");
         return it->second;
-    } else {
-        LOG_DEBUG("ClassType::findUserMethod: No exact match found");
-        return nullptr;
     }
+    
+    // 如果精确匹配失败，且签名为空（只有方法名），则基于方法名查找
+    if (signature.getParameterCount() == 0) {
+        string methodName = signature.getName();
+        LOG_DEBUG("ClassType::findUserMethod: Trying name-based lookup for: " + methodName);
+        
+        auto nameIt = methodNameToSignatures.find(methodName);
+        if (nameIt != methodNameToSignatures.end() && !nameIt->second.empty()) {
+            // 返回第一个匹配的方法（通常是无参数方法）
+            FunctionSignature firstSignature = nameIt->second[0];
+            auto funcIt = userFunctionMethods.find(firstSignature);
+            if (funcIt != userFunctionMethods.end()) {
+                LOG_DEBUG("ClassType::findUserMethod: Found name-based match: " + firstSignature.toString());
+                return funcIt->second;
+            }
+        }
+    }
+    
+    LOG_DEBUG("ClassType::findUserMethod: No match found");
+    return nullptr;
 }
 
 Function* ClassType::findStaticMethod(const FunctionSignature& signature) const {
