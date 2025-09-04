@@ -397,8 +397,7 @@ Value* Interpreter::visit(MethodReferenceExpression* expr) {
             return new StaticMethodReference(type, memberName);
         }
         
-        reportError("Cannot access method without runtime type");
-        return nullptr;
+        throw ReturnException(new String("Cannot access method without runtime type"));
     }
     
     // 目标有运行时类型，创建MethodReference并传递实例
@@ -460,8 +459,7 @@ Value* Interpreter::visit(IndexAccessExpression* expr) {
     }
     
     if (!result) {
-        reportError("Method '" + methodName + "' not found or failed on type '" + targetType->getTypeName() + "'");
-        return nullptr;
+        throw ReturnException(new String("Method '" + methodName + "' not found or failed on type '" + targetType->getTypeName() + "'"));
     }
     
     return result;
@@ -516,12 +514,21 @@ string Interpreter::extractMemberName(Value* key) {
 Value* Interpreter::visit(CallExpression* call) {
     if (!call) return nullptr;
     
+    // 调试：显示CallExpression的arguments信息
+    LOG_DEBUG("CallExpression: arguments count: " + to_string(call->arguments.size()));
+    for (size_t i = 0; i < call->arguments.size(); ++i) {
+        LOG_DEBUG("CallExpression: argument " + to_string(i) + " type: " + typeid(*call->arguments[i]).name());
+    }
+    
     // 求值被调用者（函数表达式）
     Value* callee = visit(call->callee);
     if (!callee) {
-        Interpreter::reportError("Failed to evaluate function callee");
-        return nullptr;
+        throw ReturnException(new String("Failed to evaluate function callee"));
     }
+    
+    // 调试：显示callee信息
+    LOG_DEBUG("CallExpression: callee is not null, type: " + callee->getBuiltinTypeName());
+    LOG_DEBUG("CallExpression: callee toString: " + callee->toString());
     
     // 求值所有参数
     vector<Value*> evaluatedArgs;
@@ -531,20 +538,49 @@ Value* Interpreter::visit(CallExpression* call) {
         if (value) {
             evaluatedArgs.push_back(value);
         } else {
-            Interpreter::reportError("Failed to evaluate argument " + to_string(i + 1) + " in function call");
-            return nullptr;
+            throw ReturnException(new String("Failed to evaluate argument " + to_string(i + 1) + " in function call"));
         }
+    }
+    
+    // 调试：显示evaluatedArgs的信息
+    LOG_DEBUG("CallExpression: About to process evaluatedArgs");
+    
+    // 安全检查evaluatedArgs向量
+    try {
+        if (evaluatedArgs.empty()) {
+            LOG_DEBUG("CallExpression: evaluatedArgs is empty");
+        } else {
+            LOG_DEBUG("CallExpression: evaluatedArgs count: " + to_string(evaluatedArgs.size()));
+            for (size_t i = 0; i < evaluatedArgs.size(); ++i) {
+                if (evaluatedArgs[i]) {
+                    LOG_DEBUG("CallExpression: evaluatedArgs[" + to_string(i) + "] = " + evaluatedArgs[i]->toString());
+                } else {
+                    LOG_DEBUG("CallExpression: evaluatedArgs[" + to_string(i) + "] = nullptr");
+                }
+            }
+        }
+    } catch (...) {
+        LOG_DEBUG("CallExpression: Exception occurred while processing evaluatedArgs");
+        throw ReturnException(new String("Exception occurred while processing function arguments"));
     }
     
     // 检查是否为可调用对象
     LOG_DEBUG("CallExpression: checking if callee is callable");
-
-    LOG_DEBUG("CallExpression: callee builtin type: " + callee->getBuiltinTypeName());
-    LOG_DEBUG("CallExpression: callee toString: " + callee->toString());
     
-    if (!callee->isCallable()) {
-        Interpreter::reportError("Object is not callable");
-        return nullptr;
+    // 额外的安全检查
+    if (!callee) {
+        LOG_DEBUG("CallExpression: callee is null, cannot check if callable");
+        throw ReturnException(new String("Callee is null"));
+    }
+    
+    // 尝试调用isCallable方法
+    try {
+        if (!callee->isCallable()) {
+            throw ReturnException(new String("Object is not callable"));
+        }
+    } catch (...) {
+        LOG_DEBUG("CallExpression: Exception occurred while calling isCallable()");
+        throw ReturnException(new String("Exception occurred while checking if object is callable"));
     }
     
     // 执行函数调用 - 使用执行器自动管理作用域
@@ -574,7 +610,7 @@ Value* Interpreter::visit(CallExpression* call) {
                 // 其他函数类型，使用参数验证
                 if (!func->validateArguments(evaluatedArgs)) {
                     size_t expectedParams = func->getParameters().size();
-                    Interpreter::reportError("Function expects " + to_string(expectedParams) + " arguments, but got " + to_string(evaluatedArgs.size()));
+                    throw ReturnException(new String("Function expects " + to_string(expectedParams) + " arguments, but got " + to_string(evaluatedArgs.size())));
                 } else {
                     // 使用新的函数调用架构
                     BasicFunctionCall functionCall(scopeManager.getCurrentScope(), func, evaluatedArgs);
@@ -598,10 +634,10 @@ Value* Interpreter::visit(CallExpression* call) {
                     result = callMethod->call(&tempScope);
                 }
             } else {
-                Interpreter::reportError("Function object does not support method calls");
+                throw ReturnException(new String("Function object does not support method calls"));
             }
         } else {
-            Interpreter::reportError("Function object has no type information or does not support method calls");
+            throw ReturnException(new String("Function object has no type information or does not support method calls"));
         }
     }
     

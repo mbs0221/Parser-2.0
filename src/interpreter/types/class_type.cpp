@@ -39,7 +39,8 @@ void ClassType::addUserMethod(Function* func, VisibilityType visibility) {
     // 更新名称到签名的映射
     string methodName = signature.getName();
     methodNameToSignatures[methodName].push_back(signature);
-    
+    LOG_DEBUG("ClassType::ClassType: adding class method: " + signature.toString());
+
     // 设置可见性
     if (memberVisibility.find(methodName) == memberVisibility.end()) {
         memberVisibility[methodName] = visibility;
@@ -57,7 +58,8 @@ void ClassType::addStaticMethod(Function* func, VisibilityType visibility) {
     // 更新名称到签名的映射
     string methodName = signature.getName();
     staticMethodNameToSignatures[methodName].push_back(signature);
-    
+    LOG_DEBUG("ClassType::ClassType: adding class method: " + signature.toString());
+
     // 设置可见性
     if (staticMemberVisibility.find(methodName) == staticMemberVisibility.end()) {
         staticMemberVisibility[methodName] = visibility;

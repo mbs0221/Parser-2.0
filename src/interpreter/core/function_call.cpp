@@ -190,18 +190,15 @@ InstanceMethodCall::InstanceMethodCall(Scope* scope, Value* inst, MethodReferenc
 
 Value* InstanceMethodCall::execute() {
     if (!instance) {
-        LOG_ERROR("InstanceMethodCall: Instance is null");
-        return nullptr;
+        throw ReturnException(new String("InstanceMethodCall: Instance is null"));
     }
     
     if (!currentScope) {
-        LOG_ERROR("InstanceMethodCall: Current scope not available");
-        return nullptr;
+        throw ReturnException(new String("InstanceMethodCall: Current scope not available"));
     }
     
     if (!methodRef) {
-        LOG_ERROR("InstanceMethodCall: MethodReference is null");
-        return nullptr;
+        throw ReturnException(new String("InstanceMethodCall: MethodReference is null"));
     }
     
     // 绑定实例到作用域

@@ -179,11 +179,24 @@ int main(int argc, char *argv[])
 		try{
 			interpreter.visit(program);  // 直接调用visit方法，消除execute函数依赖
 		} catch (const ReturnException& e) {
-			Integer* returnValue = e.getValue<Integer*>();
-			LOG_INFO("Program execution completed with return value: " + to_string(returnValue->getValue()));
-			return returnValue->getValue();
+			// 打印异常消息
+			LOG_INFO("Program execution completed with ReturnException: " + string(e.what()));
+			
+			// 尝试获取返回值并打印
+			if (e.getValue<Value*>() != nullptr) {
+				Value* returnValue = e.getValue<Value*>();
+				LOG_INFO("Return value: " + returnValue->toString());
+				printf("程序执行完成，返回值: %s\n", returnValue->toString().c_str());
+			} else {
+				LOG_INFO("Return value: nullptr");
+				printf("程序执行完成，无返回值\n");
+			}
+			
+			// 返回适当的退出码
+			return 0;  // 正常退出
 		} catch (const std::exception& e) {
 			LOG_ERROR("Program execution failed: " + string(e.what()));
+			printf("程序执行失败: %s\n", e.what());
 			return -1;
 		}
 		LOG_INFO("Program execution completed");

@@ -1,5 +1,6 @@
 #include "interpreter/values/value.h"
 #include "interpreter/types/types.h"
+#include "interpreter/core/control_flow.h"
 #include "interpreter/scope/scope.h"
 #include <algorithm>
 #include <iostream> // Added for debugging
@@ -61,7 +62,7 @@ Value* MethodReference::call(Scope* scope) {
     }
     
     LOG_DEBUG("MethodReference::call: No function found");
-    return nullptr;
+    throw ReturnException(new String("Method '" + methodName + "' not found"));
 }
 
 // 实现Function基类的纯虚函数

@@ -344,14 +344,12 @@ StringType::StringType() : ClassType("string", false, true, false) {
     // 批量注册静态方法
     for (Function* method : stringStaticMethods) {
         // 将 BuiltinFunction 转换为 Function* 类型
-        LOG_DEBUG("StringType::StringType: adding static method: " + method->getName());
         addStaticMethod(method);
     }
 
     // 批量注册类方法
     for (Function* method : stringClassMethods) {
         // 将 BuiltinFunction 转换为 Function* 类型
-        LOG_DEBUG("StringType::StringType: adding class method: " + method->getName());
         addUserMethod(method);
     }
 }

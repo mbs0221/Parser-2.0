@@ -45,7 +45,7 @@ static const vector<Function*> arrayStaticMethods = {
         // 如果没有可变参数，返回空数组
         cout << "ArrayType::array() called: nullptr" << endl;
         return array;
-    }, "array(...)")
+    }, "array()"),
 };
 
 // 定义类方法数组
@@ -176,7 +176,6 @@ static const vector<Function*> arrayClassMethods = {
 
 // ArrayType构造函数
 ArrayType::ArrayType() : ClassType("array", true) {
-    cout << "ArrayType::ArrayType() called" << endl;
     // 批量注册静态方法
     for (Function* method : arrayStaticMethods) {
         addStaticMethod(method);
