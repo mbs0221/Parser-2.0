@@ -1,0 +1,165 @@
+// 测试整数算术运算
+function test_integer_arithmetic() {
+    let a = 10;
+    let b = 5;
+
+    println("基本算术运算");
+    let sum = a + b;      // 15
+    let diff = a - b;     // 5
+    let product = a * b;  // 50
+    let quotient = a / b; // 2
+    let remainder = a % b; // 0
+
+    println("比较运算");
+    let greater = a > b;   // true
+    let less = a < b;      // false
+    let equal = a == b;    // false
+    let notEqual = a != b; // true
+
+    println("输出结果");
+    println("a = " + a);
+    println("b = " + b);
+    println("a + b = " + sum);
+    println("a - b = " + diff);
+    println("a * b = " + product);
+    println("a / b = " + quotient);
+    println("a % b = " + remainder);
+    println("a > b = " + greater);
+    println("a < b = " + less);
+    println("a == b = " + equal);
+    println("a != b = " + notEqual);
+    println("测试整数算术运算");
+    let a = 10;
+    let b = 5;
+
+    println("基本算术运算");
+    let sum = a + b;      // 15
+    let diff = a - b;     // 5
+    let product = a * b;  // 50
+    let quotient = a / b; // 2
+    let remainder = a % b; // 0
+
+    println("比较运算");
+    let greater = a > b;   // true
+    let less = a < b;      // false
+    let equal = a == b;    // false
+    let notEqual = a != b; // true
+
+    println("输出结果");
+    println("a = " + a);
+    println("b = " + b);
+    println("a + b = " + sum);
+    println("a - b = " + diff);
+    println("a * b = " + product);
+    println("a / b = " + quotient);
+    println("a % b = " + remainder);
+    println("a > b = " + greater);
+    println("a < b = " + less);
+    println("a == b = " + equal);
+    println("a != b = " + notEqual);
+    let c = 10.5;
+    let d = 3.2;
+    let sum = c + d;
+    let product = c * d;
+    let difference = c - d;
+    let quotient = c / d;
+    println("c + d = " + sum);
+    println("c - d = " + difference);
+    println("c * d = " + product);
+    println("c / d = " + quotient);
+    let e = 10;
+    let f = 3.14;
+    let sum = e + f;    // 13.14
+    let product = e * f; // 31.4
+    let difference = e - f; // 6.86
+    let quotient = e / f; // 3.184713
+    let remainder = e % f; // 0.66
+    println("e + f = " + sum);
+    println("e * f = " + product);
+    println("e - f = " + difference);
+    println("e / f = " + quotient);
+    println("e % f = " + remainder);
+    let g = 5;
+    let h = 3;
+    let and = g & h;
+    let or = g | h;
+    let xor = g ^ h;
+    let not = ~g;
+    let leftShift = g << 1;
+    let rightShift = g >> 1;
+    println("g & h = " + and);
+    println("g | h = " + or);
+    println("g ^ h = " + xor);
+    println("~g = " + not);
+    println("g << 1 = " + leftShift);
+    println("g >> 1 = " + rightShift);
+    let i = 10;
+    let j = 5;
+    let greater = i > j;
+    println("i > j = " + greater);
+    println("i < j = " + less);
+    println("i >= j = " + greaterEqual);
+    println("i <= j = " + lessEqual);
+    println("i == j = " + equal);
+    println("i != j = " + notEqual);
+    let k = true;
+    let l = false;
+    let and = k && l;
+    let or = k || l;
+    let not = !k;
+    println("i < j = " + less);
+    println("i >= j = " + greaterEqual);
+    println("i <= j = " + lessEqual);
+    println("i == j = " + equal);
+    println("i != j = " + notEqual);
+    let m = 15;
+    let n = 3;
+    let o = 7;
+    let sum = m + n * o;
+    println("i < j = " + less);
+    println("i >= j = " + greaterEqual);
+    println("i <= j = " + lessEqual);
+    println("i == j = " + equal);
+    println("i != j = " + notEqual);
+    let e = 10;
+    let f = 3.14;
+    let sum = e + f;    // 13.14
+    let product = e * f; // 31.4
+    let difference = e - f; // 6.86
+    let quotient = e / f; // 3.184713
+    let remainder = e % f; // 0.66
+    println("e + f = " + sum);
+    println("e * f = " + product);
+    println("e - f = " + difference);
+    println("e / f = " + quotient);
+    println("e % f = " + remainder);
+    let str = "Hello World";
+    println(str);
+    let a = 10;
+    let b = 5;
+    let greater = a > b;
+    println("greater = " + greater);
+    let str = "Hello World";
+    let len = str.length();
+    println("Length: " + len);
+    let x = 10;
+    let y = 20;
+    let result = x + y;
+    println("计算结果: " + result);
+    println("程序将退出，退出码为42");
+    exit(42);
+    println("这行代码不会执行");
+    let x = 10;
+    let y = 20;
+    let result = x + y;
+    println("计算结果: " + result);
+
+    if (result > 25) {
+        println("结果大于25，程序将退出");
+        exit(42);  // 设置退出码为42
+    } else {
+        println("结果小于等于25，程序继续执行");
+        exit(0);   // 正常退出
+    }
+}
+test_complex_expression();

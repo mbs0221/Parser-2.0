@@ -129,6 +129,11 @@ Value* builtin_print(Scope* scope) {
 }
 
 Value* builtin_println(Scope* scope) {
+    // 首先处理第一个参数（如果有的话）
+    if (Value* firstArg = scope->getArgument<Value>("value")) {
+        cout << firstArg->toString();
+    }
+    
     // 然后处理可变参数
     if (scope->hasKwargs()) {
         // 从kwargs中获取所有值
@@ -575,7 +580,7 @@ protected:
         
         // 使用宏简化内置函数注册
         REGISTER_BUILTIN_FUNCTION(scopeManager, "print", builtin_print, "print(...)");
-        REGISTER_BUILTIN_FUNCTION(scopeManager, "println", builtin_println, "println(...)");
+        REGISTER_BUILTIN_FUNCTION(scopeManager, "println", builtin_println, "println(value, ...)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "count", builtin_count, "count(value)");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "cin", builtin_cin, "cin()");
         REGISTER_BUILTIN_FUNCTION(scopeManager, "exit", builtin_exit, "exit(code)");

@@ -16,8 +16,8 @@
 #include "interpreter/types/types.h"
 
 // 3. 项目功能头文件
-#include "interpreter/utils/logger.h"
-#include "interpreter/utils/string_utils.h"
+#include "common/logger.h"
+#include "common/string_utils.h"
 
 // 4. 解析器头文件（放在最后，避免命名空间冲突）
 #include "parser/expression.h"

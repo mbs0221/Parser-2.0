@@ -1,5 +1,5 @@
 #include "interpreter/plugins/builtin_plugin.h"
-#include "interpreter/utils/logger.h"
+#include "common/logger.h"
 #include "interpreter/values/value.h"
 #include "interpreter/scope/scope.h"
 #include <iostream>

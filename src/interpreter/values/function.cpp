@@ -2,7 +2,7 @@
 #include "interpreter/types/types.h"
 #include "interpreter/core/function_call.h"
 #include "interpreter/scope/scope.h"
-#include "interpreter/utils/logger.h"
+#include "common/logger.h"
 #include <algorithm>
 #include <sstream>
 #include <iostream> // Added for debugging
@@ -441,7 +441,10 @@ FunctionSignature BuiltinFunction::getSignature() const {
     bool hasVarArgs = false;
     string varArgsType = "any";
     
+    LOG_DEBUG("BuiltinFunction::getSignature: Function '" + name + "' has " + to_string(parameters.size()) + " parameters");
+    
     for (const Parameter& param : parameters) {
+        LOG_DEBUG("BuiltinFunction::getSignature: Parameter: " + param.toString());
         if (param.isVariadic()) {
             hasVarArgs = true;
             varArgsType = param.getTypeName();
@@ -453,7 +456,9 @@ FunctionSignature BuiltinFunction::getSignature() const {
         }
     }
     
-    return FunctionSignature(name, paramTypes, defaults, hasVarArgs, varArgsType);
+    FunctionSignature result = FunctionSignature(name, paramTypes, defaults, hasVarArgs, varArgsType);
+    LOG_DEBUG("BuiltinFunction::getSignature: Generated signature: " + result.toString());
+    return result;
 }
 
 // ==================== BuiltinFunction 可变参数支持方法 ====================

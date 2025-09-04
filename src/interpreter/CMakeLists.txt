@@ -43,9 +43,7 @@ add_library(interpreter SHARED
     # 插件系统
     plugins/plugin_manager.cpp
     
-    # 工具和日志
-    utils/logger.cpp
-    utils/string_utils.cpp
+    # 工具和日志已移动到 common 库
 )
 
 # 设置位置无关代码
@@ -62,7 +60,7 @@ target_include_directories(interpreter PUBLIC
 target_compile_options(interpreter PRIVATE ${LOG4CPP_CFLAGS_OTHER})
 
 # 链接依赖库
-target_link_libraries(interpreter parser dl ${LOG4CPP_LIBRARIES})
+target_link_libraries(interpreter parser common dl ${LOG4CPP_LIBRARIES})
 
 # 设置输出目录
 set_target_properties(interpreter PROPERTIES

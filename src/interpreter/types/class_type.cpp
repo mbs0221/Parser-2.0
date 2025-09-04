@@ -1,7 +1,7 @@
 #include "interpreter/types/types.h"
 #include "interpreter/values/value.h"
 
-#include "interpreter/utils/logger.h"
+#include "common/logger.h"
 #include <algorithm>
 
 using namespace std;
@@ -325,10 +325,20 @@ const map<string, Value*>& ClassType::getAllMemberInitialValues() const {
 // 这些方法已经在上面的 addUserMethod(Function*) 和 addStaticMethod(Function*) 中实现
 
 Function* ClassType::findUserMethod(const FunctionSignature& signature) const {
+    LOG_DEBUG("ClassType::findUserMethod: Looking for signature: " + signature.toString());
+    LOG_DEBUG("ClassType::findUserMethod: Available methods count: " + to_string(userFunctionMethods.size()));
+    
+    // 打印所有可用的方法签名
+    for (const auto& pair : userFunctionMethods) {
+        LOG_DEBUG("ClassType::findUserMethod: Available signature: " + pair.first.toString());
+    }
+    
     auto it = userFunctionMethods.find(signature);
     if (it != userFunctionMethods.end()) {
+        LOG_DEBUG("ClassType::findUserMethod: Found exact match!");
         return it->second;
     } else {
+        LOG_DEBUG("ClassType::findUserMethod: No exact match found");
         return nullptr;
     }
 }

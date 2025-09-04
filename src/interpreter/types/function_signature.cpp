@@ -1,7 +1,7 @@
 
 #include "interpreter/scope/scope.h"
 #include "interpreter/values/value.h"
-#include "interpreter/utils/logger.h"
+#include "common/logger.h"
 #include <sstream>
 
 using namespace std;
@@ -62,6 +62,8 @@ FunctionSignature::FunctionSignature(const string& funcName, class Scope* scope)
     
     // 获取真正的函数参数名称（已过滤系统变量）
     vector<string> paramNames = scope->getParameterNames();
+    LOG_DEBUG("FunctionSignature: Scope has " + to_string(paramNames.size()) + " parameter names");
+    
     for (const string& paramName : paramNames) {
         Value* value = scope->getVariable(paramName);
         if (value) {
@@ -71,7 +73,8 @@ FunctionSignature::FunctionSignature(const string& funcName, class Scope* scope)
         }
     }
     
-    LOG_DEBUG("FunctionSignature: Created signature with " + to_string(parameters.size()) + " function parameters (using getParameterNames)");
+    LOG_DEBUG("FunctionSignature: Created signature for '" + funcName + "' with " + to_string(parameters.size()) + " function parameters (using getParameterNames)");
+    LOG_DEBUG("FunctionSignature: Final signature: " + toString());
 }
 
 

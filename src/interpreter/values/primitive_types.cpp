@@ -359,6 +359,10 @@ bool Integer::toBool() const {
     return static_cast<int>(value) != 0;
 }
 
+double Integer::toDouble() const {
+    return static_cast<double>(value);
+}
+
 Value* Integer::clone() const {
     return new Integer(*this);
 }

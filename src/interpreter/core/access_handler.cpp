@@ -5,7 +5,7 @@
 #include "interpreter/values/method_value.h"
 #include "interpreter/values/class_method_value.h"
 #include "interpreter/types/types.h"
-#include "interpreter/utils/logger.h"
+#include "common/logger.h"
 #include "parser/expression.h"
 #include <iostream>
 

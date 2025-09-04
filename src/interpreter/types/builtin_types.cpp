@@ -4,7 +4,7 @@
 
 #include "interpreter/values/value.h"
 #include "interpreter/types/types.h"
-#include "interpreter/utils/logger.h"
+#include "common/logger.h"
 #include "interpreter/scope/scope.h"
 #include "lexer/token.h"
 
@@ -160,7 +160,7 @@ IntegerType::IntegerType() : NumericType("int", true) {
             }
         }
         return nullptr;
-    }, "add(Integer other)"));
+    }, "add(other)"));
     
     addUserMethod(new BuiltinFunction([](class Scope* scope) -> Value* {
         if (Integer* intInstance = scope->getThis<Integer>()) {
@@ -169,7 +169,7 @@ IntegerType::IntegerType() : NumericType("int", true) {
             }
         }
         return nullptr;
-    }, "subtract(Integer other)"));
+    }, "subtract(other)"));
     
     addUserMethod(new BuiltinFunction([](class Scope* scope) -> Value* {
         if (Integer* intInstance = scope->getThis<Integer>()) {
@@ -178,7 +178,7 @@ IntegerType::IntegerType() : NumericType("int", true) {
             }
         }
         return nullptr;
-    }, "multiply(Integer other)"));
+    }, "multiply(other)"));
     
     addUserMethod(new BuiltinFunction([](class Scope* scope) -> Value* {
         if (Integer* intInstance = scope->getThis<Integer>()) {
@@ -187,7 +187,7 @@ IntegerType::IntegerType() : NumericType("int", true) {
             }
         }
         return nullptr;
-    }, "divide(Integer other)"));
+    }, "divide(other)"));
     
     addUserMethod(new BuiltinFunction([](class Scope* scope) -> Value* {
         if (Integer* intInstance = scope->getThis<Integer>()) {
@@ -196,7 +196,7 @@ IntegerType::IntegerType() : NumericType("int", true) {
             }
         }
         return nullptr;
-    }, "modulo(Integer other)"));
+    }, "modulo(other)"));
     
     // 注册比较运算方法 - 使用操作符名称
     addUserMethod(new BuiltinFunction([](class Scope* scope) -> Value* {
@@ -206,7 +206,7 @@ IntegerType::IntegerType() : NumericType("int", true) {
             }
         }
         return nullptr;
-    }, "greaterThan(Integer other)"));
+    }, "greaterThan(other)"));
     
     addUserMethod(new BuiltinFunction([](class Scope* scope) -> Value* {
         if (Integer* intInstance = scope->getThis<Integer>()) {
@@ -215,7 +215,7 @@ IntegerType::IntegerType() : NumericType("int", true) {
             }
         }
         return nullptr;
-    }, "lessThan(Integer other)"));
+    }, "lessThan(other)"));
     
     addUserMethod(new BuiltinFunction([](class Scope* scope) -> Value* {
         if (Integer* intInstance = scope->getThis<Integer>()) {
@@ -224,7 +224,7 @@ IntegerType::IntegerType() : NumericType("int", true) {
             }
         }
         return nullptr;
-    }, "equals(Integer other)"));
+    }, "equals(other)"));
     
     addUserMethod(new BuiltinFunction([](class Scope* scope) -> Value* {
         if (Integer* intInstance = scope->getThis<Integer>()) {
@@ -233,7 +233,14 @@ IntegerType::IntegerType() : NumericType("int", true) {
             }
         }
         return nullptr;
-    }, "notEquals(Integer other)"));
+    }, "notEquals(other)"));
+
+    addUserMethod(new BuiltinFunction([](class Scope* scope) -> Value* {
+        if (Integer* intInstance = scope->getThis<Integer>()) {
+            return new Double(intInstance->toDouble());
+        }
+        return nullptr;
+    }, "toDouble()"));
 }
 
 // DoubleType构造函数

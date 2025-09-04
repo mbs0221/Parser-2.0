@@ -1,7 +1,7 @@
 #include "interpreter/values/value.h"
 #include "interpreter/types/types.h"
 #include "interpreter/scope/scope.h"
-#include "interpreter/utils/logger.h"
+#include "common/logger.h"
 #include <algorithm>
 #include <stdexcept>
 

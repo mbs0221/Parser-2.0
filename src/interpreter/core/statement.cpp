@@ -4,7 +4,7 @@
 #include "parser/inter.h"
 #include "parser/parser.h"
 #include "lexer/lexer.h"
-#include "interpreter/utils/logger.h"
+#include "common/logger.h"
 #include "interpreter/values/value.h"
 
 

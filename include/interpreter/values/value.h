@@ -181,6 +181,7 @@ public:
     // 重写基类方法
     std::string toString() const override;
     bool toBool() const override;
+    double toDouble() const;
     Value* clone() const override;
     std::string getBuiltinTypeName() const override;
     // 获取和设置值

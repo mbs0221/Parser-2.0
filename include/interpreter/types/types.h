@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <cctype>
-#include "interpreter/utils/logger.h"
+#include "common/logger.h"
 #include "parser/definition.h"  // 包含FunctionPrototype和FunctionDefinition定义
 #include "interpreter/values/value.h"  // 包含FunctionSignature完整定义
 

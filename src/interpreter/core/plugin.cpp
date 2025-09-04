@@ -1,6 +1,6 @@
 #include "interpreter/core/interpreter.h"
-#include "interpreter/utils/logger.h"
-#include "interpreter/utils/string_utils.h"
+#include "common/logger.h"
+#include "common/string_utils.h"
 
 #include <iostream>
 #include <sstream>

@@ -357,13 +357,13 @@ Token *Lexer::match_other(){
 		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::Div;  // 使用静态常量
 	} else if (peek == '%') {
-		inf->read(&peek, 1);  // 读取下一个字符
+		//inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::Mod;  // 使用静态常量
 	} else if (peek == '^') {
-		inf->read(&peek, 1);  // 读取下一个字符
+		// inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::BitXor;  // 使用静态常量
 	} else if (peek == '~') {
-		inf->read(&peek, 1);  // 读取下一个字符
+		// inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::BitNot;  // 使用静态常量
 	} else if (peek == '.') {
 		// inf->read(&peek, 1);  // 读取下一个字符

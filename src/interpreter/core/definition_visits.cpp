@@ -1,7 +1,7 @@
 #include "parser/expression.h"
 #include "parser/definition.h"
 #include "parser/inter.h"
-#include "interpreter/utils/logger.h"
+#include "common/logger.h"
 #include "interpreter/values/value.h"
 #include "interpreter/types/types.h"
 #include "interpreter/core/function_call.h"

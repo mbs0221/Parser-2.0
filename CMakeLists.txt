@@ -38,6 +38,7 @@ include_directories(${CMAKE_SOURCE_DIR}/Parser)
 include_directories(${LOG4CPP_INCLUDE_DIRS})
 
 # 添加子目录
+add_subdirectory(src/common)
 add_subdirectory(src/lexer)
 add_subdirectory(src/parser)
 add_subdirectory(src/interpreter)
