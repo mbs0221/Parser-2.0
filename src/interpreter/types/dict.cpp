@@ -57,6 +57,12 @@ static const vector<Function*> dictStaticMethods = {
         LOG_DEBUG("Dict: created with " + to_string(dict->getSize()) + " entries");
         return dict;
     }, "dict(...)"),
+    
+    // 添加无参构造函数
+    new BuiltinFunction([](class Scope* scope) -> Value* {
+        LOG_DEBUG("DictType::dict() constructor called");
+        return new Dict();
+    }, "dict()"),
 };
 
 // 定义类方法数组

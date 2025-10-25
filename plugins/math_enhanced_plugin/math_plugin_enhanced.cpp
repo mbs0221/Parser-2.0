@@ -240,8 +240,8 @@ public:
         return PluginInfo{
             "math_enhanced",
             "1.0.0",
-            "增强数学函数插件，包含基础数学运算和高级数学函数",
-            {"abs", "max", "min", "pow", "random", "sin", "cos", "tan", "sqrt", "log", "floor", "ceil"}
+            "增强数学函数插件，包含高级数学运算函数",
+            {"abs", "max", "min", "pow", "random"}
         };
     }
     
@@ -290,77 +290,6 @@ public:
             [](Scope* scope) -> Value* {
                 vector<Value*> args = {};
                 return math_random(args);
-            });
-            
-        // 添加高级数学函数
-        functions.emplace_back("sin", "sin(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                if (Double* value = scope->getArgument<Double>("value")) {
-                    vector<Value*> args = {value};
-                    return math_sin(args);
-                }
-                return nullptr;
-            });
-            
-        functions.emplace_back("cos", "cos(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                if (Double* value = scope->getArgument<Double>("value")) {
-                    vector<Value*> args = {value};
-                    return math_cos(args);
-                }
-                return nullptr;
-            });
-            
-        functions.emplace_back("tan", "tan(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                if (Double* value = scope->getArgument<Double>("value")) {
-                    vector<Value*> args = {value};
-                    return math_tan(args);
-                }
-                return nullptr;
-            });
-            
-        functions.emplace_back("sqrt", "sqrt(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                if (Double* value = scope->getArgument<Double>("value")) {
-                    vector<Value*> args = {value};
-                    return math_sqrt(args);
-                }
-                return nullptr;
-            });
-            
-        functions.emplace_back("log", "log(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                if (Double* value = scope->getArgument<Double>("value")) {
-                    vector<Value*> args = {value};
-                    return math_log(args);
-                }
-                return nullptr;
-            });
-            
-        functions.emplace_back("floor", "floor(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                if (Double* value = scope->getArgument<Double>("value")) {
-                    vector<Value*> args = {value};
-                    return math_floor(args);
-                }
-                return nullptr;
-            });
-            
-        functions.emplace_back("ceil", "ceil(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                if (Double* value = scope->getArgument<Double>("value")) {
-                    vector<Value*> args = {value};
-                    return math_ceil(args);
-                }
-                return nullptr;
             });
             
         return functions;

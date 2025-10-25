@@ -64,24 +64,37 @@ FunctionSignature::FunctionSignature(const string& funcName, class Scope* scope)
     LOG_DEBUG("FunctionSignature: Checking for variadic arguments - hasArgs: " + 
               string(hasVarArgs ? "true" : "false") + ", hasKwargs: " + string(hasVarKwargs ? "true" : "false"));
     
-    // 对于方法调用，我们不应该从scope中提取参数，因为scope包含了脚本执行过程中的所有变量
-    // 方法调用的参数应该通过实际传递的arguments来确定
-    // 这里我们创建一个空的签名，让方法查找基于名称进行
-    
-    // 调试：打印新作用域中的所有变量
-    LOG_DEBUG("FunctionSignature: Scope contents for method call '" + funcName + "':");
+    // 从scope中提取参数信息
     if (scope && scope->getObjectRegistry()) {
         vector<string> allNames = scope->getObjectRegistry()->getVariableNames();
         LOG_DEBUG("FunctionSignature: Found " + to_string(allNames.size()) + " variables in scope");
+        
+        // 按顺序提取参数（排除系统变量）
+        vector<string> paramNames;
         for (const string& name : allNames) {
-            Value* value = scope->getVariable(name);
-            if (value) {
-                LOG_DEBUG("FunctionSignature: Scope variable: " + name + " = " + value->toString() + " (" + value->getBuiltinTypeName() + ")");
+            if (!isSystemVariable(name)) {
+                paramNames.push_back(name);
             }
+        }
+        
+        // 为每个参数创建Parameter对象
+        for (size_t i = 0; i < paramNames.size(); ++i) {
+            const string& paramName = paramNames[i];
+            Value* value = scope->getVariable(paramName);
+            string paramType = value ? value->getBuiltinTypeName() : "any";
+            
+            LOG_DEBUG("FunctionSignature: Parameter " + to_string(i) + ": " + paramName + " (" + paramType + ")");
+            parameters.push_back(Parameter(paramName, paramType, "", false));
+        }
+        
+        // 如果有可变参数，添加可变参数
+        if (hasVarArgs) {
+            parameters.push_back(Parameter("...", "any", "", true));
+            LOG_DEBUG("FunctionSignature: Added variadic arguments");
         }
     }
     
-    LOG_DEBUG("FunctionSignature: Creating empty signature for method call '" + funcName + "'");
+    LOG_DEBUG("FunctionSignature: Created signature for method call '" + funcName + "' with " + to_string(parameters.size()) + " parameters");
     LOG_DEBUG("FunctionSignature: Final signature: " + toString());
 }
 

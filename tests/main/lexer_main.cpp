@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     }
     
     // 初始化日志系统
-    Logger::initialize("lexer.log", 5 * 1024 * 1024, 3);
+    Logger::initialize("logs/lexer.log", 5 * 1024 * 1024, 3);
     setLogLevel(logLevel);
     
     LOG_INFO("Lexer application started with log level: " + logLevel);

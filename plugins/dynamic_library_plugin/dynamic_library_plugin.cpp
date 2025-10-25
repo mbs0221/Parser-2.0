@@ -1,4 +1,4 @@
-#include "interpreter/plugins/dynamic_library_plugin.h"
+#include "dynamic_library_plugin.h"
 #include "common/logger.h"
 
 namespace DynamicLoader {
@@ -61,7 +61,26 @@ std::vector<FunctionInfo> DynamicLibraryPlugin::getFunctions() {
         return {};
     }
     
-    return loader_->getFunctions();
+    std::vector<FunctionInfo> result;
+    auto dynamic_functions = loader_->getFunctions();
+    
+    for (const auto& dynamic_func : dynamic_functions) {
+        // 转换参数名称
+        std::vector<std::string> param_names;
+        for (const auto& param : dynamic_func.parameters) {
+            param_names.push_back(param.name);
+        }
+        
+        // 创建函数包装器
+        auto func_wrapper = loader_->createFunctionWrapper(dynamic_func);
+        
+        // 使用构造函数创建FunctionInfo
+        FunctionInfo func_info(dynamic_func.name, dynamic_func.description, param_names, func_wrapper);
+        
+        result.push_back(func_info);
+    }
+    
+    return result;
 }
 
 bool DynamicLibraryPlugin::isValid() const {

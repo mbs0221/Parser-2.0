@@ -87,11 +87,19 @@ Value* ScopeManager::lookup(const string& name) {
         }
     }
     
-    // 5. 最后查找类型名称
+    // 5. 最后查找类型名称和构造函数
     ObjectType* type = lookupType(name);
     if (type) {
         LOG_DEBUG("Found type: " + name);
-        // 返回一个表示类型的特殊值
+        // 检查是否有同名的静态方法（构造函数）
+        if (type->supportsMethods()) {
+            IMethodSupport* methodSupport = dynamic_cast<IMethodSupport*>(type);
+            if (methodSupport && methodSupport->hasStaticMethod(name)) {
+                LOG_DEBUG("Found constructor: " + name);
+                return new StaticMethodReference(type, name);
+            }
+        }
+        // 如果没有构造函数，返回类型名称字符串
         return new String(name);
     }
     
@@ -343,11 +351,11 @@ void ScopeManager::defineVariable(const string& name, Value* value) {
 
 void ScopeManager::defineVariable(const string& name, ObjectType* type, Value* value) {
     // 自动处理类成员和普通变量的注册
-    if (isInClassContext()) {
-        // 在类定义中，注册为类成员
+    if (isInClassContext() || isInStructContext()) {
+        // 在类定义中或结构体定义中，注册为类成员
         registerAsClassMember(name, value);
     } else {
-        // 不在类定义中，注册为普通变量
+        // 不在类定义或结构体定义中，注册为普通变量
         if (currentScope && currentScope->objectRegistry) {
             currentScope->objectRegistry->defineVariable(name, value);
             LOG_DEBUG("ScopeManager: variable '" + name + "' registered as regular variable");
@@ -372,11 +380,11 @@ void ScopeManager::defineFunction(const string& name, Function* function) {
     }
     
     // 自动处理类方法和普通函数的注册
-    if (isInClassContext()) {
-        // 在类定义中，注册为类方法
+    if (isInClassContext() || isInStructContext()) {
+        // 在类定义中或结构体定义中，注册为类方法
         registerAsClassMethod(name, function);
     } else {
-        // 不在类定义中，注册为普通函数
+        // 不在类定义或结构体定义中，注册为普通函数
         if (currentScope && currentScope->objectRegistry) {
             currentScope->objectRegistry->defineCallable(name, function);
             LOG_DEBUG("ScopeManager: function '" + name + "' registered as regular function");
@@ -550,6 +558,12 @@ bool ScopeManager::isInClassContext() const {
     if (String* classNameValue = currentScope->getVariable<String>("__class__")) {
         return true;
     }
+    
+    return false;
+}
+
+bool ScopeManager::isInStructContext() const {
+    if (!currentScope) return false;
     
     // 检查当前作用域中是否有__struct__变量
     if (String* structNameValue = currentScope->getVariable<String>("__struct__")) {

@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
     }
     
     // 初始化日志系统
-    Logger::initialize("parser.log", 5 * 1024 * 1024, 3);
+    Logger::initialize("logs/parser.log", 5 * 1024 * 1024, 3);
     setLogLevel(logLevel);
     
     LOG_INFO("Parser application started with log level: " + logLevel);

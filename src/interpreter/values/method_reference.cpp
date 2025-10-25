@@ -8,6 +8,13 @@
 
 using namespace std;
 
+// 辅助函数：判断是否为系统注入的变量
+static bool isSystemVariable(const string& key) {
+    return (key == "__func__" || key == "this" || key == "instance" || 
+            key == "self" || key == "__class_name__" || key == "argc" || 
+            key == "args" || key == "kwargs");
+}
+
 // ==================== MethodReference 方法实现 ====================
 
 MethodReference::MethodReference(ObjectType* type, const string& name)
@@ -60,11 +67,40 @@ Value* MethodReference::call(Scope* scope) {
         }
     }
     
-    // 计算函数签名 - 使用FunctionSignature的构造函数
-    FunctionSignature callSignature(methodName, scope);
+    // 从scope中提取参数值
+    vector<Value*> args;
+    if (scope && scope->getObjectRegistry()) {
+        vector<string> allNames = scope->getObjectRegistry()->getVariableNames();
+        
+        // 按顺序提取参数（排除系统变量）
+        for (const string& name : allNames) {
+            if (!isSystemVariable(name)) {
+                Value* value = scope->getVariable(name);
+                if (value) {
+                    args.push_back(value);
+                    LOG_DEBUG("MethodReference::call: Extracted argument: " + name + " (" + value->getBuiltinTypeName() + ")");
+                }
+            }
+        }
+    }
     
-    // 调用子类的findBestMatch方法查找匹配函数
-    Function* foundFunction = findBestMatch(callSignature);
+    LOG_DEBUG("MethodReference::call: Extracted " + to_string(args.size()) + " arguments");
+    
+    // 使用参数值查找匹配的方法
+    Function* foundFunction = nullptr;
+    if (targetType && targetType->supportsMethods()) {
+        IMethodSupport* methodSupport = dynamic_cast<IMethodSupport*>(targetType);
+        if (methodSupport) {
+            // 对于实例方法，使用findUserMethod
+            if (InstanceMethodReference* instanceRef = dynamic_cast<InstanceMethodReference*>(this)) {
+                foundFunction = methodSupport->findUserMethod(methodName, args);
+            }
+            // 对于静态方法，使用findStaticMethod
+            else if (StaticMethodReference* staticRef = dynamic_cast<StaticMethodReference*>(this)) {
+                foundFunction = methodSupport->findStaticMethod(methodName, args);
+            }
+        }
+    }
     
     // 如果找到了函数，直接设置缓存并调用
     if (foundFunction) {

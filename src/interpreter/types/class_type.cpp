@@ -1,5 +1,6 @@
 #include "interpreter/types/types.h"
 #include "interpreter/values/value.h"
+#include "interpreter/scope/scope.h"
 
 #include "common/logger.h"
 #include <algorithm>
@@ -18,7 +19,8 @@ void ClassType::addMember(const string& name, ObjectType* type, VisibilityType v
     memberVisibility[name] = visibility;
     
     // 注册成员访问方法
-    registerMemberAccessMethod(name, type);
+    registerMemberGetter(name, type);
+    registerMemberSetter(name, type);
 }
 
 void ClassType::addStaticMember(const string& name, ObjectType* type, Value* value, VisibilityType visibility) {
@@ -202,29 +204,47 @@ Value* ClassType::createDefaultValue() {
     return instance;
 }
 
-void ClassType::registerMemberAccessMethod(const string& memberName, ObjectType* memberType) {
-    // 注册成员访问方法 - 暂时注释掉，因为registerMethod方法不存在
-    // TODO: 实现成员访问方法注册
-    /*
-    registerMethod("get_" + memberName, [this, memberName](Value* instance, vector<Value*>& args) -> Value* {
+void ClassType::registerMemberGetter(const string& memberName, ObjectType* memberType) {
+    // 注册成员访问方法 - 使用addUserMethod
+    auto getMethod = [this, memberName](Scope* scope) -> Value* {
+        // 从scope中获取this参数
+        Value* instance = scope->getVariable<Value>("this");
         if (instance && instance->getValueType() == this) {
-            // 这里应该调用实例的成员访问方法
-            // 暂时返回nullptr，实际实现需要更复杂的逻辑
-            return nullptr;
+            // 获取实例的成员值
+            if (ObjectValue* objValue = dynamic_cast<ObjectValue*>(instance)) {
+                return objValue->getProperty(memberName);
+            }
         }
         return nullptr;
-    });
+    };
     
+    // 使用函数原型构造函数创建BuiltinFunction对象
+    string prototype = "get_" + memberName + "()";
+    BuiltinFunction* getFunc = new BuiltinFunction(getMethod, prototype.c_str());
+    addUserMethod(getFunc, VIS_PUBLIC);
+}
+
+void ClassType::registerMemberSetter(const string& memberName, ObjectType* memberType) {
     // 注册成员设置方法
-    registerMethod("set_" + memberName, [this, memberName, memberType](Value* instance, vector<Value*>& args) -> Value* {
-        if (instance && instance->getValueType() == this && args.size() >= 1) {
-            // 这里应该调用实例的成员设置方法
-            // 暂时返回nullptr，实际实现需要更复杂的逻辑
-            return nullptr;
+    auto setMethod = [this, memberName, memberType](Scope* scope) -> Value* {
+        // 从scope中获取this和value参数
+        Value* instance = scope->getVariable<Value>("this");
+        Value* value = scope->getVariable<Value>("value");
+        if (instance && instance->getValueType() == this && value) {
+            // 设置实例的成员值
+            if (ObjectValue* objValue = dynamic_cast<ObjectValue*>(instance)) {
+                objValue->setProperty(memberName, value);
+                return value; // 返回设置的值
+            }
         }
         return nullptr;
-    });
-    */
+    };
+    
+    // 使用函数原型构造函数创建BuiltinFunction对象
+    string memberTypeName = memberType ? memberType->getTypeName() : "any";
+    string prototype = "set_" + memberName + "(value:" + memberTypeName + ")";
+    BuiltinFunction* setFunc = new BuiltinFunction(setMethod, prototype.c_str());
+    addUserMethod(setFunc, VIS_PUBLIC);
 }
 
 // 获取静态方法映射
@@ -448,7 +468,8 @@ map<string, Function*> ClassType::getStaticMethodsByName() const {
 void ClassType::registerMemberAccess() {
     // 为所有成员注册访问方法
     for (const auto& member : memberTypes) {
-        registerMemberAccessMethod(member.first, member.second);
+        registerMemberGetter(member.first, member.second);
+        registerMemberSetter(member.first, member.second);
     }
 }
 
@@ -462,3 +483,17 @@ Value* ClassType::createValueWithArgs(const vector<Value*>& args) {
     // 子类可以重写这个方法
     return createDefaultValue();
 }
+
+// 成员可见性管理
+VisibilityType ClassType::getMemberVisibility(const string& name) const {
+    auto it = memberVisibility.find(name);
+    if (it != memberVisibility.end()) {
+        return it->second;
+    }
+    return VIS_PUBLIC; // 默认返回公有
+}
+
+void ClassType::setMemberVisibility(const string& name, VisibilityType visibility) {
+    memberVisibility[name] = visibility;
+}
+

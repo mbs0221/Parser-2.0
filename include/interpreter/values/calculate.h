@@ -119,7 +119,7 @@ protected:
 
 private:
     // 私有辅助方法：尝试将值转换为指定类型
-    Value* tryConvertValue(Value* sourceValue, const std::string& targetTypeName);
+    Value* convertValueUsingTypeSystem(Value* sourceValue, const std::string& targetTypeName);
     
     // 私有辅助方法：使用MethodReference和InstanceMethodCall调用实例方法
     Value* callMethodWithReference(ObjectType* targetType, Value* targetInstance, 

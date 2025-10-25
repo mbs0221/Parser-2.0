@@ -465,92 +465,8 @@ Value* builtin_random(Scope* scope) {
     return nullptr;
 }
 
-// array构造函数 - 创建数组
-Value* builtin_array(Scope* scope) {
-    LOG_DEBUG("builtin_array() called");
-    Array* array = new Array();
-    
-    // 使用新的*args机制处理可变参数
-    if (scope->hasArgs()) {
-        // 从*args中获取所有元素
-        Array* argsArray = scope->getArgs();
-        if (argsArray) {
-            for (size_t i = 0; i < argsArray->getSize(); ++i) {
-                Value* element = argsArray->getElement(i);
-                if (element) {
-                    array->addElement(element->clone());
-                }
-            }
-            LOG_DEBUG("builtin_array: created array with " + to_string(array->getSize()) + " elements");
-            return array;
-        }
-    } else if (scope->hasKwargs()) {
-        // 从**kwargs中获取所有值作为元素
-        Dict* kwargs = scope->getKwargs();
-        if (kwargs) {
-            // 使用Dict::getValues()简化实现
-            vector<Value*> values = kwargs->getValues();
-            // 克隆所有值
-            for (Value*& value : values) {
-                array->addElement(value->clone());
-            }
-            LOG_DEBUG("builtin_array: created array with " + to_string(array->getSize()) + " elements from kwargs");
-            return array;
-        }
-    }
-    
-    // 如果没有可变参数，返回空数组
-    LOG_DEBUG("builtin_array: created empty array");
-    return array;
-}
-
-// dict构造函数 - 创建字典
-Value* builtin_dict(Scope* scope) {
-    LOG_DEBUG("builtin_dict() called");
-    Dict* dict = new Dict();
-    
-    // 使用新的*args机制处理可变参数
-    if (scope->hasArgs()) {
-        // 从*args中获取所有元素
-        Array* argsArray = scope->getArgs();
-        if (argsArray) {
-            // 每两个参数组成一个键值对
-            for (size_t i = 0; i < argsArray->getSize(); i += 2) {
-                if (i + 1 < argsArray->getSize()) {
-                    Value* key = argsArray->getElement(i);
-                    Value* value = argsArray->getElement(i + 1);
-                    
-                    if (key && value) {
-                        string keyStr = key->toString();
-                        LOG_DEBUG("builtin_dict: adding key-value pair: " + keyStr + " = " + value->toString());
-                        dict->setEntry(keyStr, value->clone());
-                    }
-                }
-            }
-            LOG_DEBUG("builtin_dict: created dict with " + to_string(dict->getSize()) + " entries");
-            return dict;
-        }
-    } else if (scope->hasKwargs()) {
-        // 从**kwargs中获取所有键值对
-        Dict* kwargs = scope->getKwargs();
-        if (kwargs) {
-            vector<string> keys = kwargs->getKeys();
-            for (const string& key : keys) {
-                Value* value = kwargs->getEntry(key);
-                if (value) {
-                    LOG_DEBUG("builtin_dict: adding key-value pair from kwargs: " + key + " = " + value->toString());
-                    dict->setEntry(key, value->clone());
-                }
-            }
-            LOG_DEBUG("builtin_dict: created dict with " + to_string(dict->getSize()) + " entries from kwargs");
-            return dict;
-        }
-    }
-    
-    // 如果没有可变参数，返回空字典
-    LOG_DEBUG("builtin_dict: created empty dict");
-    return dict;
-}
+// 注意：array和dict构造函数已移至ArrayType和DictType类中作为静态方法
+// 这里不再需要重复实现
 
 Value* builtin_exit(Scope* scope) {
     if (Integer* code = scope->getArgument<Integer>("code")) {
@@ -567,8 +483,8 @@ public:
         return PluginInfo{
             "core",
             "1.0.0",
-            "核心基础函数插件，包含print、println、count、cin、exit等基础功能，以及通过类型系统调用的通用方法",
-            {"print", "println", "count", "cin", "exit", "push", "pop", "to_upper", "to_lower", "substring", "length", "abs", "max", "min", "pow", "sort", "to_string", "to_int", "to_double", "cast", "random"}
+            "核心基础函数插件，包含print、println、count、cin、exit等基础功能以及基础数据结构构造函数",
+            {"print", "println", "count", "cin", "exit", "array", "dict"}
         };
     }
 
@@ -608,120 +524,8 @@ protected:
                 return builtin_exit(scope);
             });
             
-        functions.emplace_back("push", "push(array, value)", 
-            std::vector<std::string>{"array", "value"},
-            [](Scope* scope) -> Value* {
-                return builtin_push(scope);
-            });
-            
-        functions.emplace_back("pop", "pop(array)", 
-            std::vector<std::string>{"array"},
-            [](Scope* scope) -> Value* {
-                return builtin_pop(scope);
-            });
-            
-        functions.emplace_back("to_upper", "to_upper(string)", 
-            std::vector<std::string>{"string"},
-            [](Scope* scope) -> Value* {
-                return builtin_to_upper(scope);
-            });
-            
-        functions.emplace_back("to_lower", "to_lower(string)", 
-            std::vector<std::string>{"string"},
-            [](Scope* scope) -> Value* {
-                return builtin_to_lower(scope);
-            });
-            
-        functions.emplace_back("substring", "substring(string, start, length)", 
-            std::vector<std::string>{"string", "start", "length"},
-            [](Scope* scope) -> Value* {
-                return builtin_substring(scope);
-            });
-            
-        functions.emplace_back("length", "length(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                return builtin_length(scope);
-            });
-            
-        functions.emplace_back("abs", "abs(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                return builtin_abs(scope);
-            });
-            
-        functions.emplace_back("max", "max(value, ...)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                return builtin_max(scope);
-            });
-            
-        functions.emplace_back("min", "min(value, ...)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                return builtin_min(scope);
-            });
-            
-        functions.emplace_back("pow", "pow(base, exponent)", 
-            std::vector<std::string>{"base", "exponent"},
-            [](Scope* scope) -> Value* {
-                return builtin_pow(scope);
-            });
-            
-        functions.emplace_back("sort", "sort(array)", 
-            std::vector<std::string>{"array"},
-            [](Scope* scope) -> Value* {
-                return builtin_sort(scope);
-            });
-            
-        functions.emplace_back("to_string", "to_string(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                return builtin_to_string(scope);
-            });
-            
-        functions.emplace_back("to_int", "to_int(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                return builtin_to_int(scope);
-            });
-            
-        functions.emplace_back("to_double", "to_double(value)", 
-            std::vector<std::string>{"value"},
-            [](Scope* scope) -> Value* {
-                return builtin_to_double(scope);
-            });
-            
-        functions.emplace_back("cast", "cast(value, type)", 
-            std::vector<std::string>{"value", "type"},
-            [](Scope* scope) -> Value* {
-                return builtin_cast(scope);
-            });
-            
-        functions.emplace_back("random", "random(max)", 
-            std::vector<std::string>{"max"},
-            [](Scope* scope) -> Value* {
-                return builtin_random(scope);
-            });
-            
-        // 添加构造函数
-        functions.emplace_back("array", "array(...)", 
-            std::vector<std::string>{},
-            [](Scope* scope) -> Value* {
-                return builtin_array(scope);
-            });
-            
-        functions.emplace_back("dict", "dict(...)", 
-            std::vector<std::string>{},
-            [](Scope* scope) -> Value* {
-                return builtin_dict(scope);
-            });
-            
-        functions.emplace_back("Dict", "Dict(...)", 
-            std::vector<std::string>{},
-            [](Scope* scope) -> Value* {
-                return builtin_dict(scope);
-            });
+        // 注意：array和dict构造函数应该通过类型系统调用，而不是插件函数
+        // 这样才是真正的面向对象设计
             
         return functions;
     }

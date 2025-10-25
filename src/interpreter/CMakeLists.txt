@@ -12,14 +12,24 @@ add_library(interpreter SHARED
     core/plugin.cpp
     core/calculate.cpp
     core/definition_visits.cpp
+    core/error_handler.cpp
+    core/memory_manager.cpp
+    core/advanced_expression_visitor.cpp
+    core/async_runtime.cpp
+    core/pattern_matching.cpp
+    core/reflection.cpp
+    core/concurrency.cpp
     
     # 类型系统
     types/type_registry.cpp
     types/builtin_types.cpp
     types/function_signature.cpp
+    types/generics.cpp
+    types/type_inference.cpp
     types/object_type.cpp
     types/class_type.cpp
     types/interface_type.cpp
+    types/interface_type_java_style.cpp
     types/struct_type.cpp
     types/string.cpp
     types/array.cpp
@@ -28,6 +38,7 @@ add_library(interpreter SHARED
     
     # 值系统
     values/primitive_types.cpp
+    values/object_value.cpp
     values/container_values.cpp
     values/object_factory.cpp
     values/object_registry.cpp

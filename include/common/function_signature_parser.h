@@ -5,8 +5,45 @@
 #include <vector>
 #include <map>
 
-// 前向声明
-class Parameter;
+// Parameter类定义
+class Parameter {
+private:
+    std::string name;
+    std::string typeName;
+    std::string defaultValue;
+    bool variadic;
+
+public:
+    Parameter(const std::string& paramName, const std::string& paramType, 
+              const std::string& defaultVal = "", bool isVariadic = false)
+        : name(paramName), typeName(paramType), defaultValue(defaultVal), variadic(isVariadic) {}
+    
+    std::string getName() const { return name; }
+    std::string getTypeName() const { return typeName; }
+    std::string getDefaultValue() const { return defaultValue; }
+    bool hasDefaultValue() const { return !defaultValue.empty(); }
+    bool isVariadic() const { return variadic; }
+    
+    std::string toString() const {
+        std::string result = name + ":" + typeName;
+        if (hasDefaultValue()) {
+            result += "=" + defaultValue;
+        }
+        if (isVariadic()) {
+            result += "...";
+        }
+        return result;
+    }
+    
+    bool operator==(const Parameter& other) const {
+        return name == other.name && typeName == other.typeName && 
+               defaultValue == other.defaultValue && variadic == other.variadic;
+    }
+    
+    bool operator!=(const Parameter& other) const {
+        return !(*this == other);
+    }
+};
 
 // 函数签名解析结果
 struct FunctionSignatureParseResult {

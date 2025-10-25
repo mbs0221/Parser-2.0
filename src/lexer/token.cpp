@@ -54,4 +54,13 @@ Operator *Operator::Arrow = new Operator(ARROW, "->", 7, true);
 Operator *Operator::Question = new Operator('?', "?", 1, false);
 Operator *Operator::Colon = new Operator(':', ":", 1, false);
 
+// 高级语法操作符
+Operator *Operator::Range = new Operator(RANGE, "..", 1, true);
+Operator *Operator::NullCoalesce = new Operator(NULL_COALESCE, "??", 1, true);
+Operator *Operator::PlusAssign = new Operator(PLUS_ASSIGN, "+=", 1, true);
+Operator *Operator::MinusAssign = new Operator(MINUS_ASSIGN, "-=", 1, true);
+Operator *Operator::MultiplyAssign = new Operator(MULTIPLY_ASSIGN, "*=", 1, true);
+Operator *Operator::DivideAssign = new Operator(DIVIDE_ASSIGN, "/=", 1, true);
+Operator *Operator::ModuloAssign = new Operator(MODULO_ASSIGN, "%=", 1, true);
+
 } // namespace lexer

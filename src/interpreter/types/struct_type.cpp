@@ -17,7 +17,3 @@ void StructType::addMember(const string& name, ObjectType* type, VisibilityType 
     }
 }
 
-void StructType::registerMethod(const string& name, function<Value*(Value*, vector<Value*>&)> method) {
-    // 强制所有方法为公有 - 注释掉，因为 registerMethod 方法不存在
-    // ObjectType::registerMethod(name, method);
-}

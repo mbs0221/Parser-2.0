@@ -31,6 +31,7 @@ class ObjectType;
 class StructType;
 class ClassType;
 class Interface;
+class InterfaceType;
 
 // 前向声明
 class TypeRegistry;
@@ -385,8 +386,6 @@ public:
     // 创建默认值
     Value* createDefaultValue() override;
     
-    // 成员访问方法注册
-    void registerMemberAccessMethod(const string& memberName, ObjectType* memberType);
     
     // 静态成员查询
     Value* getStaticMemberValue(const string& name) const;
@@ -428,6 +427,14 @@ public:
     bool hasMember(const string& name) const override;
     vector<string> getMemberNames() const override;
     map<string, ObjectType*> getMemberTypes() const override;
+    
+    // 成员可见性管理
+    VisibilityType getMemberVisibility(const string& name) const;
+    void setMemberVisibility(const string& name, VisibilityType visibility);
+    
+    // 成员访问方法注册
+    void registerMemberGetter(const string& memberName, ObjectType* memberType);
+    void registerMemberSetter(const string& memberName, ObjectType* memberType);
     
     // 成员初始值管理
     void setMemberInitialValue(const string& memberName, Value* initialValue) override;
@@ -478,6 +485,41 @@ protected:
     virtual Value* createValueWithArgs(const vector<Value*>& args);
 };
 
+// ==================== 接口类型 (Java风格) ====================
+// 接口类型定义 - 只包含方法签名，不能有实现
+class InterfaceType : public ObjectType {
+private:
+    vector<string> extendedInterfaces;  // 继承的接口列表
+    map<string, FunctionPrototype*> methodSignatures;  // 接口方法签名（只有声明，没有实现）
+    
+public:
+    InterfaceType(const string& name);
+    virtual ~InterfaceType() = default;
+    
+    // 接口继承管理
+    void addExtendedInterface(const string& interfaceName);
+    const vector<string>& getExtendedInterfaces() const;
+    
+    // 接口方法签名管理（Java风格：只有方法签名，没有实现）
+    void addMethodSignature(const string& methodName, FunctionPrototype* methodSignature);
+    const map<string, FunctionPrototype*>& getMethodSignatures() const;
+    bool hasMethodSignature(const string& methodName) const;
+    FunctionPrototype* getMethodSignature(const string& methodName) const;
+    
+    // 接口实现检查（Java风格：检查类是否实现了接口的所有方法）
+    bool isImplementedBy(ClassType* classType) const;
+    
+    // 获取所有需要实现的方法签名（包括继承的接口）
+    vector<FunctionPrototype*> getAllRequiredMethodSignatures() const;
+    
+    // 重写ObjectType方法
+    Value* createDefaultValue() override;
+    bool isCompatibleWith(ObjectType* other) const override;
+    
+    // 接口不能有实例方法或静态方法（Java风格）
+    bool supportsMethods() const override { return false; }
+};
+
 // ==================== 结构体类型 ====================
 // 结构体类型：本质上是方法成员全部公有的ClassType - 继承接口实现
 class StructType : public ClassType {
@@ -486,9 +528,6 @@ public:
     
     // 重写addMember方法，强制所有成员为公有
     void addMember(const string& name, ObjectType* type, VisibilityType visibility = VIS_PUBLIC, Value* initialValue = nullptr);
-    
-    // 重写registerMethod方法，强制所有方法为公有
-    void registerMethod(const string& name, function<Value*(Value*, vector<Value*>&)> method);
 };
 
 // ==================== 内置类型类定义 ====================
@@ -719,6 +758,10 @@ public:
     
     // 注册类类型
     void registerClassType(const std::string& name, ClassType* type) {
+        types[name] = type;
+    }
+    
+    void registerInterface(const std::string& name, InterfaceType* type) {
         types[name] = type;
     }
     

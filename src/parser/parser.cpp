@@ -55,6 +55,10 @@ Statement* Parser::parseDeclaration() {
             return parseStruct();
         case CLASS:
             return parseClass();
+        case INTERFACE:
+            return parseInterface();
+        case MODULE:
+            return parseModule();
         case ID:
             return parseExpressionStatement();
         case END_OF_FILE:
@@ -463,6 +467,25 @@ Expression* Parser::parseExpressionWithPrecedence(int minPrecedence) {
                 break;
             }
         } else {
+        // 处理特殊操作符
+        if (op->Tag == RANGE) {
+            // 范围表达式: start..end 或 start..<end
+            Expression* right = parseExpressionWithPrecedence(precedence);
+            bool inclusive = true; // 默认为包含结束值
+            left = new RangeExpression(left, right, inclusive);
+        } else if (op->Tag == NULL_COALESCE) {
+            // 空值合并表达式: value ?? defaultValue
+            Expression* right = parseExpressionWithPrecedence(precedence);
+            left = new NullCoalescingExpression(left, right);
+        } else if (op->Tag == IS) {
+            // 类型检查表达式: value is Type
+            Expression* right = parseExpressionWithPrecedence(precedence);
+            left = new TypeCheckExpression(left, right);
+        } else if (op->Tag == AS) {
+            // 类型转换表达式: value as Type
+            Expression* right = parseExpressionWithPrecedence(precedence);
+            left = new TypeCastExpression(left, right);
+        } else {
             // 处理其他二元操作符
             // 对于左结合操作符，递归调用时使用相同优先级
             // 对于右结合操作符，递归调用时使用更低优先级
@@ -470,6 +493,7 @@ Expression* Parser::parseExpressionWithPrecedence(int minPrecedence) {
             Expression* right = parseExpressionWithPrecedence(nextPrecedence);
             
             left = new BinaryExpression(left, right, op);
+        }
         }
     }
     
@@ -538,10 +562,29 @@ Expression* Parser::parsePrimary() {
             return parseArray();
         case '{': // 字典字面量
             return parseDict();
+        case '|': // 集合字面量 {1, 2, 3}
+            return parseSet();
+        case ASYNC: // async表达式
+            {
+                lex.matchToken(ASYNC);
+                Expression* expr = parsePrimary();
+                return new AsyncExpression(expr);
+            }
+        case AWAIT: // await表达式
+            {
+                lex.matchToken(AWAIT);
+                Expression* expr = parsePrimary();
+                return new AwaitExpression(expr);
+            }
         default:
             LOG_ERROR("SYNTAX ERROR line[" + to_string(lex.line) + "]: unexpected token in expression");
             lex.match(lex.token()->Tag);
             return nullptr;
+    }
+    
+    // 在返回之前检查是否有类型检查操作符
+    if (lex.token()->Tag == IS) {
+        return parseTypeCheck();
     }
 }
 
@@ -587,12 +630,35 @@ Expression* Parser::parsePostfix(Expression* expr) {
                 break;
                 
             case '[':
-                // 数组访问
+                // 数组访问或切片
                 {
                     lex.matchToken('[');
-                    Expression* index = parseExpressionWithPrecedence(0);
-                    lex.matchToken(']');
-                    expr = new IndexAccessExpression(expr, index);
+                    Expression* start = parseExpressionWithPrecedence(0);
+                    
+                    if (lex.token()->Tag == ':') {
+                        // 切片语法: [start:end:step]
+                        lex.matchToken(':');
+                        Expression* end = nullptr;
+                        Expression* step = nullptr;
+                        
+                        if (lex.token()->Tag != ']') {
+                            end = parseExpressionWithPrecedence(0);
+                        }
+                        
+                        if (lex.token()->Tag == ':') {
+                            lex.matchToken(':');
+                            if (lex.token()->Tag != ']') {
+                                step = parseExpressionWithPrecedence(0);
+                            }
+                        }
+                        
+                        lex.matchToken(']');
+                        expr = new SliceExpression(expr, start, end, step);
+                    } else {
+                        // 普通索引访问
+                        lex.matchToken(']');
+                        expr = new IndexAccessExpression(expr, start);
+                    }
                 }
                 break;
                 
@@ -656,7 +722,8 @@ bool Parser::isBinaryOperator(int tag) {
     // 检查多字符操作符（枚举类型）
     return tag == LE || tag == GE || tag == EQ_EQ || tag == NE_EQ || 
            tag == AND_AND || tag == OR_OR || tag == '&' || tag == '|' || 
-           tag == '^' || tag == LEFT_SHIFT || tag == RIGHT_SHIFT;
+           tag == '^' || tag == LEFT_SHIFT || tag == RIGHT_SHIFT ||
+           tag == RANGE || tag == NULL_COALESCE || tag == IS || tag == AS;
 }
 
 // 解析标识符
@@ -699,63 +766,81 @@ Expression* Parser::parseConstant() {
 Expression* Parser::parseArray() {
     lex.match('[');  // 匹配开始方括号
     
-    vector<Expression*> arguments;
+    vector<Expression*> elements;
     
     if (lex.token()->Tag != ']') {
         // 解析第一个元素
         Expression* element = parseExpression();
-        arguments.push_back(element);
+        elements.push_back(element);
         
         // 解析后续元素
         while (lex.token()->Tag == ',') {
             lex.match(',');
             element = parseExpression();
-            arguments.push_back(element);
+            elements.push_back(element);
         }
     }
     
     lex.match(']');  // 匹配结束方括号
     
-    // 生成Array构造函数调用，传入元素列表作为参数
-    // 这样 [1, 2, 3, 4, 5] 会被解析为 Array(1, 2, 3, 4, 5)
-    // Array作为变量表达式，系统会去查询Array符号并找到Array类型的同名方法
-    return new CallExpression(new VariableExpression("array"), arguments);
+    // 返回ArrayLiteralExpression而不是函数调用
+    return new ArrayLiteralExpression(elements);
 }
 
-// 解析字典字面量 - 作为new_dict构造函数的调用
+// 解析字典字面量 - 使用DictLiteralExpression
 Expression* Parser::parseDict() {
     lex.match('{');  // 匹配开始大括号
     
-    vector<Expression*> arguments;
+    vector<pair<Expression*, Expression*>> pairs;
     
     if (lex.token()->Tag != '}') {
         // 解析第一个键值对
-        String* key = lex.match<String>();
+        Expression* keyExpr = parseExpression(); // 支持动态键
         lex.match(':');
         Expression* valueExpr = parseExpression();
         
-        // 将键值对作为两个参数传递
-        arguments.push_back(new ConstantExpression<string>(key->getValue()));
-        arguments.push_back(valueExpr);
+        pairs.push_back(make_pair(keyExpr, valueExpr));
         
         // 解析后续键值对
         while (lex.token()->Tag == ',') {  
             lex.match(',');
-            key = lex.match<String>();
+            keyExpr = parseExpression();
+            lex.match(':');
             valueExpr = parseExpression();
             
-            // 将键值对作为两个参数传递
-            arguments.push_back(new ConstantExpression<string>(key->getValue()));
-            arguments.push_back(valueExpr);
+            pairs.push_back(make_pair(keyExpr, valueExpr));
         }
     }
     
     lex.match('}');  // 匹配结束大括号
     
-    // 返回Dict构造函数的调用，让类型系统提供支持
-    // 我们需要创建一个Dict对象，而不是调用字符串"Dict"
-    // Dict作为变量表达式，系统会去查询Dict符号并找到Dict类型的同名方法
-    return new CallExpression(new VariableExpression("dict"), arguments);
+    // 返回DictLiteralExpression而不是函数调用
+    return new DictLiteralExpression(pairs);
+}
+
+// 解析集合字面量 - 使用SetLiteralExpression
+Expression* Parser::parseSet() {
+    lex.match('|');  // 匹配开始竖线
+    
+    vector<Expression*> elements;
+    
+    if (lex.token()->Tag != '|') {
+        // 解析第一个元素
+        Expression* element = parseExpression();
+        elements.push_back(element);
+        
+        // 解析后续元素
+        while (lex.token()->Tag == ',') {
+            lex.match(',');
+            element = parseExpression();
+            elements.push_back(element);
+        }
+    }
+    
+    lex.match('|');  // 匹配结束竖线
+    
+    // 返回SetLiteralExpression
+    return new SetLiteralExpression(elements);
 }
 
 // 解析结构体实例化
@@ -876,8 +961,16 @@ StructDefinition* Parser::parseStruct() {
             // 继续解析后续的成员，使用新的访问修饰符
             continue;
         } else {
-            // 结构体成员默认为public，当作普通变量定义处理
-            VariableDefinition* varDef = parseVariableDefinition();
+            // 结构体成员：直接解析成员名称（动态语言风格）
+            string memberName = lex.matchIdentifier();
+            
+            // 创建变量定义，不包含初始化表达式
+            VariableDefinition* varDef = new VariableDefinition();
+            varDef->addVariable(memberName, nullptr); // struct成员不需要初始化
+            
+            // 必须匹配分号
+            lex.match(';');
+            
             statements.push_back(varDef);
         }
     }
@@ -887,55 +980,6 @@ StructDefinition* Parser::parseStruct() {
     return new StructDefinition(structName, statements);
 }
 
-// 解析类定义
-ClassDefinition* Parser::parseClass() {
-    lex.match(CLASS);
-    
-    // 解析类名
-    string className = lex.matchIdentifier();
-    
-    string baseClass = "";
-    if (lex.token()->Tag == ':') {
-		lex.match(':');
-        baseClass = lex.matchIdentifier();
-    } else {
-        baseClass = "Object";
-    }
-    
-    lex.match('{');
-    
-    vector<Statement*> statements;
-    
-    while (lex.token()->Tag != '}') {
-        if (lex.token()->Tag == PUBLIC || lex.token()->Tag == PRIVATE || lex.token()->Tag == PROTECTED) {
-            // 创建可见性声明语句，添加到statements中
-            Visibility* visibilityToken = static_cast<Visibility*>(lex.token());
-            string visibility = visibilityToken->toString();
-            lex.move(); // 消费访问修饰符
-            
-            // 创建VisibilityStatement并添加到statements中
-            VisibilityStatement* visStmt = new VisibilityStatement(visibility);
-            statements.push_back(visStmt);
-            
-            // 继续解析后续的成员，使用新的访问修饰符
-            continue;
-        } else if (lex.token()->Tag == FUNCTION) {
-            // 解析方法，当作普通函数定义处理
-            // 在类定义中，函数会自动注册为类方法
-            FunctionDefinition* funcDef = parseFunction();
-            statements.push_back(funcDef);
-        } else {
-            // 解析成员变量，当作普通变量定义处理
-            // 在类定义中，变量会自动注册为类成员
-            VariableDefinition* varDef = parseVariableDefinition();
-            statements.push_back(varDef);
-        }
-    }
-    
-    lex.match('}');
-    
-    return new ClassDefinition(className, baseClass, statements);
-}
 
 
 
@@ -973,6 +1017,336 @@ vector<pair<string, Type*>> Parser::parseParameterList() {
     return parameters;
 }
 
+// ==================== 高级表达式解析方法实现 ====================
 
+// 解析范围表达式
+Expression* Parser::parseRange() {
+    Expression* start = parseExpression();
+    
+    if (lex.token()->Tag == RANGE) {
+        lex.match(RANGE);
+        Expression* end = parseExpression();
+        Expression* step = nullptr;
+        
+        // 可选步长
+        if (lex.token()->Tag == ':') {
+            lex.match(':');
+            step = parseExpression();
+        }
+        
+        return new RangeExpression(start, end, step);
+    }
+    
+    return start;
+}
 
+// 解析切片表达式
+Expression* Parser::parseSlice() {
+    Expression* target = parsePrimary();
+    
+    while (lex.token()->Tag == '[') {
+        lex.match('[');
+        
+        Expression* start = nullptr;
+        Expression* end = nullptr;
+        Expression* step = nullptr;
+        
+        if (lex.token()->Tag != ']') {
+            start = parseExpression();
+            
+            if (lex.token()->Tag == ':') {
+                lex.match(':');
+                if (lex.token()->Tag != ']' && lex.token()->Tag != ':') {
+                    end = parseExpression();
+                }
+                
+                if (lex.token()->Tag == ':') {
+                    lex.match(':');
+                    if (lex.token()->Tag != ']') {
+                        step = parseExpression();
+                    }
+                }
+            }
+        }
+        
+        lex.match(']');
+        target = new SliceExpression(target, start, end, step);
+    }
+    
+    return target;
+}
+
+// 解析空值合并表达式
+Expression* Parser::parseNullCoalescing() {
+    Expression* left = parseExpressionWithPrecedence(1); // 比空值合并优先级高的表达式
+    
+    while (lex.token()->Tag == NULL_COALESCE) {
+        lex.match(NULL_COALESCE);
+        Expression* right = parseExpressionWithPrecedence(1);
+        left = new NullCoalescingExpression(left, right);
+    }
+    
+    return left;
+}
+
+// 解析匹配表达式
+Expression* Parser::parseMatch() {
+    lex.match(MATCH);
+    
+    Expression* input = parseExpression();
+    lex.match('{');
+    
+    vector<Expression*> branches;
+    
+    while (lex.token()->Tag != '}') {
+        if (lex.token()->Tag == CASE) {
+            lex.match(CASE);
+            Expression* pattern = parseExpression();
+            lex.match('=');
+            lex.match('>');
+            Expression* result = parseExpression();
+            
+            // 创建分支表达式（简化实现）
+            branches.push_back(result);
+        } else if (lex.token()->Tag == DEFAULT) {
+            lex.match(DEFAULT);
+            lex.match('=');
+            lex.match('>');
+            Expression* result = parseExpression();
+            branches.push_back(result);
+        } else {
+            break;
+        }
+        
+        if (lex.token()->Tag == ',') {
+            lex.match(',');
+        }
+    }
+    
+    lex.match('}');
+    return new MatchExpression(input, branches);
+}
+
+// 解析异步表达式
+Expression* Parser::parseAsync() {
+    lex.match(ASYNC);
+    Expression* expr = parseExpression();
+    return new AsyncExpression(expr);
+}
+
+// 解析等待表达式
+Expression* Parser::parseAwait() {
+    lex.match(AWAIT);
+    Expression* expr = parseExpression();
+    return new AwaitExpression(expr);
+}
+
+// 解析类型检查表达式
+Expression* Parser::parseTypeCheck() {
+    Expression* expr = parseExpressionWithPrecedence(2); // 比类型检查优先级高的表达式
+    
+    if (lex.token()->Tag == IS) {
+        lex.match(IS);
+        Type* type = parseType();
+        return new TypeCheckExpression(expr, type);
+    }
+    
+    return expr;
+}
+
+// 解析类型转换表达式
+Expression* Parser::parseTypeCast() {
+    Expression* expr = parseExpressionWithPrecedence(2); // 比类型转换优先级高的表达式
+    
+    if (lex.token()->Tag == AS) {
+        lex.match(AS);
+        Type* type = parseType();
+        return new TypeCastExpression(expr, type);
+    }
+    
+    return expr;
+}
+
+// 解析复合赋值表达式
+Expression* Parser::parseCompoundAssign() {
+    Expression* left = parseExpressionWithPrecedence(3); // 比复合赋值优先级高的表达式
+    
+    if (lex.token()->Tag == PLUS_ASSIGN || 
+        lex.token()->Tag == MINUS_ASSIGN ||
+        lex.token()->Tag == MULTIPLY_ASSIGN ||
+        lex.token()->Tag == DIVIDE_ASSIGN ||
+        lex.token()->Tag == MODULO_ASSIGN) {
+        
+        Token* op = lex.token();
+        lex.nextToken();
+        
+        Expression* right = parseExpressionWithPrecedence(3);
+        
+        return new CompoundAssignExpression(left, op, right);
+    }
+    
+    return left;
+}
+
+// 解析类型
+Type* Parser::parseType() {
+    if (lex.token()->Tag == ID) {
+        string typeName = lex.matchIdentifier();
+        return new Type(typeName, 0); // 简化实现
+    }
+    
+    return nullptr;
+}
+
+// ==================== 新增的解析方法 ====================
+
+// 解析接口定义
+InterfaceDefinition* Parser::parseInterface() {
+    lex.match(INTERFACE);
+    
+    string interfaceName = lex.matchIdentifier();
+    vector<string> extends;
+    vector<FunctionPrototype*> methods;
+    
+    // 解析继承的接口
+    if (lex.token()->Tag == ':') {
+        lex.match(':');
+        do {
+            extends.push_back(lex.matchIdentifier());
+            if (lex.token()->Tag == ',') {
+                lex.match(',');
+            } else {
+                break;
+            }
+        } while (true);
+    }
+    
+    lex.match('{');
+    
+    // 解析接口方法
+    while (lex.token()->Tag != '}') {
+        if (lex.token()->Tag == FUNCTION) {
+            FunctionPrototype* method = parsePrototype();
+            methods.push_back(method);
+        } else {
+            lex.nextToken(); // 跳过其他内容
+        }
+    }
+    
+    lex.match('}');
+    
+    return new InterfaceDefinition(interfaceName, extends, methods);
+}
+
+// 解析类定义
+ClassDefinition* Parser::parseClass() {
+    lex.match(CLASS);
+    
+    // 解析类名
+    string className = lex.matchIdentifier();
+    
+    string baseClass = "";
+    vector<string> implements;
+    
+    // 解析继承
+    if (lex.token()->Tag == ':') {
+        lex.match(':');
+        baseClass = lex.matchIdentifier();
+    } else {
+        baseClass = "Object";
+    }
+    
+    // 解析实现的接口
+    if (lex.token()->Tag == IMPLEMENTS) {
+        lex.match(IMPLEMENTS);
+        do {
+            implements.push_back(lex.matchIdentifier());
+            if (lex.token()->Tag == ',') {
+                lex.match(',');
+            } else {
+                break;
+            }
+        } while (true);
+    }
+    
+    lex.match('{');
+    
+    vector<Statement*> statements;
+    
+    while (lex.token()->Tag != '}') {
+        if (lex.token()->Tag == PUBLIC || lex.token()->Tag == PRIVATE || lex.token()->Tag == PROTECTED) {
+            // 创建可见性声明语句，添加到statements中
+            Visibility* visibilityToken = static_cast<Visibility*>(lex.token());
+            string visibility = visibilityToken->toString();
+            lex.move(); // 消费访问修饰符
+            
+            // 创建VisibilityStatement并添加到statements中
+            VisibilityStatement* visStmt = new VisibilityStatement(visibility);
+            statements.push_back(visStmt);
+            
+            // 继续解析后续的成员，使用新的访问修饰符
+            continue;
+        } else if (lex.token()->Tag == FUNCTION) {
+            // 解析方法，当作普通函数定义处理
+            // 在类定义中，函数会自动注册为类方法
+            FunctionDefinition* funcDef = parseFunction();
+            statements.push_back(funcDef);
+        } else {
+            // 解析成员变量，当作普通变量定义处理
+            // 在类定义中，变量会自动注册为类成员
+            VariableDefinition* varDef = parseVariableDefinition();
+            statements.push_back(varDef);
+        }
+    }
+    
+    lex.match('}');
+    
+    // 如果有接口实现，使用带接口的构造函数
+    if (!implements.empty()) {
+        return new ClassDefinition(className, baseClass, implements, statements);
+    } else {
+        return new ClassDefinition(className, baseClass, statements);
+    }
+}
+
+// 解析模块定义
+ModuleDefinition* Parser::parseModule() {
+    lex.match(MODULE);
+    
+    string moduleName = lex.matchIdentifier();
+    lex.match('{');
+    
+    vector<Statement*> statements;
+    while (lex.token()->Tag != '}') {
+        Statement* stmt = parseStatement();
+        if (stmt) {
+            statements.push_back(stmt);
+        }
+    }
+    
+    lex.match('}');
+    
+    return new ModuleDefinition(moduleName, statements);
+}
+
+// 解析类型检查表达式 (value is Type)
+Expression* Parser::parseTypeCheck() {
+    Expression* value = parsePrimary();
+    
+    if (lex.token()->Tag == IS) {
+        lex.match(IS);
+        // 右边应该是类型名称（标识符），不是表达式
+        if (lex.token()->Tag == ID) {
+            string typeName = lex.matchIdentifier();
+            // 创建类型名称表达式
+            Expression* typeExpr = new VariableExpression(typeName);
+            return new TypeCheckExpression(value, typeExpr);
+        } else {
+            LOG_ERROR("SYNTAX ERROR: Expected type name after 'is'");
+            return value;
+        }
+    }
+    
+    return value;
+}
 

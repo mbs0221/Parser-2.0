@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(Parser VERSION 2.0.0 LANGUAGES CXX)
 
+# 设置编译器
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_CXX_COMPILER g++)
+
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

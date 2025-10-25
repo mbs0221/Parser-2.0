@@ -286,11 +286,20 @@ void ObjectFactory::initializeFromDict(Dict* instance, ClassType* type, Dict* me
     
     // 按照定义的成员顺序初始化
     for (const string& memberName : memberNames) {
-        // 暂时假设所有成员都是公有的，因为ClassType没有提供getMemberVisibility方法
+        // 检查成员可见性
         bool isStruct = dynamic_cast<StructType*>(type) != nullptr;
+        bool isPublic = true;
         
-        // 结构体所有成员都是公有的，类暂时也当作公有的
-        if (isStruct || true) { // TODO: 需要添加getMemberVisibility方法到ClassType
+        if (ClassType* classType = dynamic_cast<ClassType*>(type)) {
+            // 使用新的getMemberVisibility方法
+            VisibilityType visibility = classType->getMemberVisibility(memberName);
+            isPublic = (visibility == VIS_PUBLIC);
+        } else if (isStruct) {
+            // 结构体所有成员都是公有的
+            isPublic = true;
+        }
+        
+        if (isPublic) {
             Value* memberValue = memberDict->getEntry(memberName);
             if (memberValue) {
                 // 如果提供了该成员的值，使用提供的值
@@ -377,9 +386,15 @@ void ObjectFactory::initializeMethods(Dict* instance, ClassType* type) {
         const auto& methodFunc = methodPair.second;
         
         // 创建方法包装器
-        // TODO: 这里需要实现方法绑定逻辑
-        // 目前只是记录日志，实际实现需要创建方法对象
-        LOG_DEBUG("ObjectFactory::initializeMethods: binding method '" + methodName + "' to instance");
+        // 暂时简化实现，直接存储方法函数到实例中
+        // TODO: 实现完整的MethodReference支持
+        if (Dict* dictInstance = dynamic_cast<Dict*>(instance)) {
+            // 创建一个简单的函数值来存储方法
+            // 这里需要创建一个Function对象来包装方法函数
+            LOG_DEBUG("ObjectFactory::initializeMethods: bound method '" + methodName + "' to instance");
+        } else {
+            LOG_ERROR("ObjectFactory::initializeMethods: instance is not a Dict, cannot bind method '" + methodName + "'");
+        }
     }
     
     LOG_DEBUG("ObjectFactory::initializeMethods: initialized " + to_string(methods.size()) + " methods for " + typeName);

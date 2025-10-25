@@ -8,6 +8,7 @@ add_subdirectory(string_plugin)
 add_subdirectory(array_plugin)
 add_subdirectory(type_plugin)
 add_subdirectory(io_plugin)
+add_subdirectory(dynamic_library_plugin)
 # add_subdirectory(extra_plugin)  # 与core_plugin功能重复，暂时禁用
 
 # 创建插件目标列表（用于依赖管理）
@@ -19,6 +20,7 @@ set(PLUGIN_TARGETS
     array_plugin
     type_plugin
     io_plugin
+    dynamic_library_plugin
     # extra_plugin  # 与core_plugin功能重复，暂时禁用
 )
 

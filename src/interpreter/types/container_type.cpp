@@ -25,14 +25,18 @@ bool ContainerType::supportsSizeQuery() const {
 }
 
 void ContainerType::registerSubscriptAccess() {
-    // 为容器类型注册下标访问方法
-    registerMethod("operator[]", [this](Value* instance, vector<Value*>& args) -> Value* {
-        if (args.size() >= 1 && args[0]) {
+    // 为容器类型注册下标访问方法 - 使用addUserMethod
+    auto subscriptMethod = [this](Scope* scope) -> Value* {
+        // 从scope中获取this和index参数
+        Value* instance = scope->getVariable<Value>("this");
+        Value* index = scope->getVariable<Value>("index");
+        
+        if (instance && index) {
             // 检查实例是否为数组类型
             if (Array* array = dynamic_cast<Array*>(instance)) {
                 // 数组类型：使用数字索引进行下标访问
-                if (Integer* index = dynamic_cast<Integer*>(args[0])) {
-                    return array->operator[](*index);
+                if (Integer* intIndex = dynamic_cast<Integer*>(index)) {
+                    return array->operator[](*intIndex);
                 } else {
                     throw runtime_error("Array index must be an integer");
                 }
@@ -40,14 +44,18 @@ void ContainerType::registerSubscriptAccess() {
             // 检查实例是否为字典类型
             else if (Dict* dict = dynamic_cast<Dict*>(instance)) {
                 // 字典类型：使用键进行下标访问
-                string key = args[0]->toString();
+                string key = index->toString();
                 return dict->getEntry(key);
             }
             // 其他容器类型不支持下标访问
             throw runtime_error("Subscript access only supported for array and dict types");
         }
         return nullptr;
-    });
+    };
+    
+    // 使用函数原型构造函数创建BuiltinFunction对象
+    BuiltinFunction* subscriptFunc = new BuiltinFunction(subscriptMethod, "operator[](index:any)");
+    addUserMethod(subscriptFunc, VIS_PUBLIC);
 }
 
 Value* ContainerType::createValueWithArgs(const vector<Value*>& args) {

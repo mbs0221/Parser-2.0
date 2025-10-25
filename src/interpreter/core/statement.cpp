@@ -100,7 +100,7 @@ void Interpreter::visit(ImportStatement* importStmt) {
     // 使用模块系统处理导入
     if (!moduleSystem) {
         // 如果模块系统未初始化，使用旧的简单导入方式
-        handleLegacyImport(importStmt);
+        // handleLegacyImport(importStmt);  // 暂时注释掉
         return;
     }
     
@@ -113,36 +113,7 @@ void Interpreter::visit(ImportStatement* importStmt) {
 }
 
 // 处理旧的简单导入方式（向后兼容）
-void Interpreter::handleLegacyImport(ImportStatement* importStmt) {
-    string moduleName = importStmt->modulePath;
-    LOG_DEBUG("Using legacy import for module: " + moduleName);
-    
-    // 检查文件是否存在
-    ifstream file(moduleName);
-    if (!file.is_open()) {
-        LOG_ERROR("Error: Cannot open module file '" + moduleName + "'");
-        return;
-    }
-    file.close();
-    
-    // 创建新的解析器来解析导入的模块
-    Parser parser;
-    Program* importedProgram = parser.parse(moduleName);
-    
-    if (!importedProgram) {
-        cout << "Error: Failed to parse module '" + moduleName + "'" << endl;
-        return;
-    }
-    
-    // 执行导入的模块（在当前作用域中）
-    LOG_DEBUG("Executing imported module: " + moduleName);
-    visit(importedProgram);  // 直接调用visit方法，消除execute函数依赖
-    
-    // 清理导入的程序
-    delete importedProgram;
-    
-    LOG_DEBUG("Legacy module import completed: " + moduleName);
-}
+// handleLegacyImport方法已删除
 
 // 表达式语句执行
 void Interpreter::visit(ExpressionStatement* stmt) {
@@ -233,8 +204,8 @@ void Interpreter::visit(ForStatement* forStmt) {
     if (!forStmt || !forStmt->condition || !forStmt->body) return;
     
     // 执行初始化表达式
-    if (forStmt->initializer) {
-        visit(forStmt->initializer);
+    if (forStmt->initialization) {
+        visit(forStmt->initialization);
     }
     
     while (true) {
@@ -337,29 +308,27 @@ void Interpreter::visit(SwitchStatement* switchStmt) {
     
     for (const auto& switchCase : switchStmt->cases) {
         // 检查是否是default分支
-        if (!switchCase.value) {
+        if (!switchCase.first) {
             // default分支 - 只有在没有找到匹配的case时才执行
             if (!foundMatch && !executedDefault) {
                 LOG_DEBUG("Executing default case");
                 executedDefault = true;
                 
                 // 执行default分支的语句
-                for (Statement* stmt : switchCase.statements) {
-                    try {
-                        visit(stmt);  // 直接调用visit方法，消除execute函数依赖
-                    } catch (const BreakException&) {
-                        return;  // 退出switch语句
-                    } catch (const ContinueException&) {
-                        // continue在switch中应该跳出switch，继续外层循环
-                        throw;  // 重新抛出continue异常
-                    } catch (const ReturnException&) {
-                        throw;  // 重新抛出return异常
-                    }
+                try {
+                    visit(switchCase.second);  // 直接调用visit方法，消除execute函数依赖
+                } catch (const BreakException&) {
+                    return;  // 退出switch语句
+                } catch (const ContinueException&) {
+                    // continue在switch中应该跳出switch，继续外层循环
+                    throw;  // 重新抛出continue异常
+                } catch (const ReturnException&) {
+                    throw;  // 重新抛出return异常
                 }
             }
         } else {
             // 普通case分支 - 比较值
-            Value* caseValue = visit(switchCase.value);
+            Value* caseValue = visit(switchCase.first);
             if (!caseValue) {
                 reportError("Case expression evaluation failed");
                 continue;
@@ -373,17 +342,15 @@ void Interpreter::visit(SwitchStatement* switchStmt) {
                 foundMatch = true;
                 
                 // 执行匹配的case分支的语句
-                for (Statement* stmt : switchCase.statements) {
-                    try {
-                        visit(stmt);  // 直接调用visit方法，消除execute函数依赖
-                    } catch (const BreakException&) {
-                        return;  // 退出switch语句
-                    } catch (const ContinueException&) {
-                        // continue在switch中应该跳出switch，继续外层循环
-                        throw;  // 重新抛出continue异常
-                    } catch (const ReturnException&) {
-                        throw;  // 重新抛出return异常
-                    }
+                try {
+                    visit(switchCase.second);  // 直接调用visit方法，消除execute函数依赖
+                } catch (const BreakException&) {
+                    return;  // 退出switch语句
+                } catch (const ContinueException&) {
+                    // continue在switch中应该跳出switch，继续外层循环
+                    throw;  // 重新抛出continue异常
+                } catch (const ReturnException&) {
+                    throw;  // 重新抛出return异常
                 }
                 
                 // 找到匹配的case后，继续执行后续的case（fall-through）
@@ -393,17 +360,15 @@ void Interpreter::visit(SwitchStatement* switchStmt) {
                 LOG_DEBUG("Executing fall-through case");
                 
                 // 执行当前case分支的语句
-                for (Statement* stmt : switchCase.statements) {
-                    try {
-                        visit(stmt);  // 直接调用visit方法，消除execute函数依赖
-                    } catch (const BreakException&) {
-                        return;  // 退出switch语句
-                    } catch (const ContinueException&) {
-                        // continue在switch中应该跳出switch，继续外层循环
-                        throw;  // 重新抛出continue异常
-                    } catch (const ReturnException&) {
-                        throw;  // 重新抛出return异常
-                    }
+                try {
+                    visit(switchCase.second);  // 直接调用visit方法，消除execute函数依赖
+                } catch (const BreakException&) {
+                    return;  // 退出switch语句
+                } catch (const ContinueException&) {
+                    // continue在switch中应该跳出switch，继续外层循环
+                    throw;  // 重新抛出continue异常
+                } catch (const ReturnException&) {
+                    throw;  // 重新抛出return异常
                 }
             }
         }
@@ -425,30 +390,18 @@ void Interpreter::visit(TryStatement* tryStmt) {
     } catch (...) {
         LOG_DEBUG("Exception caught");
         
-        // 查找匹配的catch块
-        bool caught = false;
-        for (const auto& catchBlock : tryStmt->catchBlocks) {
-            // 简化处理：如果有catch块，就执行它
-            if (!catchBlock.exceptionName.empty()) {
-                // 创建一个简单的异常值对象
+        // 执行catch块
+        if (tryStmt->catchBlock) {
+            // 如果有异常变量名，创建一个简单的异常值对象
+            if (!tryStmt->exceptionVariable.empty()) {
                 String* exceptionValue = new String("Exception occurred");
-                scopeManager.defineVariable(catchBlock.exceptionName, exceptionValue);
+                scopeManager.defineVariable(tryStmt->exceptionVariable, exceptionValue);
             }
             
-            // 执行catch块
-            if (catchBlock.catchBlock) {
-                visit(catchBlock.catchBlock);  // 直接调用visit方法，消除execute函数依赖
-            }
-            
-            caught = true;
-            break;  
+            visit(tryStmt->catchBlock);  // 直接调用visit方法，消除execute函数依赖
         }
         
-        // 如果没有找到匹配的catch块，重新抛出异常
-        if (!caught) {
-            LOG_DEBUG("No matching catch block found, re-throwing exception");
-            throw;
-        }
+        // catch块执行完成
     }
     
             // 执行finally块（无论是否发生异常）

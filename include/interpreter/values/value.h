@@ -97,6 +97,9 @@ public:
     void setValue(bool val);
     std::string toString() const override;
     bool toBool() const override;
+    int toInt() const;
+    double toDouble() const;
+    char toChar() const;
     Value* clone() const override;
     std::string getBuiltinTypeName() const override;
     // 逻辑运算符重载
@@ -137,6 +140,9 @@ public:
     // 重写基类方法
     std::string toString() const override;
     bool toBool() const override;
+    int toInt() const;
+    double toDouble() const;
+    char toChar() const;
     Value* clone() const override;
     std::string getBuiltinTypeName() const override;
     // 获取和设置值
@@ -182,6 +188,8 @@ public:
     std::string toString() const override;
     bool toBool() const override;
     double toDouble() const;
+    int toInt() const;
+    char toChar() const;
     Value* clone() const override;
     std::string getBuiltinTypeName() const override;
     // 获取和设置值
@@ -243,6 +251,9 @@ public:
     // 重写基类方法
     std::string toString() const override;
     bool toBool() const override;
+    int toInt() const;
+    double toDouble() const;
+    char toChar() const;
     Value* clone() const override;
     std::string getBuiltinTypeName() const override;
     // 获取和设置值
@@ -547,55 +558,8 @@ public:
 // 前向声明
 class FunctionSignature;
 
-// ==================== Parameter类 ====================
-// 封装函数参数的信息，包括名称、类型和默认值
-class Parameter {
-private:
-    std::string name;           // 参数名称
-    std::string typeName;       // 参数类型名称
-    std::string defaultValue;   // 默认值（字符串形式）
-    bool hasDefault;            // 是否有默认值
-    bool isVarArgs;             // 是否为可变参数
-
-public:
-    // 构造函数
-    Parameter(const std::string& paramName, 
-              const std::string& paramType = "any", 
-              const std::string& defaultVal = "", 
-              bool varArgs = false);
-    
-    // 拷贝构造函数
-    Parameter(const Parameter& other);
-    
-    // 赋值运算符
-    Parameter& operator=(const Parameter& other);
-    
-    // 析构函数
-    ~Parameter() = default;
-    
-    // 获取参数信息
-    std::string getName() const { return name; }
-    std::string getTypeName() const { return typeName; }
-    std::string getDefaultValue() const { return defaultValue; }
-    bool hasDefaultValue() const { return hasDefault; }
-    bool isVariadic() const { return isVarArgs; }
-    
-    // 设置参数信息
-    void setTypeName(const std::string& type) { typeName = type; }
-    void setDefaultValue(const std::string& value) { defaultValue = value; hasDefault = true; }
-    void setVarArgs(bool varArgs) { isVarArgs = varArgs; }
-    
-    // 字符串表示
-    std::string toString() const;
-    
-    // 比较操作
-    bool operator==(const Parameter& other) const;
-    bool operator!=(const Parameter& other) const;
-    
-    // 类型兼容性检查
-    bool isTypeCompatible(const std::string& actualType) const;
-    bool isTypeCompatible(ObjectType* actualType) const;
-};
+// 包含Parameter类定义
+#include "common/function_signature_parser.h"
 
 // ==================== 函数基类 ====================
 class Function : public Value {

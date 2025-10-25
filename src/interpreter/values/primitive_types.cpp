@@ -138,6 +138,18 @@ bool Bool::toBool() const {
     return value;
 }
 
+int Bool::toInt() const {
+    return value ? 1 : 0;
+}
+
+double Bool::toDouble() const {
+    return value ? 1.0 : 0.0;
+}
+
+char Bool::toChar() const {
+    return value ? 1 : 0;
+}
+
 Value* Bool::clone() const {
     return new Bool(*this);
 }
@@ -363,6 +375,14 @@ double Integer::toDouble() const {
     return static_cast<double>(value);
 }
 
+int Integer::toInt() const {
+    return static_cast<int>(value);
+}
+
+char Integer::toChar() const {
+    return static_cast<char>(value);
+}
+
 Value* Integer::clone() const {
     return new Integer(*this);
 }
@@ -487,6 +507,18 @@ string Double::toString() const {
 
 bool Double::toBool() const {
     return value != 0.0;
+}
+
+int Double::toInt() const {
+    return static_cast<int>(value);
+}
+
+double Double::toDouble() const {
+    return value;
+}
+
+char Double::toChar() const {
+    return static_cast<char>(value);
 }
 
 Value* Double::clone() const {
@@ -639,6 +671,18 @@ string Char::toString() const {
 
 bool Char::toBool() const {
     return static_cast<char>(value) != '\0';
+}
+
+int Char::toInt() const {
+    return static_cast<int>(value);
+}
+
+double Char::toDouble() const {
+    return static_cast<double>(value);
+}
+
+char Char::toChar() const {
+    return static_cast<char>(value);
 }
 
 Value* Char::clone() const {

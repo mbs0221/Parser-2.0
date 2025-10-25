@@ -9,6 +9,8 @@ import sys
 import subprocess
 import time
 from pathlib import Path
+import threading
+from tqdm import tqdm
 
 class TestRunner:
     def __init__(self, parser_path="build/bin/parser_main", test_dir="tests", verbose=False):
@@ -114,35 +116,58 @@ class TestRunner:
         print(f"找到 {len(test_files)} 个测试文件")
         print("=" * 60)
         
-        # 运行所有测试
-        for i, test_file in enumerate(test_files, 1):
-            print(f"[{i}/{len(test_files)}] 测试: {test_file}")
-            result = self.run_single_test(test_file)
-            self.results.append(result)
-            
-            # 显示结果
-            status_icons = {
-                'PASS': '✅',
-                'FAIL': '❌',
-                'SEGFAULT': '⚠️',
-                'TIMEOUT': '⏰',
-                'ERROR': '💥'
-            }
-            
-            icon = status_icons.get(result['status'], '❓')
-            print(f"  {icon} {result['status']}: {result['message']}")
-            
-            if result.get('duration'):
-                print(f"  耗时: {result['duration']:.2f}秒")
-            
-            if self.verbose and result['output']:
-                print("  输出:")
-                for line in result['output'].split('\n')[:10]:  # 只显示前10行
-                    if line.strip():
-                        print(f"    {line}")
-                if len(result['output'].split('\n')) > 10:
-                    print("    ...")
-            print()
+        # 状态统计
+        stats = {
+            'PASS': 0,
+            'FAIL': 0,
+            'SEGFAULT': 0,
+            'TIMEOUT': 0,
+            'ERROR': 0
+        }
+        
+        # 状态图标
+        status_icons = {
+            'PASS': '✅',
+            'FAIL': '❌',
+            'SEGFAULT': '⚠️',
+            'TIMEOUT': '⏰',
+            'ERROR': '💥'
+        }
+        
+        # 使用进度条
+        with tqdm(total=len(test_files), desc="测试进度", unit="test") as pbar:
+            for i, test_file in enumerate(test_files, 1):
+                # 更新进度条描述
+                pbar.set_description(f"测试: {test_file[:30]}{'...' if len(test_file) > 30 else ''}")
+                
+                result = self.run_single_test(test_file)
+                self.results.append(result)
+                
+                # 更新统计
+                stats[result['status']] += 1
+                
+                # 更新进度条后缀信息
+                status_text = f"✅{stats['PASS']} ❌{stats['FAIL']} ⚠️{stats['SEGFAULT']} ⏰{stats['TIMEOUT']} 💥{stats['ERROR']}"
+                pbar.set_postfix_str(status_text)
+                
+                # 更新进度条
+                pbar.update(1)
+                
+                # 如果详细模式，显示详细信息
+                if self.verbose:
+                    icon = status_icons.get(result['status'], '❓')
+                    print(f"\n{icon} {result['status']}: {result['message']}")
+                    if result.get('duration'):
+                        print(f"  耗时: {result['duration']:.2f}秒")
+                    if result['output']:
+                        print("  输出:")
+                        for line in result['output'].split('\n')[:5]:  # 只显示前5行
+                            if line.strip():
+                                print(f"    {line}")
+                        if len(result['output'].split('\n')) > 5:
+                            print("    ...")
+        
+        print("\n" + "=" * 60)
     
     def print_summary(self):
         """打印测试总结"""

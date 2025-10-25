@@ -22,7 +22,12 @@ Value* performBinaryOperation(T* left, T* right, Operator* op) {
         case '-': return new T(*left - *right);
         case '*': return new T(*left * *right);
         case '/': return new T(*left / *right);
-        case '%': return new T(*left % *right);
+        case '%': {
+            if (*right == 0) {
+                throw std::runtime_error("Modulo by zero");
+            }
+            return new T(*left % *right);
+        }
         // 比较运算符
         case '<': return new Bool(*left < *right);
         case '>': return new Bool(*left > *right);
@@ -291,8 +296,8 @@ Value* Calculator::executeBinaryOperation(Value* left, Value* right, Operator* o
     string targetTypeName = determineCompatibleType(left, right);
     LOG_DEBUG("Target type name: " + targetTypeName);
     // 第二步：类型转换
-    Value* convertedLeft = tryConvertValue(left, targetTypeName);
-    Value* convertedRight = tryConvertValue(right, targetTypeName);
+    Value* convertedLeft = convertValueUsingTypeSystem(left, targetTypeName);
+    Value* convertedRight = convertValueUsingTypeSystem(right, targetTypeName);
     if (!convertedLeft || !convertedRight) {
         // 清理转换后的操作数
         if (convertedLeft) delete convertedLeft;
@@ -348,7 +353,7 @@ Value* Calculator::executeUnaryOperation(Value* operand, Operator* op) {
     // 第一步：确定目标类型（对于一元运算，通常保持原类型）
     string targetTypeName = getTypeName(operand);
     // 第二步：类型转换（如果需要的话）
-    Value* convertedOperand = tryConvertValue(operand, targetTypeName);
+    Value* convertedOperand = convertValueUsingTypeSystem(operand, targetTypeName);
     LOG_DEBUG("Converted operand: " + convertedOperand->toString());
     if (!convertedOperand) {
         // 如果转换失败，尝试用户定义类型的一元运算
@@ -388,8 +393,8 @@ Value* Calculator::executeTernaryOperation(Value* condition, Value* trueValue, V
     if (!condition || !trueValue || !falseValue) {
         throw runtime_error("Null operands for ternary operation");
     }
-    // 使用tryConvertValue将条件转换为布尔值
-    Value* boolCondition = tryConvertValue(condition, "bool");
+    // 使用类型系统将条件转换为布尔值
+    Value* boolCondition = convertValueUsingTypeSystem(condition, "bool");
     
     if (!boolCondition) {
         throw runtime_error("Failed to convert condition to boolean");
@@ -405,32 +410,46 @@ Value* Calculator::executeTernaryOperation(Value* condition, Value* trueValue, V
     }
 }
 
-// 私有辅助方法：使用callMethodOnValue调用value的转换方法
-Value* Calculator::tryConvertValue(Value* sourceValue, const string& targetTypeName) {
+// 私有辅助方法：使用类型系统进行类型转换
+Value* Calculator::convertValueUsingTypeSystem(Value* sourceValue, const string& targetTypeName) {
     if (!sourceValue) return nullptr;
     
     string currentTypeName = getTypeName(sourceValue);
     
     // 如果已经是目标类型，不需要转换
     if (currentTypeName == targetTypeName) {
-        return sourceValue; // 不需要转换
+        return sourceValue;
     }
 
-    // 使用callMethodOnValue调用value的转换方法
-    // 例如：调用 toInt(), toDouble(), toBool(), toString() 等方法
-    // 首字母大写
-    string methodName = "to" + targetTypeName;
-    if (!methodName.empty() && methodName.length() > 2) {
-        methodName[2] = toupper(methodName[2]);
-    }
-    // 创建实例方法引用
+    // 获取源值的类型
     ObjectType* sourceType = sourceValue->getValueType();
-    if (!sourceType || !sourceType->supportsMethods()) return nullptr;
+    if (!sourceType) return nullptr;
     
-    InstanceMethodReference* methodRef = new InstanceMethodReference(sourceType, sourceValue, methodName);
-    Value* result = interpreter_->callMethodOnInstance(methodRef, {});
-    delete methodRef;
-    return result;
+    // 构造转换方法名
+    string methodName = "to" + targetTypeName;
+    // 首字母大写
+    if (!methodName.empty()) {
+        methodName[0] = toupper(methodName[0]);
+    }
+    
+    // 检查类型是否支持该转换方法
+    if (!sourceType->hasUserMethod(methodName)) {
+        LOG_DEBUG("Type " + currentTypeName + " does not support conversion to " + targetTypeName);
+        return nullptr;
+    }
+    
+    // 使用类型系统调用转换方法
+    try {
+        Value* result = callMethodWithReference(sourceType, sourceValue, methodName, {});
+        if (result) {
+            LOG_DEBUG("Successfully converted " + currentTypeName + " to " + targetTypeName);
+            return result;
+        }
+    } catch (const std::exception& e) {
+        LOG_DEBUG("Conversion failed: " + string(e.what()));
+    }
+    
+    return nullptr;
 }
 
 // 确定兼容类型（选择优先级更高的类型）

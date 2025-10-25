@@ -45,6 +45,11 @@ protected:
     FunctionDefinition* parseFunction();
     FunctionPrototype* parsePrototype();
     
+    // 类和接口解析
+    ClassDefinition* parseClass();
+    InterfaceDefinition* parseInterface();
+    ModuleDefinition* parseModule();
+    
     // 表达式解析
     Expression* parseExpression();
     Expression* parseExpressionWithPrecedence(int minPrecedence);
@@ -61,6 +66,21 @@ protected:
     // 数组和字典解析
     Expression* parseArray();
     Expression* parseDict();
+    
+    // 类型检查表达式解析
+    Expression* parseTypeCheck();
+    Expression* parseSet();
+    
+    // 高级表达式解析
+    Expression* parseRange();
+    Expression* parseSlice();
+    Expression* parseNullCoalescing();
+    Expression* parseMatch();
+    Expression* parseAsync();
+    Expression* parseAwait();
+    Expression* parseTypeCheck();
+    Expression* parseTypeCast();
+    Expression* parseCompoundAssign();
     
     // 结构体实例化解析
     Expression* parseStructInstantiation(const string& structName);

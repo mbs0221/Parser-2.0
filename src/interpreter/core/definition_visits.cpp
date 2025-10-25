@@ -134,16 +134,50 @@ void Interpreter::visit(ClassDefinition* classDef) {
 
     // 创建类类型
     ObjectType* type = nullptr;
-    if (!classDef->baseClass.empty()) {
+    if (!classDef->baseClass.empty() && classDef->baseClass != "Object") {
         // 查找基类类型
         ObjectType* baseType = scopeManager.lookupType(classDef->baseClass);
         if (baseType) {
             type = new ClassType(classDef->name, baseType);
+            LOG_DEBUG("Class '" + classDef->name + "' inherits from '" + classDef->baseClass + "'");
         } else {
             type = new ClassType(classDef->name);
+            LOG_WARN("Base class '" + classDef->baseClass + "' not found for class '" + classDef->name + "'");
         }
     } else {
         type = new ClassType(classDef->name);
+    }
+    
+    // 处理实现的接口
+    if (!classDef->implements.empty()) {
+        ClassType* classType = dynamic_cast<ClassType*>(type);
+        if (classType) {
+            for (const string& interfaceName : classDef->implements) {
+                // 查找接口类型
+                ObjectType* interfaceType = scopeManager.lookupType(interfaceName);
+                if (interfaceType) {
+                    InterfaceType* interface = dynamic_cast<InterfaceType*>(interfaceType);
+                    if (interface) {
+                        // 获取接口要求的所有方法签名（Java风格）
+                        const map<string, FunctionPrototype*>& interfaceMethods = interface->getMethodSignatures();
+                        for (const auto& methodPair : interfaceMethods) {
+                            const string& methodName = methodPair.first;
+                            FunctionPrototype* methodProto = methodPair.second;
+                            
+                            // 创建函数签名
+                            FunctionSignature signature(methodProto);
+                            
+                            // 将接口方法原型注册到类中（作为需要实现的方法）
+                            // 这里可以创建一个占位符函数，或者只是记录需要实现的方法
+                            LOG_DEBUG("Class '" + classDef->name + "' needs to implement method '" + methodName + "' from interface '" + interfaceName + "'");
+                        }
+                        LOG_DEBUG("Class '" + classDef->name + "' implements interface '" + interfaceName + "'");
+                    }
+                } else {
+                    LOG_WARN("Interface '" + interfaceName + "' not found for class '" + classDef->name + "'");
+                }
+            }
+        }
     }
     
     // 注册类型到作用域
@@ -159,6 +193,27 @@ void Interpreter::visit(ClassDefinition* classDef) {
     for (auto* stmt : classDef->statements) {
         if (!stmt) continue;
         visit(stmt);  // 使用访问者模式访问每个语句
+    }
+    
+    // 验证接口实现（Java风格：在类定义完成后检查）
+    if (!classDef->implements.empty()) {
+        ClassType* classType = dynamic_cast<ClassType*>(type);
+        if (classType) {
+            for (const string& interfaceName : classDef->implements) {
+                ObjectType* interfaceType = scopeManager.lookupType(interfaceName);
+                if (interfaceType) {
+                    InterfaceType* interface = dynamic_cast<InterfaceType*>(interfaceType);
+                    if (interface) {
+                        // 验证类是否实现了接口的所有方法
+                        if (interface->isImplementedBy(classType)) {
+                            LOG_DEBUG("Class '" + classDef->name + "' successfully implements interface '" + interfaceName + "'");
+                        } else {
+                            LOG_ERROR("Class '" + classDef->name + "' does not implement all methods required by interface '" + interfaceName + "'");
+                        }
+                    }
+                }
+            }
+        }
     }
     
     LOG_DEBUG("Successfully created class '" + classDef->name + "' with " +
@@ -223,4 +278,70 @@ void Interpreter::visit(VariableDefinition* decl) {
         
         LOG_DEBUG("Successfully defined variable: " + varName + " = " + initValue->toString());
     }
+}
+
+// InterfaceDefinition 访问：处理接口定义
+void Interpreter::visit(InterfaceDefinition* stmt) {
+    if (!stmt) return;
+    
+    LOG_DEBUG("Processing interface definition: " + stmt->interfaceName);
+    
+    // 创建接口类型（Java风格）
+    InterfaceType* interfaceType = new InterfaceType(stmt->interfaceName);
+    
+    // 处理继承的接口
+    for (const string& extendsName : stmt->extends) {
+        interfaceType->addExtendedInterface(extendsName);
+        LOG_DEBUG("Interface '" + stmt->interfaceName + "' extends '" + extendsName + "'");
+    }
+    
+    // 处理接口方法签名（Java风格：只有方法签名，没有实现）
+    for (FunctionPrototype* method : stmt->methods) {
+        interfaceType->addMethodSignature(method->name, method);
+        LOG_DEBUG("Interface '" + stmt->interfaceName + "' has method signature '" + method->name + "'");
+    }
+    
+    // 注册接口类型到作用域
+    scopeManager.defineType(stmt->interfaceName, interfaceType);
+    
+    LOG_DEBUG("Successfully created interface '" + stmt->interfaceName + "' with " +
+             to_string(stmt->methods.size()) + " method signatures");
+}
+
+// ModuleDefinition 访问：处理模块定义
+void Interpreter::visit(ModuleDefinition* stmt) {
+    if (!stmt) return;
+    
+    LOG_DEBUG("Processing module definition: " + stmt->moduleName);
+    
+    // 创建新的作用域
+    enterScope();
+    
+    try {
+        // 在当前作用域中注册__module__变量，标识当前是模块上下文
+        if (Scope* currentScope = scopeManager.getCurrentScope()) {
+            currentScope->setVariable("__module__", new String(stmt->moduleName));
+            LOG_DEBUG("Registered __module__ = '" + stmt->moduleName + "' in current scope");
+        }
+        
+        // 执行模块内容
+        for (Statement* moduleStmt : stmt->statements) {
+            visit(moduleStmt);
+        }
+        
+        // 将模块内容注册到模块系统
+        if (moduleSystem) {
+            moduleSystem->registerModule(stmt->moduleName, currentScope);
+            LOG_DEBUG("Module '" + stmt->moduleName + "' registered to module system");
+        }
+        
+    } catch (const exception& e) {
+        reportError("Module execution error: " + string(e.what()));
+    }
+    
+    // 退出作用域
+    exitScope();
+    
+    LOG_DEBUG("Successfully processed module '" + stmt->moduleName + "' with " +
+             to_string(stmt->statements.size()) + " statements");
 }

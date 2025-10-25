@@ -108,6 +108,41 @@ static const vector<Function*> stringClassMethods = {
     }, "toBool()"),
     
     new BuiltinFunction([](class Scope* scope) -> Value* {
+        if (String* str = scope->getThis<String>()) {
+            try {
+                int value = std::stoi(str->getValue());
+                return new Integer(value);
+            } catch (const std::exception&) {
+                return new Integer(0); // 转换失败返回0
+            }
+        }
+        return nullptr;
+    }, "toInt()"),
+    
+    new BuiltinFunction([](class Scope* scope) -> Value* {
+        if (String* str = scope->getThis<String>()) {
+            try {
+                double value = std::stod(str->getValue());
+                return new Double(value);
+            } catch (const std::exception&) {
+                return new Double(0.0); // 转换失败返回0.0
+            }
+        }
+        return nullptr;
+    }, "toDouble()"),
+    
+    new BuiltinFunction([](class Scope* scope) -> Value* {
+        if (String* str = scope->getThis<String>()) {
+            const std::string& value = str->getValue();
+            if (value.empty()) {
+                return new Char('\0');
+            }
+            return new Char(value[0]);
+        }
+        return nullptr;
+    }, "toChar()"),
+    
+    new BuiltinFunction([](class Scope* scope) -> Value* {
         // 从作用域获取实例，而不是使用参数
         LOG_DEBUG("StringType::length() called");
         if (String* str = scope->getThis<String>()) {

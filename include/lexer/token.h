@@ -37,6 +37,10 @@ enum Tag{
 	STRUCT, CLASS, PUBLIC, PRIVATE, PROTECTED, IMPORT,
 	FROM, AS,
 	
+	// 高级语法关键字
+	ASYNC, AWAIT, MATCH, IS, VAR, SET,
+	INTERFACE, IMPLEMENTS, MODULE, ANY,
+	
 	// 注释
 	COMMENT,
 	
@@ -55,6 +59,9 @@ enum Tag{
 	
 	// 其他双字符运算符
 	INCREMENT, DECREMENT, ARROW, TERNARY_OP,
+	
+	// 高级语法操作符
+	RANGE, NULL_COALESCE, // .., ??
 	
 	// 单字符运算符使用ASCII码（保持原有ASCII值）
 	// 这些值直接对应ASCII码，不需要重新定义
@@ -169,6 +176,9 @@ struct Operator :Token {
 	bool isLeftAssociative; // 左结合性
 
     static Operator *Add, *Sub, *Mul, *Div, *Mod, *LT, *GT, *LE, *GE, *EQ, *NE, *AND, *OR, *Not, *BitAnd, *BitOr, *BitXor, *BitNot, *LeftShift, *RightShift, *Increment, *Decrement, *Dot, *Arrow, *Question, *Colon, *Assign;
+    
+    // 高级语法操作符静态常量
+    static Operator *Range, *NullCoalesce, *PlusAssign, *MinusAssign, *MultiplyAssign, *DivideAssign, *ModuloAssign;
 	
 	Operator() : Token(0), symbol(""), precedence(0), isLeftAssociative(true) {}
 	Operator(int tag, const string& sym, int prec = 0, bool leftAssoc = true) 

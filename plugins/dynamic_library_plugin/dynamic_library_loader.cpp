@@ -1,4 +1,4 @@
-#include "interpreter/plugins/dynamic_library_loader.h"
+#include "dynamic_library_loader.h"
 #include "interpreter/plugins/builtin_plugin.h"
 #include "common/logger.h"
 #include <iostream>
@@ -17,7 +17,7 @@ DynamicLibraryLoader::~DynamicLibraryLoader() {
 
 bool DynamicLibraryLoader::loadLibrary(const std::string& library_path) {
     if (isLoaded()) {
-        LOG_WARNING("库已加载，先卸载当前库");
+        LOG_WARN("库已加载，先卸载当前库");
         unloadLibrary();
     }
     
@@ -122,7 +122,7 @@ bool DynamicLibraryLoader::loadFunctionSymbols() {
             loaded_functions_.push_back(func_info);
             LOG_DEBUG("成功加载函数符号: " + func_info.name);
         } else {
-            LOG_WARNING("无法加载函数符号: " + func_info.name);
+            LOG_WARN("无法加载函数符号: " + func_info.name);
         }
     }
     
@@ -169,7 +169,7 @@ void DynamicLibraryLoader::registerFunctions(ScopeManager& scopeManager) {
     LOG_INFO("成功注册 " + std::to_string(loaded_functions_.size()) + " 个函数");
 }
 
-std::function<Value*(Scope*)> DynamicLibraryLoader::createFunctionWrapper(const FunctionInfo& func_info) {
+std::function<Value*(Scope*)> DynamicLibraryLoader::createFunctionWrapper(const DynamicFunctionInfo& func_info) {
     return [this, func_info](Scope* scope) -> Value* {
         try {
             // 根据函数类型创建不同的包装器
@@ -218,7 +218,7 @@ std::function<Value*(Scope*)> DynamicLibraryLoader::createFunctionWrapper(const 
     };
 }
 
-std::vector<FunctionInfo> DynamicLibraryLoader::getFunctions() const {
+std::vector<DynamicFunctionInfo> DynamicLibraryLoader::getFunctions() const {
     return loaded_functions_;
 }
 

@@ -31,7 +31,7 @@ struct ParameterInfo {
 };
 
 // 函数信息
-struct FunctionInfo {
+struct DynamicFunctionInfo {
     std::string name;
     std::string c_signature;
     std::string description;
@@ -47,7 +47,7 @@ struct LibraryConfig {
     std::string library_path;
     std::string description;
     std::vector<std::string> header_files;
-    std::vector<FunctionInfo> functions;
+    std::vector<DynamicFunctionInfo> functions;
     std::map<std::string, std::string> type_mappings;
 };
 
@@ -67,7 +67,7 @@ public:
     void registerFunctions(class ScopeManager& scopeManager);
     
     // 获取库信息
-    std::vector<FunctionInfo> getFunctions() const;
+    std::vector<DynamicFunctionInfo> getFunctions() const;
     std::string getLibraryName() const;
     
     // 卸载库
@@ -75,11 +75,14 @@ public:
     
     // 检查库是否已加载
     bool isLoaded() const;
+    
+    // 函数包装器生成（公有方法，供插件使用）
+    std::function<Value*(Scope*)> createFunctionWrapper(const DynamicFunctionInfo& func_info);
 
 private:
     void* library_handle_ = nullptr;
     LibraryConfig config_;
-    std::vector<FunctionInfo> loaded_functions_;
+    std::vector<DynamicFunctionInfo> loaded_functions_;
     
     // 辅助方法
     bool parseConfigFile(const std::string& config_file);
@@ -88,8 +91,6 @@ private:
     FunctionType parseType(const std::string& type_str);
     std::string mapCTypeToInterpreterType(FunctionType type);
     
-    // 函数包装器生成
-    std::function<Value*(Scope*)> createFunctionWrapper(const FunctionInfo& func_info);
     
     // 类型转换函数
     template<typename T>
@@ -105,7 +106,7 @@ class FunctionWrapper {
 public:
     using FunctionPtr = RetType(*)(Args...);
     
-    FunctionWrapper(FunctionPtr func_ptr, const FunctionInfo& func_info)
+    FunctionWrapper(FunctionPtr func_ptr, const DynamicFunctionInfo& func_info)
         : func_ptr_(func_ptr), func_info_(func_info) {}
     
     Value* call(Scope* scope) {
@@ -129,7 +130,7 @@ public:
 
 private:
     FunctionPtr func_ptr_;
-    FunctionInfo func_info_;
+    DynamicFunctionInfo func_info_;
     
     template<typename... T>
     std::tuple<T...> extractArguments(Scope* scope) {

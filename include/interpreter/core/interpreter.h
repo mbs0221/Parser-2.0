@@ -6,8 +6,15 @@
 #include "parser/expression.h"
 #include "parser/statement.h"
 #include "parser/ast_visitor.h"
+#include "parser/advanced_expressions.h"
 #include "interpreter/core/control_flow.h"
 #include "interpreter/core/function_call.h"
+#include "interpreter/core/error_handler.h"
+#include "interpreter/core/memory_manager.h"
+#include "interpreter/core/async_runtime.h"
+#include "interpreter/core/pattern_matching.h"
+#include "interpreter/core/concurrency.h"
+#include "interpreter/types/type_inference.h"
 #include "interpreter/scope/scope.h"
 #include "interpreter/plugins/builtin_plugin.h"
 #include "interpreter/types/types.h"
@@ -56,6 +63,21 @@ public:
     // 调用栈（用于调试和错误报告）
     std::vector<std::string> callStack;
 
+    // 错误处理器
+    InterpreterCore::ErrorHandler* errorHandler;
+    
+    // 异步运行时
+    InterpreterCore::AsyncRuntime* asyncRuntime;
+    
+    // 模式匹配器
+    InterpreterCore::PatternMatcher* patternMatcher;
+    
+    // 类型推断管理器
+    InterpreterTypes::TypeInferenceManager* typeInferenceManager;
+    
+    // 并发管理器
+    InterpreterCore::ConcurrencyManager* concurrencyManager;
+
 public:
     // 通用的实例方法调用辅助函数
     Value* callMethodOnInstance(InstanceMethodReference* methodRef, const std::vector<Value*>& args);
@@ -71,7 +93,40 @@ public:
     
     // 模块系统相关方法
     void initializeModuleSystem();
+    
+    // 自动导入标准库
+    void autoImportStandardLibrary();
     ModuleSystem::ModuleSystem* getModuleSystem() { return moduleSystem; }
+    
+    // 异步编程相关方法
+    void initializeAsyncRuntime();
+    InterpreterCore::AsyncRuntime* getAsyncRuntime() { return asyncRuntime; }
+    std::shared_ptr<InterpreterCore::Promise> createPromise();
+    std::shared_ptr<InterpreterCore::AsyncFunction> createAsyncFunction(std::function<Value*()> func);
+    
+    // 模式匹配相关方法
+    void initializePatternMatcher();
+    InterpreterCore::PatternMatcher* getPatternMatcher() { return patternMatcher; }
+    InterpreterCore::MatchResult matchPattern(InterpreterCore::Pattern* pattern, Value* value);
+    Value* evaluateMatchExpression(MatchExpression* expr, Value* input);
+    
+    // 类型推断相关方法
+    void initializeTypeInference();
+    InterpreterTypes::TypeInferenceManager* getTypeInferenceManager() { return typeInferenceManager; }
+    InterpreterTypes::TypeInferenceResult inferExpressionType(Expression* expr);
+    InterpreterTypes::TypeInferenceResult inferStatementType(Statement* stmt);
+    InterpreterTypes::TypeInferenceResult inferFunctionType(FunctionDefinition* func);
+    bool checkExpressionType(Expression* expr, Type* expectedType);
+    bool checkStatementType(Statement* stmt);
+    bool checkFunctionType(FunctionDefinition* func);
+    Value* convertValueType(Value* value, Type* targetType);
+    
+    // 并发支持相关方法
+    void initializeConcurrency();
+    InterpreterCore::ConcurrencyManager* getConcurrencyManager() { return concurrencyManager; }
+    std::shared_ptr<InterpreterCore::Coroutine> createCoroutine(std::function<Value*()> func, const std::string& name = "");
+    std::shared_ptr<InterpreterCore::ThreadPoolTask> submitTask(std::function<Value*()> func, const std::string& name = "");
+    std::vector<Value*> parallelExecute(const std::vector<std::function<Value*()>>& functions);
 
 public:
     // 构造函数
@@ -103,6 +158,20 @@ public:
     Value* visit(CallExpression* expr) override;
     Value* visit(TernaryExpression* expr) override;
     
+    // 高级表达式类型访问方法
+    Value* visit(ArrayLiteralExpression* expr);
+    Value* visit(DictLiteralExpression* expr);
+    Value* visit(SetLiteralExpression* expr);
+    Value* visit(RangeExpression* expr);
+    Value* visit(SliceExpression* expr);
+    Value* visit(NullCoalescingExpression* expr);
+    Value* visit(MatchExpression* expr);
+    Value* visit(AsyncExpression* expr);
+    Value* visit(AwaitExpression* expr);
+    Value* visit(TypeCheckExpression* expr);
+    Value* visit(TypeCastExpression* expr);
+    Value* visit(CompoundAssignExpression* expr);
+    
     // ASTVisitor接口实现 - 语句访问方法
     void visit(Statement* stmt) override;
     void visit(ImportStatement* stmt) override;
@@ -123,6 +192,8 @@ public:
     void visit(FunctionDefinition* stmt) override;
     void visit(StructDefinition* stmt) override;
     void visit(ClassDefinition* stmt) override;
+    void visit(InterfaceDefinition* stmt) override;
+    void visit(ModuleDefinition* stmt) override;
     void visit(VisibilityStatement* stmt) override;
     
 
@@ -191,9 +262,38 @@ private:
     Value* calculate_binary(Value* left, Value* right, int op);
     Value* calculate_unary(Value* operand, int op);
     
-    // 实例错误报告函数
-    void reportError(const std::string& message);
-    void reportTypeError(const std::string& expected, const std::string& actual);
+    // 错误处理相关方法
+    InterpreterCore::ErrorHandler* getErrorHandler() const { return errorHandler; }
+    void setErrorHandler(InterpreterCore::ErrorHandler* handler) { errorHandler = handler; }
+    
+    // 便捷错误报告方法
+    void reportError(const std::string& message, 
+                    const std::string& errorCode = "",
+                    const InterpreterCore::ErrorLocation& location = InterpreterCore::ErrorLocation());
+    void reportWarning(const std::string& message,
+                      const std::string& errorCode = "",
+                      const InterpreterCore::ErrorLocation& location = InterpreterCore::ErrorLocation());
+    void reportTypeError(const std::string& expected, 
+                        const std::string& actual,
+                        const InterpreterCore::ErrorLocation& location = InterpreterCore::ErrorLocation());
+    void reportUndefinedIdentifier(const std::string& identifier,
+                                  const InterpreterCore::ErrorLocation& location = InterpreterCore::ErrorLocation());
+    void reportFunctionCallError(const std::string& functionName,
+                                const std::string& reason,
+                                const InterpreterCore::ErrorLocation& location = InterpreterCore::ErrorLocation());
+    
+    // 获取错误统计
+    int getErrorCount() const;
+    int getWarningCount() const;
+    bool hasErrors() const;
+    std::string generateErrorReport() const;
+    
+    // 内存管理相关方法
+    InterpreterCore::MemoryManager& getMemoryManager() const;
+    std::string generateMemoryReport() const;
+    bool checkForMemoryLeaks() const;
+    void enableMemoryLeakDetection(bool enable);
+    void cleanupMemory();
 };
 
 #endif // INTERPRETER_H

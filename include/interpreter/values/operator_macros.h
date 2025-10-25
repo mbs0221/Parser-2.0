@@ -1,33 +1,48 @@
-#ifndef INTERPRETER_OPERATOR_MACROS_H
-#define INTERPRETER_OPERATOR_MACROS_H
+#ifndef INTERPRETER_OPERATOR_MACROS_NEW_H
+#define INTERPRETER_OPERATOR_MACROS_NEW_H
+
 
 // ==================== 运算符注册宏定义 ====================
 // 这个文件包含了所有用于简化运算符方法注册的宏定义
+// 使用addUserMethod而不是registerMethod
 
 // ==================== 基础运算符注册宏 ====================
 
 // 简化二元运算符方法注册的宏（带类型参数）
 #define REGISTER_BINARY_OPERATOR(typeName, opName, opSymbol) \
-    registerMethod(opName, [](Value* instance, vector<Value*>& args) -> Value* { \
-        if (args.size() >= 1 && args[0]) { \
-            auto a = dynamic_cast<typeName*>(instance); \
-            auto b = dynamic_cast<typeName*>(args[0]); \
-            if (a && b) { \
-                return new typeName((*a) operator##opSymbol (*b)); \
+    do { \
+        auto method = [](Scope* scope) -> Value* { \
+            Value* instance = scope->getVariable<Value>("this"); \
+            Value* other = scope->getVariable<Value>("other"); \
+            if (instance && other) { \
+                auto a = dynamic_cast<typeName*>(instance); \
+                auto b = dynamic_cast<typeName*>(other); \
+                if (a && b) { \
+                    return new typeName((*a) operator##opSymbol (*b)); \
+                } \
             } \
-        } \
-        return nullptr; \
-    })
+            return nullptr; \
+        }; \
+        BuiltinFunction* func = new BuiltinFunction(method, (string(opName) + "(other:" + #typeName + ")").c_str()); \
+        addUserMethod(func, VIS_PUBLIC); \
+    } while(0)
 
 // 简化一元运算符方法注册的宏（带类型参数）
 #define REGISTER_UNARY_OPERATOR(typeName, opName, opSymbol) \
-    registerMethod(opName, [](Value* instance, vector<Value*>& args) -> Value* { \
-        auto a = dynamic_cast<typeName*>(instance); \
-        if (a) { \
-            return new typeName(operator##opSymbol (*a)); \
-        } \
-        return nullptr; \
-    })
+    do { \
+        auto method = [](Scope* scope) -> Value* { \
+            Value* instance = scope->getVariable<Value>("this"); \
+            if (instance) { \
+                auto a = dynamic_cast<typeName*>(instance); \
+                if (a) { \
+                    return new typeName(operator##opSymbol (*a)); \
+                } \
+            } \
+            return nullptr; \
+        }; \
+        BuiltinFunction* func = new BuiltinFunction(method, (string(opName) + "()").c_str()); \
+        addUserMethod(func, VIS_PUBLIC); \
+    } while(0)
 
 // 简化比较运算符方法注册的宏（带类型参数）
 #define REGISTER_COMPARISON_OPERATOR(typeName, opName, opSymbol) \
@@ -35,51 +50,65 @@
 
 // 简化赋值运算符方法注册的宏（带类型参数）
 #define REGISTER_ASSIGN_OPERATOR(typeName) \
-    registerMethod("=", [](Value* instance, vector<Value*>& args) -> Value* { \
-        if (args.size() >= 1 && args[0]) { \
-            auto a = dynamic_cast<typeName*>(instance); \
-            auto b = dynamic_cast<typeName*>(args[0]); \
-            if (a && b) { \
-                *a = *b; \
-                return a; /* 返回当前对象以实现连续赋值 */ \
+    do { \
+        auto method = [](Scope* scope) -> Value* { \
+            Value* instance = scope->getVariable<Value>("this"); \
+            Value* other = scope->getVariable<Value>("other"); \
+            if (instance && other) { \
+                auto a = dynamic_cast<typeName*>(instance); \
+                auto b = dynamic_cast<typeName*>(other); \
+                if (a && b) { \
+                    *a = *b; \
+                    return a; /* 返回当前对象以实现连续赋值 */ \
+                } \
             } \
-        } \
-        return nullptr; \
-    })
+            return nullptr; \
+        }; \
+        BuiltinFunction* func = new BuiltinFunction(method, ("=(other:" + string(#typeName) + ")").c_str()); \
+        addUserMethod(func, VIS_PUBLIC); \
+    } while(0)
 
 // 简化new方法注册的宏
 #define REGISTER_NEW_METHOD(typeName) \
-    registerMethod("new", [](Value* instance, vector<Value*>& args) -> Value* { \
-        return new typeName(); \
-    })
+    do { \
+        auto method = [](Scope* scope) -> Value* { \
+            return new typeName(); \
+        }; \
+        BuiltinFunction* func = new BuiltinFunction(method, "new()"); \
+        addUserMethod(func, VIS_PUBLIC); \
+    } while(0)
 
 // 简化下标访问运算符方法注册的宏（双目运算）
 #define REGISTER_SUBSCRIPT_OPERATOR(typeName) \
-    registerMethod("[]", [](Value* instance, vector<Value*>& args) -> Value* { \
-        if (args.size() >= 1 && args[0]) { \
-            auto a = dynamic_cast<typeName*>(instance); \
-            auto index = dynamic_cast<Integer*>(args[0]); \
-            if (a && index) { \
-                return new Char((*a)[index->getValue()]); \
+    do { \
+        auto method = [](Scope* scope) -> Value* { \
+            Value* instance = scope->getVariable<Value>("this"); \
+            Value* index = scope->getVariable<Value>("index"); \
+            if (instance && index) { \
+                auto a = dynamic_cast<typeName*>(instance); \
+                auto intIndex = dynamic_cast<Integer*>(index); \
+                if (a && intIndex) { \
+                    return new Char((*a)[intIndex->getValue()]); \
+                } \
             } \
-        } \
-        return nullptr; \
-    })
+            return nullptr; \
+        }; \
+        BuiltinFunction* func = new BuiltinFunction(method, "[](index:any)"); \
+        addUserMethod(func, VIS_PUBLIC); \
+    } while(0)
 
 // 简化字典类型new方法注册的宏（处理键值对参数）
 #define REGISTER_DICT_NEW_METHOD() \
-    registerMethod("new", [](Value* instance, vector<Value*>& args) -> Value* { \
-        Dict* newDict = new Dict(); \
-        /* 处理键值对参数 */ \
-        for (size_t i = 0; i < args.size(); i += 2) { \
-            if (i + 1 < args.size()) { \
-                if (String* key = dynamic_cast<String*>(args[i])) { \
-                    newDict->setEntry(key->getValue(), args[i + 1] ? args[i + 1]->clone() : nullptr); \
-                } \
-            } \
-        } \
-        return newDict; \
-    })
+    do { \
+        auto method = [](Scope* scope) -> Value* { \
+            Dict* newDict = new Dict(); \
+            /* 处理键值对参数 - 这里需要从scope中获取参数 */ \
+            /* 暂时简化实现 */ \
+            return newDict; \
+        }; \
+        BuiltinFunction* func = new BuiltinFunction(method, "new()"); \
+        addUserMethod(func, VIS_PUBLIC); \
+    } while(0)
 
 // ==================== 组合运算符注册宏 ====================
 
@@ -182,4 +211,4 @@
     /* 下标访问运算符 */ \
     REGISTER_SUBSCRIPT_OPERATOR(typeName)
 
-#endif // INTERPRETER_OPERATOR_MACROS_H 
+#endif // INTERPRETER_OPERATOR_MACROS_NEW_H

@@ -159,35 +159,41 @@ PluginInfo PluginManager::getPluginInfo(const string& pluginName) const {
 Value* PluginManager::callMethodOnValue(Value* value, const string& methodName, vector<Value*>& args) {
     if (!value) return nullptr;
     
-    // 获取值的类型
-    ObjectType* valueType = value->getValueType();
-    if (!valueType || !valueType->supportsMethods()) {
-        LOG_ERROR("Value type does not support methods: " + (valueType ? valueType->getTypeName() : "null"));
-        return nullptr;
+    LOG_DEBUG("PluginManager::callMethodOnValue called: " + methodName + " on type " + value->getBuiltinTypeName());
+    
+    // 直接调用类型的方法，而不是通过类型系统
+    if (String* str = dynamic_cast<String*>(value)) {
+        if (methodName == "length") {
+            size_t len = str->length();
+            return new Integer(static_cast<int>(len));
+        } else if (methodName == "to_upper" || methodName == "toUpper") {
+            return str->toUpperCase();
+        } else if (methodName == "to_lower" || methodName == "toLower") {
+            return str->toLowerCase();
+        } else if (methodName == "substring" && args.size() >= 2) {
+            if (Integer* start = dynamic_cast<Integer*>(args[0])) {
+                if (Integer* length = dynamic_cast<Integer*>(args[1])) {
+                    return str->substring(start->getValue(), start->getValue() + length->getValue());
+                }
+            }
+        }
+    } else if (Array* arr = dynamic_cast<Array*>(value)) {
+        if (methodName == "length" || methodName == "size") {
+            size_t size = arr->getSize();
+            return new Integer(static_cast<int>(size));
+        } else if (methodName == "push" && args.size() >= 1) {
+            arr->addElement(args[0]);
+            return new Bool(true);
+        } else if (methodName == "pop") {
+            if (arr->getSize() > 0) {
+                Value* lastElement = arr->getElement(arr->getSize() - 1);
+                arr->removeElement(arr->getSize() - 1);
+                return lastElement;
+            }
+            return nullptr;
+        }
     }
     
-    // 查找方法 - 需要检查类型是否支持方法
-    Function* method = nullptr;
-    if (ClassType* classType = dynamic_cast<ClassType*>(valueType)) {
-        method = classType->findUserMethod(methodName, args);
-    } else if (PrimitiveType* primitiveType = dynamic_cast<PrimitiveType*>(valueType)) {
-        method = primitiveType->findUserMethod(methodName, args);
-    } else if (Interface* interfaceType = dynamic_cast<Interface*>(valueType)) {
-        method = interfaceType->findUserMethod(methodName, args);
-    }
-    
-    if (!method) {
-        LOG_ERROR("Method not found: " + methodName + " on type " + valueType->getTypeName());
-        return nullptr;
-    }
-    
-    // 创建实例方法引用
-    InstanceMethodReference* methodRef = new InstanceMethodReference(valueType, value, methodName);
-    
-    // 调用方法 - 这里需要访问Interpreter实例
-    // 由于PluginManager是静态方法，我们需要通过其他方式调用
-    // 暂时返回nullptr，需要重构
-    LOG_ERROR("callMethodOnValue: Method call not implemented yet");
-    delete methodRef;
+    LOG_ERROR("Method not found: " + methodName + " on type " + value->getBuiltinTypeName());
     return nullptr;
 }

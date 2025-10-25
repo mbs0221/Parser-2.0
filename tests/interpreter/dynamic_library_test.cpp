@@ -1,4 +1,4 @@
-#include "interpreter/plugins/dynamic_library_plugin.h"
+#include "dynamic_library_plugin.h"
 #include "interpreter/scope/scope_manager.h"
 #include "interpreter/values/value.h"
 #include "common/logger.h"

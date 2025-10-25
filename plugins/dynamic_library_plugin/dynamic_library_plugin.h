@@ -1,7 +1,7 @@
 #pragma once
 
 #include "interpreter/plugins/builtin_plugin.h"
-#include "interpreter/plugins/dynamic_library_loader.h"
+#include "dynamic_library_loader.h"
 #include <memory>
 
 namespace DynamicLoader {

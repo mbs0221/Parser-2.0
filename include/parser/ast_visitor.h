@@ -68,6 +68,8 @@ public:
     virtual void visit(FunctionDefinition* func) = 0;
     virtual void visit(ClassDefinition* stmt) = 0;
     virtual void visit(StructDefinition* stmt) = 0;
+    virtual void visit(InterfaceDefinition* stmt) = 0;
+    virtual void visit(ModuleDefinition* stmt) = 0;
     virtual void visit(VisibilityStatement* stmt) = 0;
     
     // 程序根节点访问方法
@@ -94,6 +96,7 @@ public:
     virtual ReturnType visit(AccessExpression* expr) = 0;
     virtual ReturnType visit(CallExpression* expr) = 0;
     virtual ReturnType visit(TernaryExpression* expr) = 0;
+    virtual ReturnType visit(TypeCheckExpression* expr) = 0;
 };
 
 // 完整的AST访问者接口 - 继承自StatementVisitor和ExpressionVisitor

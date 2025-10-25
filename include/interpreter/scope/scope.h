@@ -205,6 +205,9 @@ private:
     // 检查是否在类定义上下文中
     bool isInClassContext() const;
     
+    // 检查是否在结构体定义上下文中
+    bool isInStructContext() const;
+    
     // 获取当前可见性
     VisibilityType getCurrentVisibility() const;
     

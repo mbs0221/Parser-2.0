@@ -45,6 +45,12 @@ static const vector<Function*> arrayStaticMethods = {
         // 如果没有可变参数，返回空数组
         cout << "ArrayType::array() called: nullptr" << endl;
         return array;
+    }, "array(...)"),
+    
+    // 添加无参构造函数
+    new BuiltinFunction([](class Scope* scope) -> Value* {
+        LOG_DEBUG("ArrayType::array() constructor called");
+        return new Array();
     }, "array()"),
 };
 

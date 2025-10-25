@@ -97,3 +97,4 @@ map<string, Function*> PrimitiveType::getStaticMethodsByName() const {
     }
     return result;
 }
+

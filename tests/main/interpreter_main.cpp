@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 
 	
 	// 初始化日志系统（启用日志轮转：最大5MB，保留3个文件）
-	Logger::initialize("parser.log", 5 * 1024 * 1024, 3);
+	Logger::initialize("logs/parser.log", 5 * 1024 * 1024, 3);
 	setLogLevel(logLevel);
 	
 	LOG_INFO("Parser application started with log level: " + logLevel);

@@ -8,8 +8,11 @@ namespace lexer {
 Lexer::Lexer() : inf(nullptr) {
 	look = nullptr; // 初始化当前token
 	
-	words["int"] = Type::Int;// new Word(INT, "int");
+	words["bool"] = Type::Bool;
+	words["char"] = Type::Char;
+	words["int"] = Type::Int;
 	words["double"] = Type::Double;
+	words["string"] = Type::String;
 	words["if"] = new Word(IF, "if");
 	words["then"] = new Word(THEN, "then");
 	words["else"] = new Word(ELSE, "else");
@@ -42,6 +45,20 @@ Lexer::Lexer() : inf(nullptr) {
 	words["from"] = new Word(FROM, "from");
 	words["as"] = new Word(AS, "as");
 	words["null"] = new Word(NULL_VALUE, "null");
+	
+	// 高级语法关键字
+	words["async"] = new Word(ASYNC, "async");
+	words["await"] = new Word(AWAIT, "await");
+	words["match"] = new Word(MATCH, "match");
+	words["is"] = new Word(IS, "is");
+	words["var"] = new Word(VAR, "var");
+	words["set"] = new Word(SET, "set");
+	
+	// 标准库语法关键字
+	words["interface"] = new Word(INTERFACE, "interface");
+	words["implements"] = new Word(IMPLEMENTS, "implements");
+	words["module"] = new Word(MODULE, "module");
+	words["any"] = new Word(ANY, "any");
 }
 
 Lexer::~Lexer(){
@@ -329,7 +346,8 @@ Token *Lexer::match_other(){
 			// ||
 			return Operator::OR;  // 使用静态常量
 		} else {
-			// |
+			// | - 可能是集合字面量的开始或位或操作符
+			// 这里需要上下文信息来判断，暂时作为位或操作符处理
 			inf->seekg(-1, ios_base::cur);
 			return Operator::BitOr;  // 使用静态常量
 		}
@@ -338,6 +356,9 @@ Token *Lexer::match_other(){
 		if (peek == '+') {
 			// ++
 			return Operator::Increment;  // 使用静态常量
+		} else if (peek == '=') {
+			// +=
+			return Operator::PlusAssign;  // 使用静态常量
 		} else {
 			// +
 			inf->seekg(-1, ios_base::cur);
@@ -348,20 +369,44 @@ Token *Lexer::match_other(){
 		if (peek == '-') {
 			// --
 			return Operator::Decrement;  // 使用静态常量
+		} else if (peek == '=') {
+			// -=
+			return Operator::MinusAssign;  // 使用静态常量
 		} else {
 			// -
 			inf->seekg(-1, ios_base::cur);
 			return Operator::Sub;  // 使用静态常量
 		}
 	} else if (peek == '*') {
-		inf->read(&peek, 1);  // 读取下一个字符
-		return Operator::Mul;  // 使用静态常量
+		inf->read(&peek, 1);
+		if (peek == '=') {
+			// *=
+			return Operator::MultiplyAssign;  // 使用静态常量
+		} else {
+			// *
+			inf->seekg(-1, ios_base::cur);
+			return Operator::Mul;  // 使用静态常量
+		}
 	} else if (peek == '/') {
-		inf->read(&peek, 1);  // 读取下一个字符
-		return Operator::Div;  // 使用静态常量
+		inf->read(&peek, 1);
+		if (peek == '=') {
+			// /=
+			return Operator::DivideAssign;  // 使用静态常量
+		} else {
+			// /
+			inf->seekg(-1, ios_base::cur);
+			return Operator::Div;  // 使用静态常量
+		}
 	} else if (peek == '%') {
-		inf->read(&peek, 1);  // 读取下一个字符
-		return Operator::Mod;  // 使用静态常量
+		inf->read(&peek, 1);
+		if (peek == '=') {
+			// %=
+			return Operator::ModuloAssign;  // 使用静态常量
+		} else {
+			// %
+			inf->seekg(-1, ios_base::cur);
+			return Operator::Mod;  // 使用静态常量
+		}
 	} else if (peek == '^') {
 		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::BitXor;  // 使用静态常量
@@ -369,8 +414,25 @@ Token *Lexer::match_other(){
 		inf->read(&peek, 1);  // 读取下一个字符
 		return Operator::BitNot;  // 使用静态常量
 	} else if (peek == '.') {
-		inf->read(&peek, 1);  // 读取下一个字符
-		return Operator::Dot;  // 使用静态常量
+		inf->read(&peek, 1);
+		if (peek == '.') {
+			// ..
+			return Operator::Range;  // 使用静态常量
+		} else {
+			// .
+			inf->seekg(-1, ios_base::cur);
+			return Operator::Dot;  // 使用静态常量
+		}
+	} else if (peek == '?') {
+		inf->read(&peek, 1);
+		if (peek == '?') {
+			// ??
+			return Operator::NullCoalesce;  // 使用静态常量
+		} else {
+			// ?
+			inf->seekg(-1, ios_base::cur);
+			return Operator::Question;  // 使用静态常量
+		}
 	} else {
 		// 其他字符返回Token类型
 		if (peek > 31 && peek < 256){
@@ -581,10 +643,28 @@ string Lexer::matchIdentifier() {
 // 匹配类型
 Type* Lexer::matchType() {
     if (look->Tag == ID) {
-        // 用户定义类型，暂时返回Type::Int作为默认值
-        // 这里可以根据需要扩展为查找用户定义的类型
-        move();
-        return Type::Int;
+        // 检查是否是预定义的类型关键字
+        string typeName = look->str();
+        if (typeName == "int") {
+            move();
+            return Type::Int;
+        } else if (typeName == "double") {
+            move();
+            return Type::Double;
+        } else if (typeName == "string") {
+            move();
+            return Type::String;
+        } else if (typeName == "char") {
+            move();
+            return Type::Char;
+        } else if (typeName == "bool") {
+            move();
+            return Type::Bool;
+        } else {
+            // 用户定义类型，暂时返回Type::Int作为默认值
+            move();
+            return Type::Int;
+        }
     } else if (look->Tag == STR) {
         move();
         return Type::String;

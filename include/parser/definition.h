@@ -281,10 +281,14 @@ struct VisibilityStatement : public Statement {
 // 类定义 - 基类，本质上是一组statement
 struct ClassDefinition : public Definition {
     string baseClass;
+    vector<string> implements;  // 实现的接口列表
     vector<Statement*> statements;  // 类体中的所有语句（包括成员、方法等）
     
     ClassDefinition(const string& className, const string& base, const vector<Statement*>& stmts)
         : Definition(className), baseClass(base), statements(stmts) {}
+    
+    ClassDefinition(const string& className, const string& base, const vector<string>& interfaces, const vector<Statement*>& stmts)
+        : Definition(className), baseClass(base), implements(interfaces), statements(stmts) {}
     
     virtual ~ClassDefinition() {
         for (auto* stmt : statements) {
@@ -306,6 +310,42 @@ struct StructDefinition : public ClassDefinition {
     
     string getDefinitionType() const override {
         return "StructDefinition";
+    }
+    
+    void accept(StatementVisitor* visitor) override;
+};
+
+// ==================== 接口定义 ====================
+
+// 接口定义
+struct InterfaceDefinition : public Definition {
+    string interfaceName;
+    vector<string> extends;  // 继承的接口列表
+    vector<FunctionPrototype*> methods;  // 接口方法原型
+    
+    InterfaceDefinition(const string& name, const vector<string>& extendsList = {}, 
+                       const vector<FunctionPrototype*>& methodList = {})
+        : interfaceName(name), extends(extendsList), methods(methodList) {}
+    
+    string getDefinitionType() const override {
+        return "InterfaceDefinition";
+    }
+    
+    void accept(StatementVisitor* visitor) override;
+};
+
+// ==================== 模块定义 ====================
+
+// 模块定义
+struct ModuleDefinition : public Definition {
+    string moduleName;
+    vector<Statement*> statements;  // 模块内容
+    
+    ModuleDefinition(const string& name, const vector<Statement*>& stmts)
+        : moduleName(name), statements(stmts) {}
+    
+    string getDefinitionType() const override {
+        return "ModuleDefinition";
     }
     
     void accept(StatementVisitor* visitor) override;
